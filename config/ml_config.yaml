@@ -1,0 +1,150 @@
+# MLflow Configuration
+mlflow:
+  tracking_uri: ${MLFLOW_TRACKING_URI}
+  artifact_location: ./mlruns
+  server:
+    host: 0.0.0.0
+    port: 5000
+  experiments:
+    - name: demand_forecasting
+      description: "Demand forecasting models for order prediction"
+    - name: coverage_analysis
+      description: "Coverage gap analysis models"
+
+# Training Configuration
+training:
+  model_types:
+    - random_forest
+    - gradient_boosting
+    - xgboost
+  data:
+    test_size: 0.2
+    validation_size: 0.1
+    random_seed: 42
+    time_series_split: false
+    
+  feature_engineering:
+    scaling_method: standard  # standard, robust, none
+    missing_value_strategy: median  # median, mean, forward_fill
+    lag_periods: [1, 7, 14, 30]
+    rolling_windows: [7, 14, 30]
+    
+  models:
+    xgboost:
+      n_estimators: [100, 200, 300]
+      max_depth: [4, 6, 8]
+      learning_rate: [0.01, 0.1, 0.3]
+      subsample: [0.8, 1.0]
+      colsample_bytree: [0.8, 1.0]
+      
+    random_forest:
+      n_estimators: [100, 200]
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+      
+    gradient_boosting:
+      n_estimators: [100, 200]
+      max_depth: [3, 5, 7]
+      learning_rate: [0.01, 0.1]
+      subsample: [0.8, 1.0]
+      
+  evaluation:
+    cv_folds: 5
+    metrics:
+      - mae
+      - rmse
+      - r2
+      - mape
+      - mse
+    thresholds:
+      min_r2: 0.80
+      max_mape: 15.0
+      max_latency_ms: 100
+      
+  model_selection:
+    primary_metric: r2
+    improvement_threshold: 0.02  # 2% improvement required
+    
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  rolling_windows: [7, 30, 90]
+  drift_detection:
+    enabled: true
+    check_frequency_days: 7
+    ks_test_threshold: 0.05
+    drift_threshold: 0.20
+  performance_degradation:
+    r2_warning_threshold: 0.80
+    r2_alert_threshold: 0.75
+  alerts:
+    email_enabled: true
+    slack_enabled: false
+    
+# Retraining Configuration
+retraining:
+  enabled: true
+  schedule: "0 2 * * 0"  # Weekly at 2 AM Sunday (cron format)
+  triggers:
+    min_data_growth_pct: 10
+    performance_drop_threshold: 0.75
+  auto_promote:
+    enabled: false
+    min_improvement_pct: 3
+
+# Prediction Configuration
+prediction:
+  model_cache_ttl_seconds: 3600  # 1 hour
+  batch_size: 1000
+  confidence_interval_margin: 0.10  # 10%
+  max_concurrent_requests: 100
+
+# Data Versioning Configuration
+data_versioning:
+  enabled: true
+  artifact_path: ./data_versions
+  track_lineage: true
+  calculate_hash: true
+
+# Explainability Configuration
+explainability:
+  enabled: true
+  shap_sample_size: 100
+  top_features: 20
+  generate_plots: true
+
+# Baseline Benchmarking Configuration
+baseline_benchmarking:
+  enabled: true
+  models:
+    - mean_predictor
+    - median_predictor
+    - linear_regression
+  min_improvement_threshold: 0.05  # 5% improvement over best baseline
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    file:
+      enabled: true
+      path: ./logs/ml.log
+      max_bytes: 10485760  # 10MB
+      backup_count: 5
+    console:
+      enabled: true
+  loggers:
+    mlflow: WARNING
+    urllib3: WARNING
+    
+# Security Configuration
+security:
+  api_key_required: false
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+  input_validation:
+    strict_mode: true
+    max_batch_size: 10000

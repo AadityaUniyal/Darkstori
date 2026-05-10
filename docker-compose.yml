@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: darkstori-postgres
+    environment:
+      POSTGRES_USER: darkstori
+      POSTGRES_PASSWORD: darkstori_dev_password
+      POSTGRES_DB: darkstori_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U darkstori"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - darkstori-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: darkstori-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - darkstori-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: darkstori-backend
+    environment:
+      - DATABASE_URL=postgresql://darkstori:darkstori_dev_password@postgres:5432/darkstori_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - SECRET_KEY=darkstore-dev-secret-key-min-32-chars-long
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:80
+      # MLflow Configuration
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+      - MLFLOW_BACKEND_STORE_URI=postgresql://darkstori:darkstori_dev_password@postgres:5432/darkstori_db
+      - MLFLOW_ARTIFACT_ROOT=./mlruns
+      - MLFLOW_ENABLE_TRACKING=true
+    ports:
+      - "8000:8000"
+      - "5000:5000"  # MLflow UI
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./database:/app/database
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./mlruns:/app/mlruns
+      - ./logs:/app/logs
+    networks:
+      - darkstori-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: darkstori-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - darkstori-network
+
+  # Nginx Reverse Proxy (optional, for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: darkstori-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - darkstori-network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mlruns_data:
+    driver: local
+  logs_data:
+    driver: local
+
+networks:
+  darkstori-network:
+    driver: bridge

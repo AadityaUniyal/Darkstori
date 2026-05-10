@@ -163,6 +163,8 @@ docker-compose.override.yml
 *.model
 models/
 checkpoints/
+mlruns/
+data_versions/
 
 # ============================================
 # Temporary Files

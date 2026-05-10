@@ -8,6 +8,7 @@ import LiveMap from './pages/LiveMap';
 import Analytics from './pages/Analytics';
 import Predictions from './pages/Predictions';
 import Login from './pages/Login';
+import LiveFeed from './pages/LiveFeed';
 
 // Components
 import Navbar from './components/Navbar';
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/live-map" element={<LiveMap />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/predictions" element={<Predictions />} />
+                <Route path="/live-feed" element={<LiveFeed />} />
                 <Route path="/login" element={<Login />} />
               </Routes>
             </main>

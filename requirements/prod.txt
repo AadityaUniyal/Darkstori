@@ -1,0 +1,9 @@
+# Production Dependencies
+-r base.txt
+-r ml.txt
+
+# Production Server
+gunicorn==21.2.0
+
+# Monitoring
+sentry-sdk[fastapi]==1.39.2

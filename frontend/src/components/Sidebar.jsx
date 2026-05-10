@@ -5,7 +5,8 @@ import {
   BarChart3, 
   TrendingUp, 
   Database,
-  Settings
+  Settings,
+  Radio
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -13,6 +14,7 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/live-map', icon: Map, label: 'Live Map' },
+    { path: '/live-feed', icon: Radio, label: 'Live Feed' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
     { path: '/data', icon: Database, label: 'Data' },
