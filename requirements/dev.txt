@@ -17,7 +17,7 @@ pylint==3.0.3
 
 # Security
 bandit==1.7.6
-safety==3.0.1
+safety==3.7.0
 detect-secrets==1.4.0
 
 # Pre-commit
