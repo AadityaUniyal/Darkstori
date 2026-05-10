@@ -23,7 +23,7 @@ bcrypt==4.1.2
 python-jose==3.3.0
 
 # Utilities
-python-dotenv==1.0.0
+python-dotenv==1.2.2
 aiofiles==23.2.1
 httpx==0.26.0
 
