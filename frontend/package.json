@@ -18,7 +18,7 @@
     "recharts": "^2.10.3",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
-    "framer-motion": "^10.16.16",
+    "framer-motion": "^12.38.0",
     "zustand": "^4.4.7",
     "date-fns": "^3.0.6",
     "lucide-react": "^0.303.0"
