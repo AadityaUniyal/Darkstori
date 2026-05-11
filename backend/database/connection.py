@@ -31,11 +31,7 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # Import Base from consolidated models
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
-from database.models.models import Base
+from database.models.models import Base  # noqa: E402
 
 
 async def init_db():
