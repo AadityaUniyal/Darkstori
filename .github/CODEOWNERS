@@ -1,0 +1,27 @@
+# Default owner for everything in the repo
+* @AadityaUniyal
+
+# Backend code
+/backend/ @AadityaUniyal
+/database/ @AadityaUniyal
+
+# Frontend code
+/frontend/ @AadityaUniyal
+
+# ML and data science
+/backend/ml/ @AadityaUniyal
+/backend/pipelines/ @AadityaUniyal
+
+# Infrastructure and DevOps
+/.github/ @AadityaUniyal
+/docker-compose*.yml @AadityaUniyal
+/Dockerfile* @AadityaUniyal
+
+# Configuration files
+/.env.example @AadityaUniyal
+/alembic.ini @AadityaUniyal
+/pyproject.toml @AadityaUniyal
+
+# Documentation
+/docs/ @AadityaUniyal
+/README.md @AadityaUniyal

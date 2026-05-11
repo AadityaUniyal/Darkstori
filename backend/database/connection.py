@@ -1,31 +1,39 @@
 """Database connection management for backend."""
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+
 from backend.core.config import settings
 from backend.core.logger import logger
 
 # Convert PostgreSQL URL to async
 DATABASE_URL = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
-# Create async engine
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20
-)
+# Create async engine with conditional parameters based on database type
+if "sqlite" in DATABASE_URL:
+    # SQLite doesn't support pool_size and max_overflow
+    engine = create_async_engine(
+        DATABASE_URL, echo=settings.DEBUG, connect_args={"check_same_thread": False}
+    )
+else:
+    # PostgreSQL supports connection pooling
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=settings.DEBUG,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+    )
 
 # Session factory
 AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    engine, class_=AsyncSession, expire_on_commit=False
 )
 
 # Import Base from consolidated models
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from database.models.models import Base
 

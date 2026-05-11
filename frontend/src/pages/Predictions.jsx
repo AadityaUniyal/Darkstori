@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import {
-  LineChart, Line, AreaChart, Area,
+  AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { api } from '../services/api';
@@ -302,7 +302,7 @@ const Predictions = () => {
             ) : (
               <div className="result-placeholder">
                 <Sparkles size={48} />
-                <p>Enter parameters and click "Predict Demand" to see results</p>
+                <p>Enter parameters and click &quot;Predict Demand&quot; to see results</p>
               </div>
             )}
           </div>

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  AreaChart, Area, ScatterChart, Scatter,
+  AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { api } from '../services/api';
@@ -76,7 +76,8 @@ const Analytics = () => {
 
   const handleExport = () => {
     // Export functionality
-    alert('Exporting analytics data...');
+    // eslint-disable-next-line no-console
+    console.log('Exporting analytics data...');
   };
 
   return (
