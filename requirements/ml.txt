@@ -2,7 +2,7 @@
 -r base.txt
 
 numpy==1.26.0
-pandas==2.2.0
+pandas==3.0.2
 scikit-learn==1.8.0
 xgboost==2.0.3
 joblib==1.5.3
