@@ -73,7 +73,12 @@ dist-ssr/
 # ============================================
 # IDE & Editors
 # ============================================
-.vscode/
+# VSCode - ignore personal settings but keep shared configs
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
 .idea/
 *.swp
 *.swo
