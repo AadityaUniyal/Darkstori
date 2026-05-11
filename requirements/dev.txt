@@ -12,7 +12,7 @@ aiosqlite==0.22.1
 # Code Quality
 black==23.12.1
 flake8==7.3.0
-mypy==1.8.0
+mypy==2.0.0
 isort==5.13.2
 pylint==3.0.3
 
