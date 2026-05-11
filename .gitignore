@@ -91,6 +91,9 @@ dist-ssr/
 *.sublime-workspace
 .history/
 
+# Kiro AI assistant files
+.kiro/
+
 # ============================================
 # Environment & Secrets
 # ============================================
