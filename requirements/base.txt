@@ -33,5 +33,5 @@ tweepy==4.16.0
 prometheus-client==0.25.0
 
 # Email
-aiosmtplib==3.0.1
+aiosmtplib==5.1.0
 email-validator==2.3.0
