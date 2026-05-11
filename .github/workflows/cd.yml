@@ -2,8 +2,9 @@ name: CD
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - 'v*.*.*'  # Deploy only on version tags (e.g., v1.0.0, v1.2.3)
+  workflow_dispatch:  # Allow manual deployment trigger
 
 env:
   PYTHON_VERSION: '3.11'
@@ -16,7 +17,6 @@ jobs:
     name: Deploy Backend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
@@ -41,7 +41,6 @@ jobs:
     name: Deploy Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
@@ -70,7 +69,6 @@ jobs:
     name: Publish Docker Images
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
