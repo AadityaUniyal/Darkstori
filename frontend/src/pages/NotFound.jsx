@@ -19,15 +19,13 @@ const NotFound = () => {
         >
           404
         </motion.h1>
-        
-        <h2 className="text-3xl font-semibold text-gray-300 mb-4">
-          Page Not Found
-        </h2>
-        
+
+        <h2 className="text-3xl font-semibold text-gray-300 mb-4">Page Not Found</h2>
+
         <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        
+
         <div className="flex gap-4 justify-center">
           <Link
             to="/"
@@ -36,7 +34,7 @@ const NotFound = () => {
             <Home size={20} />
             Go to Dashboard
           </Link>
-          
+
           <button
             onClick={() => window.history.back()}
             className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"

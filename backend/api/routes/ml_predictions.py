@@ -19,7 +19,11 @@ from backend.ml.mlflow_config import get_mlflow_tracking_uri
 from backend.ml.model_loader import ModelLoader
 from backend.ml.model_registry import ModelRegistry
 from backend.ml.prediction_service import PredictionService
-from backend.ml.schemas import PredictionRequest, PredictionResponse
+from backend.ml.schemas import (
+    BatchPredictionResponse,
+    PredictionRequest,
+    PredictionResponse,
+)
 
 router = APIRouter()
 

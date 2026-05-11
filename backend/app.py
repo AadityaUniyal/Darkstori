@@ -4,12 +4,13 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from backend.api.routes import (
+from backend.api.routes import (  # noqa: E402
     analytics,
     auth,
     live_data,
@@ -21,12 +22,12 @@ from backend.api.routes import (
     predictions,
     stores,
 )
-from backend.core.config import settings
-from backend.core.logger import logger
-from backend.core.metrics import get_metrics
-from backend.database.connection import close_db, init_db
-from backend.ml.mlflow_config import mlflow_config
-from backend.ml.mlflow_server import get_server_manager
+from backend.core.config import settings  # noqa: E402
+from backend.core.logger import logger  # noqa: E402
+from backend.core.metrics import get_metrics  # noqa: E402
+from backend.database.connection import close_db, init_db  # noqa: E402
+from backend.ml.mlflow_config import mlflow_config  # noqa: E402
+from backend.ml.mlflow_server import get_server_manager  # noqa: E402
 
 
 # Lifespan context manager for startup/shutdown

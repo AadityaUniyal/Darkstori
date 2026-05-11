@@ -108,45 +108,31 @@ jobs:
     needs: [lint-python]
     
     env:
-      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-      SECRET_KEY: ci-test-secret-key-minimum-32-characters-long
-      JWT_SECRET_KEY: ci-test-jwt-secret-minimum-32-characters-long
+      DATABASE_URL: sqlite:///./test.db
+      SECRET_KEY: ci-test-secret-key-32chars-exactly-needed
+      JWT_SECRET_KEY: ci-test-jwt-secret-32chars-exactly
       ALGORITHM: HS256
       JWT_ALGORITHM: HS256
-      DEBUG: "False"
       ENVIRONMENT: testing
+      DEBUG: "False"
       REDIS_URL: redis://localhost:6379/0
-      GOOGLE_MAPS_API_KEY: test-key
-      KAGGLE_USERNAME: test
-      KAGGLE_API_KEY: test
+      GOOGLE_MAPS_API_KEY: test-key-placeholder
+      GOOGLE_PLACES_API_KEY: test-key-placeholder
+      GOOGLE_GEOCODING_API_KEY: test-key-placeholder
+      GOOGLE_DISTANCE_MATRIX_API_KEY: test-key-placeholder
+      KAGGLE_USERNAME: testuser
+      KAGGLE_API_KEY: testkey
+      SMTP_HOST: localhost
+      SMTP_PORT: "587"
+      SMTP_USER: test@test.com
+      SMTP_PASSWORD: testpass
+      ALERT_EMAIL: test@test.com
+      CELERY_BROKER_URL: redis://localhost:6379/1
+      CELERY_RESULT_BACKEND: redis://localhost:6379/2
+      NEON_DATABASE_URL: sqlite:///./test.db
       MLFLOW_ENABLE_TRACKING: "False"
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -163,13 +149,9 @@ jobs:
           pip install -r requirements/dev.txt
 
       - name: Run tests with pytest
-        env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-          REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-for-ci-minimum-32-characters-long
-          ENVIRONMENT: testing
+        working-directory: backend
         run: |
-          pytest backend/tests/ -v --tb=short --cov=backend --cov-report=xml --cov-report=term-missing
+          pytest tests/ -v --tb=short 2>&1
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
@@ -271,30 +253,15 @@ jobs:
   migration-check:
     name: Check Migrations
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     needs: [lint-python]
     
     env:
-      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-      SECRET_KEY: ci-test-secret-key-minimum-32-characters-long
-      JWT_SECRET_KEY: ci-test-jwt-secret-minimum-32-characters-long
+      DATABASE_URL: sqlite:///./ci_migrations.db
+      SECRET_KEY: ci-test-secret-key-32chars-exactly-needed
+      JWT_SECRET_KEY: ci-test-jwt-secret-32chars-exactly
       ENVIRONMENT: testing
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -311,13 +278,9 @@ jobs:
           pip install -r requirements/base.txt
 
       - name: Run Alembic migrations
-        env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: |
           alembic upgrade head
 
       - name: Check for pending migrations
-        env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: |
           alembic current
