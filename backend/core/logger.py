@@ -1,8 +1,10 @@
 """Centralized logging configuration."""
+
 import logging
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
 from backend.core.config import settings
 
 # Create logs directory
@@ -17,21 +19,18 @@ logger.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
 console_format = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )
 console_handler.setFormatter(console_format)
 
 # File handler with rotation
 file_handler = RotatingFileHandler(
-    LOGS_DIR / "api.log",
-    maxBytes=10 * 1024 * 1024,  # 10MB
-    backupCount=5
+    LOGS_DIR / "api.log", maxBytes=10 * 1024 * 1024, backupCount=5  # 10MB
 )
 file_handler.setLevel(logging.DEBUG)
 file_format = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 file_handler.setFormatter(file_format)
 
