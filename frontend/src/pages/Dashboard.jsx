@@ -6,7 +6,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   // Fetch store stats
-  const { data: stats, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['store-stats'],
     queryFn: api.getStoreStats,
   });
@@ -44,7 +44,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <div className="dashboard-header">
         <h1>Dashboard Overview</h1>
-        <p>Real-time insights into India's quick commerce landscape</p>
+        <p>Real-time insights into India&apos;s quick commerce landscape</p>
       </div>
 
       {/* KPI Cards */}

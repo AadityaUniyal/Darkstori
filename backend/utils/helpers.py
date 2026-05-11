@@ -1,19 +1,20 @@
 """Helper utility functions."""
-import time
+
 import logging
+import time
 from functools import wraps
-from typing import Callable, Any
+from typing import Any, Callable
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
 def retry_on_failure(max_retries: int = 3, delay: float = 2.0):
     """Decorator to retry a function on failure."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -27,7 +28,9 @@ def retry_on_failure(max_retries: int = 3, delay: float = 2.0):
                     logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying...")
                     time.sleep(delay)
             return None
+
         return wrapper
+
     return decorator
 
 
@@ -35,7 +38,7 @@ def rate_limit(calls_per_second: float = 1.0):
     """Decorator to rate limit function calls."""
     min_interval = 1.0 / calls_per_second
     last_called = [0.0]
-    
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -45,7 +48,9 @@ def rate_limit(calls_per_second: float = 1.0):
             result = func(*args, **kwargs)
             last_called[0] = time.time()
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -63,7 +68,7 @@ def clean_platform_name(platform: str) -> str:
         "instamart": "Instamart",
         "zepto": "Zepto",
         "flipkart minutes": "Flipkart Minutes",
-        "flipkart": "Flipkart Minutes"
+        "flipkart": "Flipkart Minutes",
     }
     return platform_map.get(platform.lower().strip(), platform)
 
@@ -85,15 +90,15 @@ def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> fl
     Calculate distance between two coordinates using Haversine formula.
     Returns distance in kilometers.
     """
-    from math import radians, sin, cos, sqrt, atan2
-    
+    from math import atan2, cos, radians, sin, sqrt
+
     R = 6371  # Earth's radius in kilometers
-    
+
     lat1, lng1, lat2, lng2 = map(radians, [lat1, lng1, lat2, lng2])
     dlat = lat2 - lat1
     dlng = lng2 - lng1
-    
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlng/2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1-a))
-    
+
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlng / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
     return R * c

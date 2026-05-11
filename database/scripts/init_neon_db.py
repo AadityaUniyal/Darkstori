@@ -1,35 +1,44 @@
 """Initialize Neon PostgreSQL database with all tables."""
+
+import asyncio
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from src.database.models import Base, engine, init_database
-from src.utils.helpers import logger
+from backend.core.logger import logger
+from database.connection import engine, init_db
+from database.models.models import Base
 
 
-def main():
+async def test_connection():
+    """Test database connection."""
+    try:
+        from sqlalchemy import text
+
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        logger.info("✓ Database connection test passed!")
+        return True
+    except Exception as e:
+        logger.error(f"✗ Database connection test failed: {e}")
+        return False
+
+
+async def main():
     """Initialize the Neon PostgreSQL database."""
     try:
         logger.info("Connecting to Neon PostgreSQL database...")
-        
+
         # Create all tables
-        init_database()
-        
+        await init_db()
+
         logger.info("✓ Database initialized successfully!")
-        logger.info("✓ All 5 tables created:")
-        logger.info("  - dark_stores")
-        logger.info("  - pincode_coverage")
-        logger.info("  - orders_synthetic")
-        logger.info("  - competitor_pricing")
-        logger.info("  - user_reviews")
-        
+        logger.info("✓ All tables created from models")
+
         # Test connection
-        from src.database.db_connect import test_connection
-        if test_connection():
-            logger.info("✓ Database connection test passed!")
-        else:
-            logger.error("✗ Database connection test failed!")
-            
+        await test_connection()
+
     except Exception as e:
         logger.error(f"✗ Database initialization failed: {e}")
         logger.error("Please check your DATABASE_URL in .env file")
@@ -37,4 +46,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

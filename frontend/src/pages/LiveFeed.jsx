@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './LiveFeed.css';
 
@@ -11,16 +11,7 @@ function LiveFeed() {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-  useEffect(() => {
-    fetchLiveMetrics();
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchLiveMetrics, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchLiveMetrics = async () => {
+  const fetchLiveMetrics = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
@@ -39,7 +30,16 @@ function LiveFeed() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
+
+  useEffect(() => {
+    fetchLiveMetrics();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLiveMetrics, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchLiveMetrics]);
 
   const fetchDeliveryTimes = async () => {
     try {
