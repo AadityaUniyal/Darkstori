@@ -94,38 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Upgrade Guide
-
-### Upgrading from 1.0.0 to 2.0.0
-
-1. **Backup your database**
-   ```bash
-   pg_dump darkstori_db > backup_v1.sql
-   ```
-
-2. **Update dependencies**
-   ```bash
-   pip install -r requirements/prod.txt
-   cd frontend && npm install
-   ```
-
-3. **Run database migrations**
-   ```bash
-   alembic upgrade head
-   ```
-
-4. **Update environment variables**
-   - Add `MLFLOW_TRACKING_URI`
-   - Add `REDIS_URL`
-   - Update `DATABASE_URL` if using Neon
-
-5. **Restart services**
-   ```bash
-   docker-compose down
-   docker-compose up -d
-   ```
-
----
 
 ## Contributing
 
