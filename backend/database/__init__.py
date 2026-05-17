@@ -1,1 +1,24 @@
-"""Database module for backend."""
+"""
+Database Package
+Contains database models, connections, and migration scripts
+"""
+
+from database.connection import (
+    AsyncSessionLocal,
+    close_db,
+    engine,
+    get_async_session,
+    get_db,
+    init_db,
+)
+from database.models import Base
+
+__all__ = [
+    "engine",
+    "AsyncSessionLocal",
+    "get_db",
+    "get_async_session",
+    "init_db",
+    "close_db",
+    "Base",
+]
