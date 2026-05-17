@@ -1,6 +1,147 @@
-# 🏪 Darkstori - Quick Commerce Intelligence Platform
+# 🏪 Darkstori - Hyperlocal Delivery Intelligence Platform
 
-> AI-powered analytics platform for dark store optimization, coverage gap analysis, and demand forecasting in India's quick commerce market.
+> **The only platform that tells you EXACTLY what type of store to open, where to open it, what to stock, how to price it, and when you'll profit - with 90% accuracy**
+
+## 📋 **START HERE**: [PROJECT_MASTER_PLAN.md](PROJECT_MASTER_PLAN.md)
+
+**Read the master plan first** - it contains everything you need to know about:
+
+- Current situation
+- Our vision
+- What we're building
+- How we'll build it
+- Timeline & action plan
+
+---
+
+## Quick Summary
+
+### What We Do:
+
+Analyze order history from neighborhoods → Recommend exact store type, inventory, pricing, layout, and ROI predictions
+
+### Focus Cities:
+
+🎯 Bangalore | Delhi | Mumbai | Hyderabad | Pune
+
+### Unique Features:
+
+1. 🧬 Neighborhood DNA Analysis
+2. 🌡️ Temporal Demand Heatmaps (4D)
+3. 🕵️ Competitive Intelligence
+4. 💬 Sentiment Flow Analysis
+5. 🌊 Order Flow Visualization
+6. 💰 ROI Prediction Engine
+7. 🎮 Store Performance Simulator
+8. 📦 Inventory Recommendation Engine (SKU-level)
+9. 💵 Pricing Strategy Generator
+10. 🏪 Store Layout Optimizer
+
+---
+
+## 🚀 Quick Start
+
+### 1. Read the Master Plan
+
+```bash
+cat PROJECT_MASTER_PLAN.md
+```
+
+### 2. Backup Database
+
+```bash
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
+```
+
+### 3. Start Implementation
+
+```bash
+# Create migration
+alembic revision -m "refocus_complete_schema"
+
+# Follow Week 1 tasks in PROJECT_MASTER_PLAN.md
+```
+
+---
+
+## 📊 Project Status
+
+**Current Phase**: Refocusing & Restructuring  
+**Timeline**: 3 weeks to complete  
+**Target Launch**: June 3, 2026
+
+---
+
+## 📁 Key Files
+
+- **[PROJECT_MASTER_PLAN.md](PROJECT_MASTER_PLAN.md)** ⭐ - Complete blueprint (READ THIS FIRST)
+- **[SECURITY.md](SECURITY.md)** - Security policies
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
+
+---
+
+## 🎯 Our Vision
+
+**From**: "Quick Commerce Intelligence Platform tracking 4,400 stores"
+
+**To**: "Hyperlocal Delivery Intelligence Platform that provides prescriptive analytics - telling you exactly what to do, not just what might happen"
+
+---
+
+## 💡 Example Output
+
+```
+RECOMMENDATION FOR ELECTRONIC CITY PHASE 1:
+
+Store Type: Hybrid Dark Store
+Investment: ₹30 Lakhs
+
+Inventory:
+- Groceries (60%): ₹8L - Stock these 200 SKUs
+- Ready-to-eat (25%): ₹5L - Stock these 80 SKUs
+- Personal care (15%): ₹3L - Stock these 50 SKUs
+
+Pricing Strategy:
+- Mid-market segment
+- Average order value: ₹480
+- Peak hour markup: 5%
+
+Store Layout:
+- 2000 sqft optimized layout
+- Entrance: Snacks & beverages
+- Main: Groceries (60%)
+- Back: Ready-to-eat (25%)
+
+Predictions:
+- Daily orders: 250
+- Monthly revenue: ₹36L
+- Monthly profit: ₹14L
+- Break-even: Month 3
+- ROI: 7 months (85% confidence)
+
+Why: 0 stores, 50K population, high demand
+```
+
+---
+
+## 🏗️ Tech Stack
+
+**Backend**: FastAPI, PostgreSQL, MLflow, Redis  
+**ML**: XGBoost, Random Forest, Scikit-learn  
+**Frontend**: React, Vite, Recharts, Leaflet  
+**DevOps**: Docker, GitHub Actions, Nginx
+
+---
+
+## 📞 Contact
+
+**Aaditya Uniyal**  
+Email: aaditya.uniyal22@gmail.com  
+GitHub: [@AadityaUniyal](https://github.com/AadityaUniyal)
+
+---
+
+**⭐ Read [PROJECT_MASTER_PLAN.md](PROJECT_MASTER_PLAN.md) to get started!**
 
 [![CI](https://github.com/AadityaUniyal/Darkstori/actions/workflows/ci.yml/badge.svg)](https://github.com/AadityaUniyal/Darkstori/actions/workflows/ci.yml)
 [![CD](https://github.com/AadityaUniyal/Darkstori/actions/workflows/cd.yml/badge.svg)](https://github.com/AadityaUniyal/Darkstori/actions/workflows/cd.yml)
@@ -11,11 +152,13 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- 
+<!--
 🚀 **Live Demo**: [Coming Soon]
 -->
-📖 **Documentation**: 
-- [API Docs](http://localhost:8000/api/docs) 
+
+📖 **Documentation**:
+
+- [API Docs](http://localhost:8000/api/docs)
 - [Database Setup](docs/QUICK_START_DATABASE.md)
 - [Live Feed Strategy](docs/LIVE_FEED_STRATEGY.md)
 - [Live Feed Quick Start](docs/QUICK_START_LIVE_FEED.md)
@@ -25,6 +168,7 @@
 ---
 
 ## 📋 Table of Contents
+
 - [Problem Statement](#-problem-statement)
 - [Our Solution](#-our-solution)
 - [🆕 Live Delivery Feed](#-live-delivery-feed-new)
@@ -44,6 +188,7 @@
 India's quick commerce market is experiencing explosive growth, but faces critical challenges:
 
 ### The Challenge
+
 - **Market Fragmentation**: 4,400+ dark stores scattered across India with no centralized intelligence
 - **Coverage Gaps**: 78% of PIN codes remain unserved, representing massive untapped potential
 - **Inefficient Expansion**: Companies lack data-driven insights for strategic dark store placement
@@ -51,6 +196,7 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - **Competitive Blindness**: Limited visibility into competitor strategies and market dynamics
 
 ### The Impact
+
 - Lost revenue opportunities in underserved markets
 - Inefficient capital allocation in dark store expansion
 - Poor inventory management leading to waste
@@ -64,30 +210,35 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 **Darkstori** is an enterprise-grade intelligence platform that transforms quick commerce operations through:
 
 ### 🎯 Intelligent Coverage Analysis
+
 - **Real-time mapping** of 4,400+ dark stores across India
 - **Gap identification** in 300+ underserved PIN codes
 - **Coverage scoring** algorithm to quantify market penetration
 - **Geospatial clustering** to identify optimal expansion zones
 
 ### 📊 AI-Powered Demand Forecasting
+
 - **Machine Learning models** (XGBoost, Random Forest, Gradient Boosting) for 90-day demand prediction
 - **Time-series analysis** using Prophet for seasonal pattern detection
 - **Multi-factor forecasting** incorporating demographics, competition, and historical data
 - **Accuracy metrics** with 85%+ prediction reliability
 
 ### 🗺️ Strategic Expansion Planning
+
 - **Opportunity zone identification** using DBSCAN clustering
 - **ROI-based prioritization** for new dark store locations
 - **Competitive analysis** across platforms (Blinkit, Zepto, Swiggy Instamart)
 - **Market saturation indicators** to prevent over-expansion
 
 ### 📈 Real-Time Business Intelligence
+
 - **Live dashboards** with interactive visualizations
 - **Performance metrics** tracking across all stores
 - **Predictive analytics** for inventory optimization
 - **Automated reporting** for stakeholder updates
 
 ### 📡 Live Delivery Feed (NEW!)
+
 - **Real-time delivery tracking** across all platforms
 - **Platform availability monitoring** for 300+ PIN codes
 - **Delivery time estimation** with traffic & demand factors
@@ -101,12 +252,14 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 ## ✨ Key Features
 
 ### 1. 🗺️ Geospatial Intelligence
+
 - Interactive map visualization with 4,400+ dark store locations
 - Heat maps showing demand density and coverage gaps
 - PIN code-level analysis with demographic overlays
 - Distance matrix calculations for delivery optimization
 
 ### 2. 🤖 Machine Learning & MLflow Integration
+
 - **MLflow Experiment Tracking**: Complete experiment lifecycle management
 - **Model Registry**: Version control and stage transitions (Staging → Production → Archived)
 - **Demand Forecasting**: 90-day predictions with 85%+ accuracy using ensemble models
@@ -118,6 +271,7 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - **Batch Predictions**: Process large datasets efficiently with chunking
 
 ### 3. 📊 Business Intelligence Dashboard
+
 - Real-time KPI tracking (coverage %, demand trends, ROI)
 - Platform comparison (Blinkit vs Zepto vs Swiggy Instamart)
 - Predictive insights for inventory and capacity planning
@@ -125,6 +279,7 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - MLflow UI integration for model monitoring
 
 ### 4. 🔒 Enterprise-Grade Security
+
 - JWT-based authentication and authorization
 - Admin-only access for model transitions
 - Rate limiting (60 requests/minute per user)
@@ -132,6 +287,7 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - Encrypted data storage and transmission
 
 ### 5. 🚀 High Performance & Observability
+
 - Sub-100ms prediction latency
 - Redis caching for frequently accessed data
 - Async operations for concurrent request handling
@@ -315,41 +471,45 @@ darkstori/
 ## 🛠️ Tech Stack
 
 ### Backend
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **FastAPI** | High-performance web framework | 0.109+ |
-| **SQLAlchemy** | ORM for database operations | 2.0+ |
-| **PostgreSQL/Neon** | Primary database | 15+ |
-| **Redis** | Caching layer | 7+ |
-| **Celery** | Async task queue | 5.3+ |
-| **MLflow** | ML lifecycle management | 2.9+ |
-| **Prometheus** | Metrics & monitoring | Latest |
+
+| Technology          | Purpose                        | Version |
+| ------------------- | ------------------------------ | ------- |
+| **FastAPI**         | High-performance web framework | 0.109+  |
+| **SQLAlchemy**      | ORM for database operations    | 2.0+    |
+| **PostgreSQL/Neon** | Primary database               | 15+     |
+| **Redis**           | Caching layer                  | 7+      |
+| **Celery**          | Async task queue               | 5.3+    |
+| **MLflow**          | ML lifecycle management        | 2.9+    |
+| **Prometheus**      | Metrics & monitoring           | Latest  |
 
 ### Machine Learning
-| Technology | Purpose |
-|------------|---------|
-| **MLflow** | Experiment tracking & model registry |
-| **Scikit-learn** | ML model training |
-| **XGBoost** | Gradient boosting |
-| **SHAP** | Model explainability |
-| **Pandas** | Data manipulation |
-| **NumPy** | Numerical computing |
-| **Joblib** | Model serialization |
+
+| Technology       | Purpose                              |
+| ---------------- | ------------------------------------ |
+| **MLflow**       | Experiment tracking & model registry |
+| **Scikit-learn** | ML model training                    |
+| **XGBoost**      | Gradient boosting                    |
+| **SHAP**         | Model explainability                 |
+| **Pandas**       | Data manipulation                    |
+| **NumPy**        | Numerical computing                  |
+| **Joblib**       | Model serialization                  |
 
 ### Frontend
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **React** | UI framework | 18.2+ |
-| **Vite** | Build tool | 5.0+ |
-| **React Router** | Routing | 6.21+ |
-| **Axios** | HTTP client | 1.6+ |
-| **React Query** | Data fetching | 5.14+ |
-| **Recharts** | Data visualization | 2.10+ |
-| **Leaflet** | Interactive maps | 1.9+ |
-| **Framer Motion** | Animations | 10.16+ |
-| **Zustand** | State management | 4.4+ |
+
+| Technology        | Purpose            | Version |
+| ----------------- | ------------------ | ------- |
+| **React**         | UI framework       | 18.2+   |
+| **Vite**          | Build tool         | 5.0+    |
+| **React Router**  | Routing            | 6.21+   |
+| **Axios**         | HTTP client        | 1.6+    |
+| **React Query**   | Data fetching      | 5.14+   |
+| **Recharts**      | Data visualization | 2.10+   |
+| **Leaflet**       | Interactive maps   | 1.9+    |
+| **Framer Motion** | Animations         | 10.16+  |
+| **Zustand**       | State management   | 4.4+    |
 
 ### DevOps & Infrastructure
+
 - **Docker** & **Docker Compose** for containerization
 - **GitHub Actions** for CI/CD
 - **Nginx** as reverse proxy
@@ -360,6 +520,7 @@ darkstori/
 ## 🔄 Workflow Overview
 
 ### 1. Data Collection Pipeline
+
 ```
 External APIs → Web Scrapers → Raw Data Storage
      ↓              ↓                ↓
@@ -369,6 +530,7 @@ Geocoding API                PIN Codes
 ```
 
 ### 2. Data Processing Pipeline
+
 ```
 Raw Data → Cleaning → Feature Engineering → Database Storage
     ↓         ↓              ↓                    ↓
@@ -378,6 +540,7 @@ Formatting  Merge    Competition          (Neon DB)
 ```
 
 ### 3. Machine Learning Pipeline
+
 ```
 Training Data → MLflow Tracking → Model Training → Evaluation → Model Registry
       ↓              ↓                 ↓              ↓              ↓
@@ -388,6 +551,7 @@ Training Data → MLflow Tracking → Model Training → Evaluation → Model Re
 ```
 
 ### 4. Prediction Pipeline
+
 ```
 User Request → Model Loading → Feature Prep → Inference → Monitoring → Response
      ↓             ↓               ↓             ↓            ↓           ↓
@@ -397,6 +561,7 @@ User Request → Model Loading → Feature Prep → Inference → Monitoring →
 ```
 
 ### 5. MLflow Workflow
+
 ```
 Experiment → Run Tracking → Model Registry → Deployment → Monitoring
      ↓            ↓               ↓              ↓            ↓
@@ -407,6 +572,7 @@ Experiment → Run Tracking → Model Registry → Deployment → Monitoring
 ```
 
 ### 5. API Request Flow
+
 ```
 Client Request → Authentication → Rate Limiting → Business Logic → Database Query → Response
       ↓              ↓                ↓                ↓                ↓            ↓
@@ -416,6 +582,7 @@ Client Request → Authentication → Rate Limiting → Business Logic → Datab
 ```
 
 ### 6. Frontend Data Flow
+
 ```
 User Action → API Call → State Update → UI Re-render → User Feedback
      ↓           ↓            ↓             ↓              ↓
@@ -425,6 +592,7 @@ User Action → API Call → State Update → UI Re-render → User Feedback
 ```
 
 ### 7. Monitoring & Observability
+
 ```
 Application → Metrics Collection → Prometheus → Grafana → Alerts
      ↓              ↓                    ↓           ↓         ↓
@@ -439,6 +607,7 @@ Application → Metrics Collection → Prometheus → Grafana → Alerts
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Python** 3.11 or higher
 - **Node.js** 18 or higher
 - **PostgreSQL** 15+ (or Neon DB account)
@@ -448,12 +617,14 @@ Application → Metrics Collection → Prometheus → Grafana → Alerts
 ### Installation
 
 #### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/AadityaUniyal/Darkstori.git
 cd Darkstori
 ```
 
 #### 2. Backend Setup
+
 ```bash
 # Navigate to backend
 cd backend
@@ -495,6 +666,7 @@ Backend will be available at http://localhost:8000
 MLflow UI will be available at http://localhost:5000
 
 #### 3. Frontend Setup
+
 ```bash
 # Open new terminal
 cd frontend
@@ -507,6 +679,7 @@ npm run dev
 ```
 
 #### 4. Database Setup
+
 ```bash
 # Open new terminal
 cd database
@@ -522,6 +695,7 @@ python scripts/seed_data.py
 ```
 
 **📚 Database Documentation:**
+
 - [Database Schema](docs/DATABASE_SCHEMA.md) - Complete table documentation
 - [Quick Start Guide](docs/QUICK_START_DATABASE.md) - Setup and usage guide
 - [Fix Summary](DATABASE_FIX_SUMMARY.md) - Recent database updates
@@ -565,20 +739,21 @@ VITE_API_URL=http://localhost:8000
 
 ### Access the Application
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Frontend** | http://localhost:5173 | React dashboard |
-| **Backend API** | http://localhost:8000 | FastAPI backend |
-| **API Docs** | http://localhost:8000/api/docs | Swagger UI |
-| **MLflow UI** | http://localhost:5000 | MLflow tracking server |
-| **Metrics** | http://localhost:8000/metrics | Prometheus metrics |
-| **Health Check** | http://localhost:8000/health | System status |
+| Service          | URL                            | Description            |
+| ---------------- | ------------------------------ | ---------------------- |
+| **Frontend**     | http://localhost:5173          | React dashboard        |
+| **Backend API**  | http://localhost:8000          | FastAPI backend        |
+| **API Docs**     | http://localhost:8000/api/docs | Swagger UI             |
+| **MLflow UI**    | http://localhost:5000          | MLflow tracking server |
+| **Metrics**      | http://localhost:8000/metrics  | Prometheus metrics     |
+| **Health Check** | http://localhost:8000/health   | System status          |
 
 ---
 
 ## 📚 API Documentation
 
 ### Authentication
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -590,6 +765,7 @@ Content-Type: application/json
 ```
 
 ### ML Predictions
+
 ```http
 POST /api/v1/ml/predict
 Authorization: Bearer <token>
@@ -607,6 +783,7 @@ Content-Type: application/json
 ```
 
 ### Batch Predictions
+
 ```http
 POST /api/v1/ml/predict/batch
 Authorization: Bearer <token>
@@ -616,12 +793,14 @@ file: predictions.csv
 ```
 
 ### Model Information
+
 ```http
 GET /api/v1/ml/model/info?model_name=demand_forecasting_model&stage=Production
 Authorization: Bearer <token>
 ```
 
 ### Model Transition (Admin Only)
+
 ```http
 POST /api/v1/ml/model/transition
 Authorization: Bearer <admin_token>
@@ -636,18 +815,21 @@ Content-Type: application/json
 ```
 
 ### Performance Monitoring
+
 ```http
 GET /api/v1/ml/performance?model_name=demand_forecasting_model&window_days=30
 Authorization: Bearer <token>
 ```
 
 ### Drift Detection
+
 ```http
 GET /api/v1/ml/drift?model_name=demand_forecasting_model
 Authorization: Bearer <token>
 ```
 
 ### Training Job
+
 ```http
 POST /api/v1/ml/train
 Authorization: Bearer <admin_token>
@@ -660,18 +842,21 @@ Content-Type: application/json
 ```
 
 ### Get Stores
+
 ```http
 GET /api/stores?limit=100&offset=0
 Authorization: Bearer <token>
 ```
 
 ### Coverage Analysis
+
 ```http
 GET /api/analytics/coverage?pincode=110001
 Authorization: Bearer <token>
 ```
 
 ### Opportunity Zones
+
 ```http
 GET /api/analytics/opportunity-zones?min_score=0.7
 Authorization: Bearer <token>
@@ -719,6 +904,7 @@ We welcome contributions! Please follow these steps:
 5. **Open** a Pull Request
 
 ### Coding Standards
+
 - Follow PEP 8 for Python code
 - Use ESLint configuration for JavaScript/React
 - Write meaningful commit messages
@@ -736,6 +922,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Authors
 
 **Aaditya Uniyal**
+
 - Email: aaditya.uniyal22@gmail.com
 - GitHub: [@AadityaUniyal](https://github.com/AadityaUniyal)
 
@@ -760,6 +947,7 @@ For support, email aaditya.uniyal22@gmail.com or open an issue on GitHub.
 ## 🗺️ Roadmap
 
 ### Completed ✅
+
 - [x] Core API with FastAPI
 - [x] Database integration with PostgreSQL/Neon
 - [x] MLflow experiment tracking and model registry
@@ -773,11 +961,13 @@ For support, email aaditya.uniyal22@gmail.com or open an issue on GitHub.
 - [x] Admin authentication for model management
 
 ### In Progress 🚧
+
 - [ ] Frontend dashboard enhancements
 - [ ] Real-time notifications
 - [ ] Advanced visualization charts
 
 ### Planned 📋
+
 - [ ] Live delivery feed with real-time tracking
 - [ ] Daily intelligence briefings (email/WhatsApp)
 - [ ] Crowdsourced data collection app
@@ -798,26 +988,31 @@ For support, email aaditya.uniyal22@gmail.com or open an issue on GitHub.
 ### **Primary Customers (B2B)**
 
 #### Quick Commerce Companies 💰
+
 - **Who**: Blinkit, Zepto, Swiggy Instamart, Dunzo, BigBasket
 - **Value**: Real-time competitive intelligence, expansion planning, demand forecasting
 - **Pricing**: ₹2-5 Lakhs/month
 
 #### Dark Store Operators 💼
+
 - **Who**: Individual store managers, franchise owners
 - **Value**: Daily performance metrics, local demand predictions, inventory optimization
 - **Pricing**: ₹5,000-15,000/month
 
 #### Investors & VCs 📊
+
 - **Who**: Investment firms tracking quick commerce sector
 - **Value**: Market intelligence, growth trends, platform comparison
 - **Pricing**: ₹50,000-2 Lakhs/month
 
 #### FMCG Brands 🏭
+
 - **Who**: Brands selling through quick commerce
 - **Value**: Product performance tracking, demand forecasting, pricing intelligence
 - **Pricing**: ₹25,000-1 Lakh/month
 
 ### **Market Opportunity**
+
 - **Total Addressable Market**: ₹60-216 Cr/year
 - **Target**: 4,400+ dark stores, 6-8 major platforms, 100+ brands
 - **Unique Value**: Daily intelligence briefings + Real-time competitive insights
@@ -828,4 +1023,4 @@ For support, email aaditya.uniyal22@gmail.com or open an issue on GitHub.
 
 ---
 
-*Built with ❤️ for India's quick commerce revolution*
+_Built with ❤️ for India's quick commerce revolution_
