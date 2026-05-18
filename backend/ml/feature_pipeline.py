@@ -355,6 +355,7 @@ class FeaturePipeline:
         random_seed: int = 42,
         scaling_method: str = "standard",
         handle_missing: str = "median",
+        time_series_split: bool = False,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str]]:
         """Prepare features for training with logging.
 
@@ -365,6 +366,7 @@ class FeaturePipeline:
             random_seed: Random seed
             scaling_method: Scaling method (standard, robust, none)
             handle_missing: Missing value strategy
+            time_series_split: Use chronological split instead of random
 
         Returns:
             Tuple of (X_train, X_test, y_train, y_test, feature_names)
@@ -393,12 +395,20 @@ class FeaturePipeline:
             # Store feature names
             self.feature_names = list(X.columns)
 
-            # Train-test split
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, random_state=random_seed
-            )
-
-            self.log_train_test_split(test_size, random_seed)
+            # Train-test split (chronological for time series)
+            if time_series_split and "order_date" in X.columns:
+                sort_idx = X["order_date"].argsort()
+                X = X.iloc[sort_idx]
+                y = y.iloc[sort_idx]
+                split_idx = int(len(X) * (1 - test_size))
+                X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
+                y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+                self.log_train_test_split(test_size, random_seed, time_series_split=True)
+            else:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=test_size, random_state=random_seed
+                )
+                self.log_train_test_split(test_size, random_seed)
 
             # Log dataset sizes
             if self.tracker:
