@@ -41,8 +41,8 @@ class ModelLoader:
         # Cache TTL from settings
         self.cache_ttl_seconds = settings.MODEL_CACHE_TTL_SECONDS
 
-        # Lock for thread-safe access
-        self._lock = threading.Lock()
+        # Lock for thread-safe access (RLock allows re-entrant calls)
+        self._lock = threading.RLock()
 
         logger.info("ModelLoader initialized")
 
