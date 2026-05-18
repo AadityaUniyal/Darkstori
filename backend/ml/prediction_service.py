@@ -1,9 +1,5 @@
-"""Prediction Service for ML Models.
-
-This module provides a service layer for making predictions
-using MLflow-registered models with input validation and monitoring.
-"""
-
+"""Prediction Service for ML Models."""
+import asyncio
 import logging
 import time
 import uuid
@@ -12,13 +8,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.config import settings
 from backend.ml.model_loader import ModelLoader
-from backend.ml.model_registry import ModelRegistry
 from backend.ml.performance_monitor import PerformanceMonitor
 from backend.ml.schemas import PredictionRequest, PredictionResponse
+from database.models.models import Neighborhood
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +25,10 @@ class PredictionService:
     def __init__(
         self, model_loader: ModelLoader, db_session: Optional[AsyncSession] = None
     ):
-        """Initialize prediction service.
-
-        Args:
-            model_loader: ModelLoader instance for loading models
-            db_session: Database session for logging predictions (optional)
-        """
         self.model_loader = model_loader
         self.db_session = db_session
         self.default_model_name = "demand_forecasting_model"
 
-        # Initialize performance monitor if db_session provided
         self.monitor = None
         if db_session:
             self.monitor = PerformanceMonitor(db_session)
@@ -49,71 +38,85 @@ class PredictionService:
     async def predict(
         self, request: PredictionRequest, model_name: Optional[str] = None
     ) -> PredictionResponse:
-        """Make a single prediction.
-
-        Args:
-            request: Prediction request with input data
-            model_name: Model name (uses default if not provided)
-
-        Returns:
-            PredictionResponse with prediction and metadata
-        """
         start_time = time.time()
         model_name = model_name or self.default_model_name
 
         try:
-            # Load production model
-            model, scaler, feature_names = self.model_loader.load_production_model(
-                model_name, force_reload=False
+            # Load production model (sync call -> thread)
+            model, scaler, feature_names = await asyncio.to_thread(
+                self.model_loader.load_production_model, model_name, False
             )
 
-            # Prepare input data
-            input_df = self._prepare_input(request)
+            # Look up neighborhood demographics from pincode
+            nbhd = await self._lookup_neighborhood(request.pincode)
+            if nbhd is None:
+                raise ValueError(f"No neighborhood found for pincode: {request.pincode}")
 
-            # Engineer features
-            features = self._engineer_features(input_df)
+            # Build input DataFrame matching training features exactly
+            dt = pd.to_datetime(request.order_date)
+            nbhd_mean = nbhd.get("avg_daily_orders", 300)
+            is_holiday = nbhd.get("is_holiday", 0)
+            row = {
+                "order_date": dt.toordinal(),
+                "population": request.population or nbhd.get("population", 50000),
+                "population_density": nbhd.get("population_density", 5000),
+                "avg_household_income": nbhd.get("avg_household_income", 400000),
+                "working_professionals_pct": nbhd.get("working_professionals_pct", 60),
+                "platform_count": request.platform_count or 3,
+                "day_of_week": dt.dayofweek,
+                "is_weekend": int(dt.dayofweek >= 5),
+                "is_holiday": is_holiday,
+                "weather_Cloudy": 0,
+                "weather_Rainy": 0,
+                "avg_order_value": nbhd.get("avg_order_value", 450),
+                "avg_discount": nbhd.get("avg_discount", 30),
+                "total_stores": nbhd.get("total_stores", 5),
+                "comp_level": nbhd.get("comp_level", 1),
+                "lag_1": nbhd_mean,
+                "lag_7": nbhd_mean,
+                "rolling_7": nbhd_mean,
+                "lag_14": nbhd_mean,
+                "rolling_14": nbhd_mean,
+                "platform_diversity": nbhd.get("platform_diversity", 0.6),
+                "category_diversity": nbhd.get("category_diversity", 0.6),
+            }
+            input_df = pd.DataFrame([row])
 
-            # Validate features
-            self._validate_features(features, feature_names)
+            # Select only the features the model expects
+            if feature_names:
+                missing = set(feature_names) - set(input_df.columns)
+                if missing:
+                    for col in missing:
+                        input_df[col] = 0
+                input_df = input_df[feature_names]
 
-            # Scale features if scaler available
+            # Scale (preserve column names for MLflow signature validation)
             if scaler is not None:
                 try:
-                    features_scaled = scaler.transform(features)
+                    scaled = scaler.transform(input_df)
+                    input_df = pd.DataFrame(scaled, columns=input_df.columns, index=input_df.index)
                 except Exception as e:
-                    logger.warning(
-                        f"Scaler transform failed: {e}, using unscaled features"
-                    )
-                    features_scaled = features.values
-            else:
-                features_scaled = features.values
+                    logger.warning(f"Scaler transform failed: {e}, using raw")
 
-            # Make prediction
-            prediction = model.predict(features_scaled)[0]
-
-            # Calculate confidence intervals
+            # Predict with DataFrame (MLflow pyfunc requires named columns with float64)
+            prediction = model.predict(input_df.astype(float))[0]
             lower_bound, upper_bound = self._calculate_confidence_intervals(
-                prediction, features_scaled
+                prediction, input_df.values
             )
 
-            # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
-
-            # Generate prediction ID
             prediction_id = self._generate_prediction_id()
 
-            # Get model version
             model_info = self.model_loader.get_model_info(model_name)
             model_version = (
                 model_info.get("version", "unknown") if model_info else "unknown"
             )
 
-            # Log prediction for monitoring
             await self._log_prediction(
                 prediction_id=prediction_id,
                 model_name=model_name,
                 model_version=str(model_version),
-                input_data=request.model_dump(),
+                input_data=row,
                 prediction=float(prediction),
                 lower_bound=float(lower_bound),
                 upper_bound=float(upper_bound),
@@ -121,7 +124,7 @@ class PredictionService:
             )
 
             logger.info(
-                f"Prediction made: {prediction:.2f} for {request.city} "
+                f"Prediction: {prediction:.2f} for pincode {request.pincode} "
                 f"(latency: {latency_ms:.2f}ms)"
             )
 
@@ -136,6 +139,9 @@ class PredictionService:
                 timestamp=datetime.now().isoformat(),
             )
 
+        except ValueError as e:
+            logger.error(f"Validation error: {e}")
+            raise
         except Exception as e:
             logger.error(f"Prediction failed: {e}", exc_info=True)
             raise
@@ -146,83 +152,80 @@ class PredictionService:
         output_path: Optional[str] = None,
         model_name: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Process batch predictions from CSV file.
-
-        Args:
-            file_path: Path to input CSV file
-            output_path: Path for output CSV (optional)
-            model_name: Model name (uses default if not provided)
-
-        Returns:
-            Dictionary with batch job results
-        """
         start_time = time.time()
         model_name = model_name or self.default_model_name
 
         try:
-            # Load production model
-            model, scaler, feature_names = self.model_loader.load_production_model(
-                model_name, force_reload=False
+            model, scaler, feature_names = await asyncio.to_thread(
+                self.model_loader.load_production_model, model_name, False
             )
 
-            # Read input CSV
             input_df = pd.read_csv(file_path)
-
-            # Validate required columns
             self._validate_batch_input(input_df)
 
-            # Process in chunks for memory efficiency
             chunk_size = 1000
             predictions = []
             lower_bounds = []
             upper_bounds = []
 
             for i in range(0, len(input_df), chunk_size):
-                chunk = input_df.iloc[i : i + chunk_size]
+                chunk = input_df.iloc[i : i + chunk_size].copy()
 
-                # Engineer features
-                features = self._engineer_features(chunk)
+                # Engineer features matching training
+                dt = pd.to_datetime(chunk["order_date"])
+                chunk["order_date"] = dt.map(pd.Timestamp.toordinal)
+                chunk["day_of_week"] = dt.dt.dayofweek
+                chunk["is_weekend"] = (dt.dt.dayofweek >= 5).astype(int)
+                chunk["is_holiday"] = chunk.get("is_holiday", 0)
+                chunk["weather_Cloudy"] = chunk.get("weather_Cloudy", 0)
+                chunk["weather_Rainy"] = chunk.get("weather_Rainy", 0)
+                chunk["avg_order_value"] = chunk.get("avg_order_value", 450)
+                chunk["avg_discount"] = chunk.get("avg_discount", 30)
+                chunk["total_stores"] = chunk.get("total_stores", 5)
+                chunk["comp_level"] = chunk.get("comp_level", 1)
+                chunk["lag_1"] = chunk.get("lag_1", 300)
+                chunk["lag_7"] = chunk.get("lag_7", 300)
+                chunk["rolling_7"] = chunk.get("rolling_7", 300)
+                chunk["lag_14"] = chunk.get("lag_14", 300)
+                chunk["rolling_14"] = chunk.get("rolling_14", 300)
+                chunk["platform_diversity"] = chunk.get("platform_diversity", 0.6)
+                chunk["category_diversity"] = chunk.get("category_diversity", 0.6)
 
-                # Scale features
-                if scaler is not None:
-                    features_scaled = scaler.transform(features)
+                for col in ["population_density", "avg_household_income", "working_professionals_pct", "platform_count"]:
+                    if col not in chunk.columns:
+                        chunk[col] = 0
+
+                if feature_names:
+                    missing = set(feature_names) - set(chunk.columns)
+                    for col in missing:
+                        chunk[col] = 0
+                    features = chunk[feature_names]
                 else:
-                    features_scaled = features.values
+                    features = chunk.select_dtypes(include=[np.number])
 
-                # Make predictions
-                chunk_predictions = model.predict(features_scaled)
+                features = features.fillna(features.median())
+
+                if scaler is not None:
+                    scaled = scaler.transform(features)
+                    features = pd.DataFrame(scaled, columns=features.columns, index=features.index)
+
+                chunk_predictions = model.predict(features)
                 predictions.extend(chunk_predictions)
-
-                # Calculate confidence intervals
                 for pred in chunk_predictions:
-                    lower, upper = self._calculate_confidence_intervals(pred, None)
-                    lower_bounds.append(lower)
-                    upper_bounds.append(upper)
+                    lo, hi = self._calculate_confidence_intervals(pred, None)
+                    lower_bounds.append(lo)
+                    upper_bounds.append(hi)
 
-                logger.info(
-                    f"Processed {min(i+chunk_size, len(input_df))}/{len(input_df)} rows"
-                )
-
-            # Add predictions to dataframe
             input_df["prediction"] = predictions
             input_df["lower_bound"] = lower_bounds
             input_df["upper_bound"] = upper_bounds
 
-            # Save output
             if output_path is None:
                 output_path = file_path.replace(".csv", "_predictions.csv")
-
             input_df.to_csv(output_path, index=False)
 
-            # Calculate processing time
             processing_time = time.time() - start_time
-
-            # Generate job ID
             job_id = f"batch_{datetime.now().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}"
-
-            logger.info(
-                f"Batch prediction completed: {len(input_df)} rows in {processing_time:.2f}s"
-            )
 
             return {
                 "job_id": job_id,
@@ -231,10 +234,8 @@ class PredictionService:
                 "output_path": output_path,
                 "processing_time_seconds": processing_time,
                 "model_name": model_name,
-                "model_version": str(
-                    self.model_loader.get_model_info(model_name).get(
-                        "version", "unknown"
-                    )
+                "version": str(
+                    self.model_loader.get_model_info(model_name).get("version", "unknown")
                 ),
             }
 
@@ -242,145 +243,99 @@ class PredictionService:
             logger.error(f"Batch prediction failed: {e}", exc_info=True)
             raise
 
-    def _prepare_input(self, request: PredictionRequest) -> pd.DataFrame:
-        """Prepare input data from request.
-
-        Args:
-            request: Prediction request
-
-        Returns:
-            DataFrame with input data
-        """
-        return pd.DataFrame(
-            [
-                {
-                    "pincode": request.pincode,
-                    "order_date": request.order_date,
-                    "population": request.population,
-                    "coverage_score": request.coverage_score,
-                    "city_tier": request.city_tier,
-                    "city": request.city,
-                    "state": request.state,
+    async def _lookup_neighborhood(self, pincode: str) -> Optional[Dict[str, Any]]:
+        if not self.db_session:
+            return self._default_nbhd()
+        try:
+            from sqlalchemy import text as sql_text
+            q = sql_text("""
+                SELECT n.population, n.population_density, n.avg_household_income,
+                       n.working_professionals_pct, n.total_stores,
+                       CASE n.competition_intensity
+                           WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 1 ELSE 0
+                       END AS comp_level,
+                       COALESCE(AVG(o.order_count), 300) AS avg_daily_orders,
+                       COALESCE(AVG(o.avg_ord_val), 450) AS avg_order_value,
+                       COALESCE(AVG(o.avg_disc), 30) AS avg_discount,
+                       COALESCE(AVG(dv.plat_div), 0.6) AS platform_diversity,
+                       COALESCE(AVG(dv.cat_div), 0.6) AS category_diversity
+                FROM neighborhoods n
+                LEFT JOIN (
+                    SELECT neighborhood_id, COUNT(*)::float8 AS order_count,
+                           AVG(order_value) AS avg_ord_val,
+                           AVG(discount) AS avg_disc
+                    FROM orders_synthetic
+                    GROUP BY neighborhood_id, order_date
+                ) o ON o.neighborhood_id = n.neighborhood_id
+                LEFT JOIN (
+                    SELECT order_date, neighborhood_id,
+                           1.0 - SUM((cnt::float8 / total) * (cnt::float8 / total)) AS plat_div,
+                           1.0 - SUM((cnt2::float8 / total2) * (cnt2::float8 / total2)) AS cat_div
+                    FROM (
+                        SELECT order_date, neighborhood_id, platform, COUNT(*)::float8 AS cnt,
+                               SUM(COUNT(*)) OVER (PARTITION BY order_date, neighborhood_id)::float8 AS total
+                        FROM orders_synthetic
+                        GROUP BY order_date, neighborhood_id, platform
+                    ) plat_sub
+                    JOIN (
+                        SELECT order_date, neighborhood_id, category, COUNT(*)::float8 AS cnt2,
+                               SUM(COUNT(*)) OVER (PARTITION BY order_date, neighborhood_id)::float8 AS total2
+                        FROM orders_synthetic
+                        GROUP BY order_date, neighborhood_id, category
+                    ) cat_sub USING (order_date, neighborhood_id)
+                    GROUP BY order_date, neighborhood_id
+                ) dv ON dv.neighborhood_id = n.neighborhood_id
+                WHERE n.pincode = :p
+                GROUP BY n.population, n.population_density,
+                         n.avg_household_income, n.working_professionals_pct,
+                         n.total_stores, n.competition_intensity
+            """)
+            result = await self.db_session.execute(q, {"p": pincode})
+            row = result.one_or_none()
+            if row:
+                return {
+                    "population": row.population or 50000,
+                    "population_density": row.population_density or 5000,
+                    "avg_household_income": row.avg_household_income or 400000,
+                    "working_professionals_pct": row.working_professionals_pct or 60,
+                    "total_stores": row.total_stores or 5,
+                    "comp_level": row.comp_level or 1,
+                    "avg_daily_orders": row.avg_daily_orders or 300,
+                    "avg_order_value": row.avg_order_value or 450,
+                    "avg_discount": row.avg_discount or 30,
+                    "platform_diversity": row.platform_diversity or 0.6,
+                    "category_diversity": row.category_diversity or 0.6,
                 }
-            ]
-        )
+        except Exception as e:
+            logger.warning(f"Neighborhood lookup failed for {pincode}: {e}")
+        return self._default_nbhd()
 
-    def _engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Engineer features for prediction.
-
-        This should match the feature engineering in the training pipeline.
-
-        Args:
-            df: Input dataframe
-
-        Returns:
-            DataFrame with engineered features
-        """
-        features = df.copy()
-
-        # Parse order date
-        if "order_date" in features.columns:
-            features["order_date"] = pd.to_datetime(features["order_date"])
-            features["year"] = features["order_date"].dt.year
-            features["month"] = features["order_date"].dt.month
-            features["day"] = features["order_date"].dt.day
-            features["day_of_week"] = features["order_date"].dt.dayofweek
-            features["is_weekend"] = features["day_of_week"].isin([5, 6]).astype(int)
-            features["quarter"] = features["order_date"].dt.quarter
-
-        # City tier encoding
-        if "city_tier" in features.columns:
-            tier_mapping = {"Metro": 4, "Tier1": 3, "Tier2": 2, "Tier3": 1}
-            features["tier_score"] = features["city_tier"].map(tier_mapping)
-
-        # Population features
-        if "population" in features.columns:
-            features["log_population"] = np.log1p(features["population"])
-            features["population_density"] = features["population"] / 1000
-
-        # Coverage features
-        if "coverage_score" in features.columns:
-            features["has_coverage"] = (features["coverage_score"] > 0).astype(int)
-            features["coverage_squared"] = features["coverage_score"] ** 2
-
-        # Select numeric columns only
-        numeric_cols = features.select_dtypes(include=[np.number]).columns
-        features = features[numeric_cols]
-
-        # Fill missing values
-        features = features.fillna(features.median())
-
-        return features
-
-    def _validate_features(
-        self, features: pd.DataFrame, expected_features: Optional[List[str]]
-    ) -> None:
-        """Validate features against expected schema.
-
-        Args:
-            features: Engineered features
-            expected_features: Expected feature names
-        """
-        if expected_features is None:
-            logger.warning("No expected features provided, skipping validation")
-            return
-
-        # Check for missing features
-        missing = set(expected_features) - set(features.columns)
-        if missing:
-            logger.warning(f"Missing features: {missing}")
-
-        # Check for extra features
-        extra = set(features.columns) - set(expected_features)
-        if extra:
-            logger.warning(f"Extra features: {extra}")
+    @staticmethod
+    def _default_nbhd() -> Dict[str, Any]:
+        return {
+            "population": 50000, "population_density": 5000,
+            "avg_household_income": 400000, "working_professionals_pct": 60,
+            "total_stores": 5, "comp_level": 1,
+            "avg_daily_orders": 300, "avg_order_value": 450,
+            "avg_discount": 30, "platform_diversity": 0.6,
+            "category_diversity": 0.6,
+        }
 
     def _validate_batch_input(self, df: pd.DataFrame) -> None:
-        """Validate batch input dataframe.
-
-        Args:
-            df: Input dataframe
-        """
-        required_cols = [
-            "pincode",
-            "order_date",
-            "population",
-            "coverage_score",
-            "city_tier",
-            "city",
-            "state",
-        ]
-
-        missing_cols = set(required_cols) - set(df.columns)
-        if missing_cols:
-            raise ValueError(f"Missing required columns: {missing_cols}")
+        required = ["pincode", "order_date"]
+        missing = set(required) - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
 
     def _calculate_confidence_intervals(
         self, prediction: float, features: Optional[np.ndarray]
     ) -> Tuple[float, float]:
-        """Calculate confidence intervals for prediction.
-
-        Args:
-            prediction: Point prediction
-            features: Input features (optional, for advanced CI calculation)
-
-        Returns:
-            Tuple of (lower_bound, upper_bound)
-        """
-        # Simplified confidence interval (10% margin)
-        # TODO: Implement proper confidence intervals using model uncertainty
         margin = prediction * 0.1
         lower_bound = max(0, prediction - margin)
         upper_bound = prediction + margin
-
         return lower_bound, upper_bound
 
     def _generate_prediction_id(self) -> str:
-        """Generate unique prediction ID.
-
-        Returns:
-            Unique prediction ID
-        """
         return f"pred_{datetime.now().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}"
 
     async def _log_prediction(
@@ -394,18 +349,6 @@ class PredictionService:
         upper_bound: float,
         latency_ms: float,
     ) -> None:
-        """Log prediction for monitoring.
-
-        Args:
-            prediction_id: Unique prediction ID
-            model_name: Model name
-            model_version: Model version
-            input_data: Input data
-            prediction: Prediction value
-            lower_bound: Lower confidence bound
-            upper_bound: Upper confidence bound
-            latency_ms: Prediction latency
-        """
         if self.monitor:
             try:
                 await self.monitor.log_prediction(
@@ -420,7 +363,6 @@ class PredictionService:
                 )
             except Exception as e:
                 logger.error(f"Failed to log prediction: {e}")
-                # Don't raise - monitoring should not break predictions
         else:
             logger.debug(
                 f"Prediction logged (no monitor): {prediction_id} - "
