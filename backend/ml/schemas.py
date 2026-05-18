@@ -15,15 +15,10 @@ from pydantic import BaseModel, Field, field_validator
 class PredictionRequest(BaseModel):
     """Request schema for single prediction."""
 
-    pincode: str = Field(..., description="6-digit PIN code")
+    pincode: str = Field(..., description="6-digit PIN code to look up neighborhood")
     order_date: str = Field(..., description="Order date in YYYY-MM-DD format")
-    population: int = Field(..., ge=0, description="Population of the area")
-    coverage_score: int = Field(
-        ..., ge=0, le=4, description="Platform coverage score (0-4)"
-    )
-    city_tier: str = Field(..., description="City tier (Metro, Tier1, Tier2, Tier3)")
-    city: str = Field(..., description="City name")
-    state: str = Field(..., description="State name")
+    population: Optional[int] = Field(None, ge=0, description="Override population")
+    platform_count: Optional[int] = Field(None, ge=1, description="Override active platform count")
 
     @field_validator("pincode")
     @classmethod
@@ -33,25 +28,11 @@ class PredictionRequest(BaseModel):
             raise ValueError("PIN code must be 6 digits")
         return v
 
-    @field_validator("city_tier")
-    @classmethod
-    def validate_city_tier(cls, v):
-        """Validate city tier."""
-        allowed = ["Metro", "Tier1", "Tier2", "Tier3"]
-        if v not in allowed:
-            raise ValueError(f"City tier must be one of {allowed}")
-        return v
-
     class Config:
         json_schema_extra = {
             "example": {
-                "pincode": "110001",
-                "order_date": "2026-05-10",
-                "population": 50000,
-                "coverage_score": 3,
-                "city_tier": "Metro",
-                "city": "Delhi",
-                "state": "Delhi",
+                "pincode": "560001",
+                "order_date": "2026-05-15",
             }
         }
 
@@ -145,27 +126,6 @@ class ModelInfoResponse(BaseModel):
                 "metrics": {"r2_score": 0.87, "rmse": 45.2, "mae": 32.1},
                 "tags": {"model_type": "xgboost", "training_date": "2026-05-10"},
                 "description": "XGBoost model for demand forecasting",
-            }
-        }
-
-
-class ModelReloadResponse(BaseModel):
-    """Response schema for model reload."""
-
-    model_name: str = Field(..., description="Model name")
-    previous_version: str = Field(..., description="Previous version")
-    current_version: str = Field(..., description="Current version")
-    reloaded: bool = Field(..., description="Whether model was reloaded")
-    message: str = Field(..., description="Status message")
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "model_name": "demand_forecasting_model",
-                "previous_version": "1",
-                "current_version": "2",
-                "reloaded": True,
-                "message": "Model reloaded successfully",
             }
         }
 
