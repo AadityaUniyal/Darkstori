@@ -43,6 +43,7 @@ class MLflowConfig:
     """Main MLflow configuration."""
 
     tracking_uri: str
+    backend_store_uri: str = ""
     artifact_location: str = "./mlruns"
     server: MLflowServerConfig = field(default_factory=MLflowServerConfig)
     experiments: List[ExperimentConfig] = field(default_factory=list)
@@ -50,18 +51,24 @@ class MLflowConfig:
 
     def __post_init__(self):
         """Validate and process configuration after initialization."""
-        # Ensure artifact location exists
         artifact_path = Path(self.artifact_location)
         artifact_path.mkdir(parents=True, exist_ok=True)
 
-        # Substitute environment variables in tracking_uri
         self.tracking_uri = self._substitute_env_vars(self.tracking_uri)
+
+        # If backend_store_uri is not explicitly set, derive from tracking_uri
+        if not self.backend_store_uri:
+            if self.tracking_uri.startswith("http://") or self.tracking_uri.startswith("https://"):
+                self.backend_store_uri = f"file:///{Path(self.artifact_location).absolute()}"
+            else:
+                self.backend_store_uri = self.tracking_uri
+        else:
+            self.backend_store_uri = self._substitute_env_vars(self.backend_store_uri)
 
     @staticmethod
     def _substitute_env_vars(value: str) -> str:
         """Substitute environment variables in configuration values."""
         if isinstance(value, str) and "${" in value:
-            # Extract variable name between ${ and }
             import re
 
             pattern = r"\$\{([^}]+)\}"
@@ -100,16 +107,18 @@ class MLflowConfig:
                 )
             )
 
-        # Create main config
         tracking_uri = mlflow_config.get(
             "tracking_uri", os.getenv("MLFLOW_TRACKING_URI", "")
         )
-        # Substitute environment variables if present
         tracking_uri = cls._substitute_env_vars(tracking_uri)
         artifact_location = mlflow_config.get("artifact_location", "./mlruns")
+        backend_store_uri = mlflow_config.get(
+            "backend_store_uri", os.getenv("MLFLOW_BACKEND_STORE_URI", "")
+        )
 
         return cls(
             tracking_uri=tracking_uri,
+            backend_store_uri=backend_store_uri,
             artifact_location=artifact_location,
             server=server,
             experiments=experiments,
@@ -120,6 +129,7 @@ class MLflowConfig:
     def from_env(cls) -> "MLflowConfig":
         """Load configuration from environment variables."""
         tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "")
+        backend_store_uri = os.getenv("MLFLOW_BACKEND_STORE_URI", "")
         artifact_location = os.getenv("MLFLOW_ARTIFACT_LOCATION", "./mlruns")
 
         server = MLflowServerConfig(
@@ -132,6 +142,7 @@ class MLflowConfig:
 
         return cls(
             tracking_uri=tracking_uri,
+            backend_store_uri=backend_store_uri,
             artifact_location=artifact_location,
             server=server,
             experiments=[],
@@ -140,7 +151,7 @@ class MLflowConfig:
 
     def get_backend_store_uri(self) -> str:
         """Get the backend store URI for MLflow server."""
-        return self.tracking_uri
+        return self.backend_store_uri or self.tracking_uri
 
     def get_artifact_root(self) -> str:
         """Get the artifact root directory."""
@@ -153,15 +164,6 @@ class MLflowConfig:
 
         if not self.artifact_location:
             raise ValueError("MLFLOW_ARTIFACT_LOCATION is required")
-
-        # Validate tracking URI format
-        if self.tracking_uri.startswith("postgresql"):
-            # Ensure it has the correct format
-            if "psycopg2" not in self.tracking_uri:
-                logger.warning(
-                    "PostgreSQL tracking URI should use psycopg2 driver. "
-                    "Example: postgresql+psycopg2://user:pass@host:port/db"
-                )
 
         return True
 
