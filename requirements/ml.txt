@@ -10,7 +10,7 @@ scipy==1.17.1
 
 # MLflow & Experiment Tracking
 mlflow==2.10.2
-protobuf==4.25.2
+protobuf==7.34.1
 
 # Model Explainability
 shap==0.51.0
