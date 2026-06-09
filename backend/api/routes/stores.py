@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
 from backend.core.security import verify_token
-from backend.database.connection import get_db
+from database.connection import get_db
 from database.models.models import DarkStore
 
 router = APIRouter()
@@ -28,8 +28,7 @@ class StoreResponse(BaseModel):
     city_tier: Optional[str]
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class StoreCreate(BaseModel):
@@ -53,8 +52,9 @@ async def get_stores(
     city: Optional[str] = None,
     city_tier: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
 ):
-    """Get list of dark stores with filters."""
+    """Get all active dark stores, optionally filtered."""
     query = select(DarkStore).where(DarkStore.is_active.is_(True))
 
     if platform:
@@ -108,10 +108,15 @@ async def get_store_stats(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{store_id}", response_model=StoreResponse)
-async def get_store(store_id: int, db: AsyncSession = Depends(get_db)):
-    """Get specific store by ID."""
-    query = select(DarkStore).where(DarkStore.id == store_id)
-    result = await db.execute(query)
+async def get_store(
+    store_id: int,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
+):
+    """Get a single dark store by ID."""
+    result = await db.execute(
+        select(DarkStore).where(DarkStore.id == store_id)
+    )
     store = result.scalar_one_or_none()
 
     if not store:
@@ -123,7 +128,7 @@ async def get_store(store_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/", response_model=StoreResponse, dependencies=[Depends(verify_token)])
 async def create_store(store: StoreCreate, db: AsyncSession = Depends(get_db)):
     """Create a new store (requires authentication)."""
-    db_store = DarkStore(**store.dict())
+    db_store = DarkStore(**store.model_dump())
     db.add(db_store)
     await db.commit()
     await db.refresh(db_store)

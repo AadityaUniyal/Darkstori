@@ -4,19 +4,17 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from prophet import Prophet
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import TimeSeriesSplit, cross_val_score, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
-from backend.core.config import PROCESSED_DATA_DIR
 from backend.pipelines.data_pipeline import DataPipeline
 
 logger = logging.getLogger(__name__)

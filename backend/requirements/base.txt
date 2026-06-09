@@ -13,25 +13,25 @@ asyncpg==0.31.0
 psycopg2-binary==2.9.12
 alembic==1.18.4
 
-# Caching & Queue
-redis==5.0.1
-celery==5.6.3
-
 # Security
 cryptography==42.0.2
 bcrypt==4.1.2
 
-# Utilities
+# HTTP & Data Fetching
 python-dotenv==1.2.2
 aiofiles==23.2.1
 httpx==0.28.1
 aiohttp==3.13.5
 beautifulsoup4==4.14.3
-tweepy==4.16.0
 
 # Monitoring
 prometheus-client==0.25.0
 
-# Email
+# Email Validation
 aiosmtplib==3.0.1
 email-validator==2.3.0
+
+# NOTE: Removed dead dependencies:
+#   redis==5.0.1       — Redis not used in new architecture
+#   celery==5.6.3      — Celery job queue removed
+#   tweepy==4.16.0     — Twitter integration removed

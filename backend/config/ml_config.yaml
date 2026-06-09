@@ -1,6 +1,6 @@
 # MLflow Configuration
 mlflow:
-  tracking_uri: ${MLFLOW_TRACKING_URI}
+  tracking_uri: sqlite:///mlflow.db
   artifact_location: ./mlruns
   server:
     host: 0.0.0.0
@@ -21,7 +21,7 @@ training:
     test_size: 0.2
     validation_size: 0.1
     random_seed: 42
-    time_series_split: false
+    time_series_split: true  # chronological split prevents future leakage
     
   feature_engineering:
     scaling_method: standard  # standard, robust, none
@@ -38,8 +38,8 @@ training:
       colsample_bytree: [0.8, 1.0]
       
     random_forest:
-      n_estimators: [100, 200]
-      max_depth: [10, 20, null]
+      n_estimators: [300, 200, 100]
+      max_depth: [15, 20, 10, null]
       min_samples_split: [2, 5, 10]
       min_samples_leaf: [1, 2, 4]
       

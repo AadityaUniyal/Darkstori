@@ -5,18 +5,22 @@ Initializes database, MLflow schema, and performs initial model training
 for production deployment.
 """
 
+from backend.scripts.init_mlflow_db import init_mlflow_database
+from backend.ml.mlflow_config import mlflow_config
+from database.connection import get_async_session, init_db
+from alembic.config import Config
+from alembic import command
 import asyncio
 import logging
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent.parent))
+PROJECT_ROOT = str(Path(__file__).parent.parent.parent)
+BACKEND_DIR = str(Path(__file__).parent.parent)
+for p in [PROJECT_ROOT, BACKEND_DIR]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-from alembic import command
-from alembic.config import Config
-from backend.database.connection import get_async_session, init_db
-from backend.ml.mlflow_config import mlflow_config
-from backend.scripts.init_mlflow_db import init_mlflow_database
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

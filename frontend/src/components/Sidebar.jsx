@@ -1,24 +1,25 @@
+import { memo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Map, 
-  BarChart3, 
-  TrendingUp, 
-  Database,
-  Settings,
-  Radio
+import {
+  LayoutDashboard,
+  Leaf,
+  FlaskConical,
+  MapPin,
+  BarChart2,
+  TrendingUp,
+  Cpu,
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = memo(() => {
   const menuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/live-map', icon: Map, label: 'Live Map' },
-    { path: '/live-feed', icon: Radio, label: 'Live Feed' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
-    { path: '/data', icon: Database, label: 'Data' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/',              icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/resilience',   icon: Leaf,             label: 'Zero-Waste Engine' },
+    { path: '/simulator',    icon: FlaskConical,     label: 'Simulator' },
+    { path: '/neighborhoods',icon: MapPin,            label: 'Neighborhoods' },
+    { path: '/analytics',    icon: BarChart2,         label: 'Analytics' },
+    { path: '/forecast',     icon: TrendingUp,        label: 'AI Forecast' },
+    { path: '/algorithm-lab',icon: Cpu,               label: 'Algorithmic Mind' },
   ];
 
   return (
@@ -28,7 +29,8 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => 
+            end={item.path === '/'}
+            className={({ isActive }) =>
               `sidebar-link ${isActive ? 'active' : ''}`
             }
           >
@@ -39,6 +41,8 @@ const Sidebar = () => {
       </nav>
     </aside>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

@@ -32,6 +32,7 @@ skip_glob = ["*/migrations/*", "venv/*", ".venv/*"]
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["backend/tests"]
+asyncio_mode = "auto"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

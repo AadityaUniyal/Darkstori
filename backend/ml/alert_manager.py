@@ -5,7 +5,6 @@ supporting email and Slack notifications for performance degradation
 and drift detection.
 """
 
-import json
 import logging
 import os
 from datetime import datetime

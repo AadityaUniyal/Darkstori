@@ -1,44 +1,117 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 
-// Pages
-import Dashboard from './pages/Dashboard';
-import LiveMap from './pages/LiveMap';
-import Analytics from './pages/Analytics';
-import Predictions from './pages/Predictions';
-import Login from './pages/Login';
-import LiveFeed from './pages/LiveFeed';
+const Dashboard        = lazy(() => import('./pages/Dashboard'));
+const ResilienceCockpit = lazy(() => import('./pages/ResilienceCockpit'));
+const Simulator        = lazy(() => import('./pages/Simulator'));
+const Neighborhoods    = lazy(() => import('./pages/Neighborhoods'));
+const Analytics        = lazy(() => import('./pages/Analytics'));
+const Forecast         = lazy(() => import('./pages/Forecast'));
+const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
+const Login            = lazy(() => import('./pages/Login'));
+const NotFound         = lazy(() => import('./pages/NotFound'));
 
-// Components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import ErrorBoundary from './components/ErrorBoundary';
+import PrivateRoute from './components/PrivateRoute';
+import RangoliLoader from './components/RangoliLoader';
+import { AuthProvider } from './context/AuthContext';
+import { CityProvider } from './context/CityContext';
 
-// Styles
 import './App.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      gcTime: 30 * 60 * 1000,
+    },
+  },
+});
+
+const pageVariants = {
+  initial: { opacity: 0, y: 16, scale: 0.98 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    scale: 0.98,
+    transition: { duration: 0.2, ease: 'easeIn' },
+  },
+};
+
+function AnimatedPage({ children }) {
+  return (
+    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+      {children}
+    </motion.div>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
+  if (isLoginPage) {
+    return (
+      <Suspense fallback={<RangoliLoader />}>
+        <Routes location={location}>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Navbar />
+      <div className="app-container">
+        <Sidebar />
+        <main className="main-content">
+          <Suspense fallback={<RangoliLoader />}>
+            <AnimatePresence mode="wait">
+              <Routes location={location} key={location.pathname}>
+                <Route path="/"              element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
+                <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><ResilienceCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><Simulator /></AnimatedPage></PrivateRoute>} />
+                <Route path="/neighborhoods" element={<PrivateRoute><AnimatedPage><Neighborhoods /></AnimatedPage></PrivateRoute>} />
+                <Route path="/analytics"     element={<PrivateRoute><AnimatedPage><Analytics /></AnimatedPage></PrivateRoute>} />
+                <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Forecast /></AnimatedPage></PrivateRoute>} />
+                <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><AlgorithmLab /></AnimatedPage></PrivateRoute>} />
+                <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
+                <Route path="*"              element={<Navigate to="/not-found" replace />} />
+              </Routes>
+            </AnimatePresence>
+          </Suspense>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="app">
-          <Navbar />
-          <div className="app-container">
-            <Sidebar />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/live-map" element={<LiveMap />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/predictions" element={<Predictions />} />
-                <Route path="/live-feed" element={<LiveFeed />} />
-                <Route path="/login" element={<Login />} />
-              </Routes>
-            </main>
-          </div>
-        </div>
-      </Router>
+      <ErrorBoundary>
+        <CityProvider>
+          <AuthProvider>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <AppContent />
+            </Router>
+          </AuthProvider>
+        </CityProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

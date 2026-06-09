@@ -290,7 +290,7 @@ class MetricsMiddleware:
         await self.app(scope, receive, send_wrapper)
 
         # Record latency
-        latency = time.time() - start_time
+        time.time() - start_time
         # Additional metrics can be recorded here
 
 

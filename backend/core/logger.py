@@ -12,12 +12,15 @@ LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
 
 # Create logger
+log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
+if settings.DEBUG:
+    log_level = logging.DEBUG
 logger = logging.getLogger("darkstore_api")
-logger.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
+logger.setLevel(log_level)
 
 # Console handler
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(log_level)
 console_format = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )

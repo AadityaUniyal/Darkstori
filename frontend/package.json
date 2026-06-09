@@ -9,32 +9,54 @@
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
-    "format:check": "prettier --check \"src/**/*.{js,jsx,css,json}\""
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.0.0",
+    "@deck.gl/aggregation-layers": "^9.3.2",
+    "@deck.gl/core": "^9.3.2",
+    "@deck.gl/layers": "^9.3.2",
+    "@deck.gl/react": "^9.3.2",
+    "@tanstack/react-query": "^5.14.2",
+    "axios": "^1.6.2",
+    "date-fns": "^3.0.6",
+    "framer-motion": "^10.16.16",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "lucide-react": "^0.303.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+<<<<<<< HEAD
     "react-router-dom": "^6.21.0",
     "axios": "^1.16.1",
     "@tanstack/react-query": "^5.100.10",
     "recharts": "^2.10.3",
     "leaflet": "^1.9.4",
+=======
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
     "react-leaflet": "^4.2.1",
-    "framer-motion": "^10.16.16",
-    "zustand": "^4.4.7",
-    "date-fns": "^3.0.6",
-    "lucide-react": "^0.303.0"
+    "react-router-dom": "^7.15.1",
+    "react-tilt": "^1.0.2",
+    "recharts": "^2.10.3",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.8",
     "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "jsdom": "^29.1.1",
     "prettier": "^3.1.1",
-    "eslint-config-prettier": "^9.1.0"
+    "vite": "^5.0.8",
+    "vitest": "^4.1.6"
   }
 }

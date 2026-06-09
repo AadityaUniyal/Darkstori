@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏪 Darkstori - Hyperlocal Delivery Intelligence Platform
 
 > **The only platform that tells you EXACTLY what type of store to open, where to open it, what to stock, how to price it, and when you'll profit - with 90% accuracy**
@@ -164,10 +165,18 @@ GitHub: [@AadityaUniyal](https://github.com/AadityaUniyal)
 - [Live Feed Quick Start](docs/QUICK_START_LIVE_FEED.md)
 - [Executive Summary](docs/EXECUTIVE_SUMMARY.md)
 - [Pitch Deck](docs/PITCH_DECK_OUTLINE.md)
+=======
+# 🏪 Darkstori — Hyperlocal Delivery Intelligence Platform
+
+> **A prescriptive analytics and real-time simulation platform that tells quick commerce operators exactly where to locate dark stores, what inventory to stock, how to dynamically price perishables, and how to configure layouts for sub-10-minute order picking.**
+
+![Darkstori Hero Banner](docs/images/darkstori_hero.png)
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
 ## 📋 Table of Contents
+<<<<<<< HEAD
 
 - [Problem Statement](#-problem-statement)
 - [Our Solution](#-our-solution)
@@ -180,13 +189,25 @@ GitHub: [@AadityaUniyal](https://github.com/AadityaUniyal)
 - [Getting Started](#-getting-started)
 - [API Documentation](#-api-documentation)
 - [Contributing](#-contributing)
+=======
+- [🎯 Project Aim](#-project-aim)
+- [⚠️ The Quick Commerce Gaps We Bridge](#-the-quick-commerce-gaps-we-bridge)
+- [🧠 High-Fidelity Algorithmic Intelligence (Expand to View)](#-high-fidelity-algorithmic-intelligence-expand-to-view)
+- [📡 Real-Time WebSocket Architecture](#-real-time-websocket-architecture)
+- [🏢 Enterprise B2B Multi-Tenancy](#-enterprise-b2b-multi-tenancy)
+- [🔬 Interactive Algorithmic Mind Lab](#-interactive-algorithmic-mind-lab)
+- [🏗️ System Data Flow & Architecture](#️-system-data-flow--architecture)
+- [🚀 Getting Started](#-getting-started)
+- [🧪 Running the Offline Test Suite](#-running-the-offline-test-suite)
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
-## 🎯 Problem Statement
+## 🎯 Project Aim
 
-India's quick commerce market is experiencing explosive growth, but faces critical challenges:
+**Darkstori** bridges the gap between raw data collection and operational execution. Its core aim is to **democratize retail optimization** for quick commerce operators, warehouse managers, and B2B enterprises across India's five major focus metros: **Bangalore, Delhi, Mumbai, Hyderabad, and Pune**.
 
+<<<<<<< HEAD
 ### The Challenge
 
 - **Market Fragmentation**: 4,400+ dark stores scattered across India with no centralized intelligence
@@ -202,11 +223,19 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - Poor inventory management leading to waste
 - Inability to predict and respond to demand spikes
 - Lack of competitive intelligence for strategic planning
+=======
+Instead of presenting passive historical charts, Darkstori uses **prescriptive algorithms and machine learning** to recommend specific action paths:
+- **Locate**: Identify underserved areas using spatial pull indices.
+- **Stock**: Automatically determine safety stocks and reorder points based on customer demographics.
+- **Price**: Dynamically markdown decaying goods to maximize revenue and minimize food waste.
+- **Layout**: Optimize warehouse shelving and pick-paths to beat the 10-minute delivery SLA.
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
-## 💡 Our Solution
+## ⚠️ The Quick Commerce Gaps We Bridge
 
+<<<<<<< HEAD
 **Darkstori** is an enterprise-grade intelligence platform that transforms quick commerce operations through:
 
 ### 🎯 Intelligent Coverage Analysis
@@ -246,11 +275,21 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - **Social sentiment monitoring** for customer satisfaction
 - **Competitive intelligence** dashboard with market share tracking
 - **Crowdsourced data collection** for enhanced accuracy
+=======
+| Operational Area | The Industry Gap | How Darkstori Solves It | Status |
+| :--- | :--- | :--- | :---: |
+| **Site Selection** | Operators select new warehouse sites based on intuition, leading to over-saturation or unserved neighborhoods. | **Huff's Gravity Model**<br>Simulates spatial pull dynamics, sizing potential catch-areas by weighing store square footage against local rival coordinates. | **Active** 🟢 |
+| **Fresh Food Waste** | Perishables (fruits/veggies) spoil on shelves because pricing is static, leading to millions in write-offs. | **Sigmoid Decay Markdown**<br>Calculates real-time price reductions by mapping decay factors against sigmoid curves of consumer purchase probability. | **Active** 🟢 |
+| **SLA Violations** | Unstructured shelving arrangements force warehouse pickers to walk twice as far, breaching the 10-minute delivery promise. | **Pick-Path Layout Optimizer**<br>Computes optimal pick-paths and enforces cross-merchandising and hygiene isolation rules on a coordinate grid. | **Active** 🟢 |
+| **Margin Gaps** | Failure to monitor competitor pricing and localized price elasticity prevents operators from capturing high-margin peak hour markups. | **Elasticity & CPI Loop**<br>Adapts prices in real-time by correlating localized demand elasticity ($E$) with a live Competitor Price Index (CPI). | **Active** 🟢 |
+| **Latency Gaps** | Decisions are made using stale, batched data. Operators lack live visibility into inventory events. | **Postgres Listen/Notify Pipeline**<br>Database events (orders, batch decay, rival entry) trigger triggers that broadcast JSON payloads via Socket.io to UI overlays instantly. | **Active** 🟢 |
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
-## ✨ Key Features
+## 🧠 High-Fidelity Algorithmic Intelligence (Expand to View)
 
+<<<<<<< HEAD
 ### 1. 🗺️ Geospatial Intelligence
 
 - Interactive map visualization with 4,400+ dark store locations
@@ -294,182 +333,129 @@ India's quick commerce market is experiencing explosive growth, but faces critic
 - Database connection pooling for scalability
 - Prometheus metrics for monitoring
 - Enhanced health checks for all components
+=======
+To make the system highly clear, click any section below to view the mathematical logic, parameters, and inputs powering Darkstori:
+
+<details>
+<summary><b>📐 1. Spatial Pull (Huff's Gravity Model)</b></summary>
+
+Calculates the probability $P(\text{Capture}_i)$ that consumers in a neighborhood will visit/order from store $i$, based on store floor size ($S$) and geodesic distance ($d$):
+
+$$P(\text{Capture}_i) = \frac{S_i / d_i^2}{S_i / d_i^2 + \sum_{j \in \text{Competitors}} S_j / d_{ij}^2}$$
+
+- **Inputs**: Store location coordinates, competitor coordinates, store size (sq ft).
+- **Output**: Capture share probability percentage for each rival store in the neighborhood.
+</details>
+
+<details>
+<summary><b>🌡️ 2. Perishables Sigmoid Decay (Zero-Waste Engine)</b></summary>
+
+Models physical decay of perishables over time $t$ with decay constant $\alpha$, then grid-searches the optimal discount rate $d$ that maximizes expected revenue against a Sigmoid probability curve of purchase:
+
+$$\text{Freshness}(t) = \text{Freshness}(0) \times e^{-\alpha \times t}$$
+$$\text{Expected Revenue} = (1 - d) \times \frac{1}{1 + e^{\beta \times ((1-d) - 1.25 \times \text{Freshness} + 0.25)}}$$
+
+- **Inputs**: Freshness check score ($0.0 - 1.0$), baseline price, decay rate parameter ($\alpha$).
+- **Output**: Optimal discount rate $d$ (e.g. $15\%$, $40\%$) and marked-down selling price.
+</details>
+
+<details>
+<summary><b>📦 3. SKU Reorder Point (ROP) & Safety Stock</b></summary>
+
+Performs ABC analysis to classify products by revenue. Uses standard deviation of daily demand ($\sigma_d$) and replenishment lead time ($LT$) to compute ROP and safety stock levels:
+
+$$\text{Safety Stock} = \lceil Z \times \sigma_d \times \sqrt{\text{LT}} \rceil$$
+$$\text{Reorder Point (ROP)} = \lceil (d \times \text{LT}) + \text{Safety Stock} \rceil$$
+
+- **Inputs**: Target Z-score confidence level, standard deviation of demand, supplier lead time (days).
+- **Output**: Restock triggers and exact inventory safety buffers.
+</details>
+
+<details>
+<summary><b>📈 4. Seasonality-Aware Demand Forecasting</b></summary>
+
+Predicts order volumes by blending machine learning ensembles (XGBoost, Random Forest, Gradient Boosting) with monthly Indian quick-commerce seasonality weights and public holiday multipliers ($+30\%$) to project demand.
+
+- **Inputs**: Date, holiday index, historical monthly quick-commerce order patterns.
+- **Output**: Predicted order counts for a 90-day window.
+</details>
+
+<details>
+<summary><b>💰 5. Price Elasticity of Demand (PED) & CPI</b></summary>
+
+Calculates dynamic price adjustments by linking historical quantity changes with a Competitor Price Index (CPI):
+
+$$\text{CPI}_{\text{competitor}} = \frac{\text{Competitor Avg Price}}{\text{Market Avg Price}}$$
+
+- **Inputs**: Baseline price, competitor pricing feed, quantity sold delta.
+- **Output**: Optimal elasticity adjustment index.
+</details>
+
+<details>
+<summary><b>🗺️ 6. Store Layout Pick-Path Optimization</b></summary>
+
+Optimizes picking paths on coordinate grids, enforcing cross-merchandising adjacencies (e.g., placing snacks next to soft drinks) and hygiene isolation constraints (e.g., separating household cleaners from fresh vegetables) to minimize order fulfillment time.
+
+- **Inputs**: Category coordinates on shelves, picker starting location, product picker check-lists.
+- **Output**: Step-by-step picker coordinate grid routing instructions.
+</details>
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
-## 📁 Project Structure
+## 📡 Real-Time WebSocket Architecture
 
+Darkstori implements a **reactive server push pipeline** so operations dashboards sync without polling:
+
+```mermaid
+sequenceDiagram
+    participant DB as Postgres (Neon)
+    participant Daemon as Lifespan Listener Daemon
+    participant WS as Socket.io Websocket
+    participant UI as React Client App
+    
+    Note over DB: Order Inserted or Batch Decays
+    DB->>DB: Fire PL/pgSQL Trigger
+    DB->>Daemon: Emits pg_notify('darkstori_events', json_payload)
+    Daemon->>WS: Broadcast event
+    WS->>UI: Receive update (state updates dynamically)
 ```
-darkstori/
-│
-├── .github/                   # GitHub Actions CI/CD
-│   └── workflows/            # Workflow definitions
-│
-├── .kiro/                     # Kiro AI configuration
-│   └── specs/                # Project specifications
-│
-├── alembic/                   # Database Migrations
-│   ├── versions/             # Migration scripts
-│   │   └── 001_add_ml_tracking_tables.py
-│   └── env.py               # Alembic environment
-│
-├── backend/                   # FastAPI Backend Application
-│   ├── api/                  # API Routes & Endpoints
-│   │   ├── routes/          # Route handlers
-│   │   │   ├── stores.py   # Store management
-│   │   │   ├── analytics.py # Analytics endpoints
-│   │   │   ├── predictions.py # Legacy predictions
-│   │   │   ├── ml_predictions.py # ML predictions
-│   │   │   ├── ml_models.py # Model management
-│   │   │   ├── ml_monitoring.py # Performance monitoring
-│   │   │   └── ml_training.py # Training jobs
-│   │   └── __init__.py
-│   │
-│   ├── core/                 # Core Functionality
-│   │   ├── config.py        # Configuration management
-│   │   ├── logger.py        # Logging setup
-│   │   ├── metrics.py       # Prometheus metrics
-│   │   ├── monitoring.py    # System monitoring
-│   │   ├── rate_limiter.py  # Rate limiting
-│   │   ├── security.py      # Security utilities
-│   │   └── validation.py    # Input validation
-│   │
-│   ├── database/             # Database Connection
-│   │   ├── connection.py    # Async connection manager
-│   │   └── models.py        # ML tracking models
-│   │
-│   ├── ml/                   # Machine Learning System
-│   │   ├── mlflow_config.py # MLflow configuration
-│   │   ├── mlflow_server.py # MLflow server manager
-│   │   ├── experiment_tracker.py # Experiment tracking
-│   │   ├── model_registry.py # Model registry wrapper
-│   │   ├── model_loader.py  # Model loading & caching
-│   │   ├── evaluation_engine.py # Model evaluation
-│   │   ├── feature_pipeline.py # Feature engineering
-│   │   ├── prediction_service.py # Prediction service
-│   │   ├── performance_monitor.py # Performance tracking
-│   │   ├── alert_manager.py # Alert system
-│   │   ├── schemas.py       # Pydantic schemas
-│   │   ├── explainability.py # Model explainability
-│   │   ├── baseline_models.py # Baseline benchmarking
-│   │   ├── data_versioning.py # Data versioning
-│   │   ├── retraining_scheduler.py # Auto retraining
-│   │   ├── advanced_ml.py   # Advanced ML models
-│   │   ├── coverage_gap.py  # Coverage analysis
-│   │   └── train_model.py   # Training script
-│   │
-│   ├── pipelines/            # Data & ML Pipelines
-│   │   ├── data_pipeline.py # Data processing
-│   │   ├── training_pipeline.py # Legacy training
-│   │   ├── mlflow_training_pipeline.py # MLflow training
-│   │   └── prediction_pipeline.py # Prediction pipeline
-│   │
-│   ├── security/             # Security & Authentication
-│   │   ├── auth.py          # JWT authentication
-│   │   ├── encryption.py    # Data encryption
-│   │   └── input_validator.py # Input sanitization
-│   │
-│   ├── external_apis/        # External API Integrations
-│   │   ├── google_places.py # Google Places API
-│   │   ├── google_geocoding.py # Geocoding API
-│   │   └── distance_matrix.py # Distance Matrix API
-│   │
-│   ├── data_sources/         # Data Source Integrations
-│   │   ├── kaggle_integration.py # Kaggle datasets
-│   │   ├── live_map_data.py # Real-time map data
-│   │   └── realtime_analytics.py # Live analytics
-│   │
-│   ├── scrapers/             # Web Scrapers
-│   │   └── blinkit_scraper.py # Blinkit data scraper
-│   │
-│   ├── scripts/              # Utility Scripts
-│   │   ├── collect_training_data.py # Data collection
-│   │   ├── init_mlflow_db.py # MLflow initialization
-│   │   └── deploy_init.py   # Deployment setup
-│   │
-│   ├── utils/                # Utility Functions
-│   │   └── helpers.py       # General utilities
-│   │
-│   ├── app.py                # Main FastAPI application
-│   └── requirements.txt      # Python dependencies
-│
-├── config/                    # Configuration Files
-│   └── ml_config.yaml        # ML system configuration
-│
-├── database/                  # Database Models
-│   ├── models/               # SQLAlchemy Models
-│   │   └── models.py        # All database models
-│   │
-│   ├── scripts/              # Database Scripts
-│   │   ├── init_neon_db.py  # Database initialization
-│   │   ├── seed_data.py     # Data seeding
-│   │   └── seed_enhanced_data.py # Enhanced data seeding
-│   │
-│   ├── connection.py         # Legacy connection (deprecated)
-│   ├── db_connect.py         # Connection utilities
-│   └── requirements.txt      # Database dependencies
-│
-├── frontend/                  # React Frontend Application
-│   ├── src/
-│   │   ├── components/      # Reusable UI Components
-│   │   │   ├── Navbar.jsx  # Navigation bar
-│   │   │   └── Sidebar.jsx # Sidebar navigation
-│   │   │
-│   │   ├── pages/           # Page Components
-│   │   │   ├── Dashboard.jsx   # Main dashboard
-│   │   │   ├── Analytics.jsx   # Analytics page
-│   │   │   ├── Predictions.jsx # Predictions page
-│   │   │   ├── LiveMap.jsx     # Live map view
-│   │   │   └── Login.jsx       # Authentication
-│   │   │
-│   │   ├── services/        # API Services
-│   │   │   └── api.js      # API client
-│   │   │
-│   │   ├── App.jsx          # Root component
-│   │   └── main.jsx         # Entry point
-│   │
-│   ├── index.html           # HTML template
-│   ├── package.json         # Node dependencies
-│   └── vite.config.js       # Vite configuration
-│
-├── nginx/                     # Nginx Configuration
-│   ├── default.conf          # Default site config
-│   └── nginx.conf            # Main nginx config
-│
-├── requirements/              # Python Requirements
-│   ├── base.txt              # Base dependencies
-│   ├── dev.txt               # Development dependencies
-│   ├── ml.txt                # ML dependencies
-│   └── prod.txt              # Production dependencies
-│
-├── .dockerignore             # Docker ignore rules
-├── .env.example              # Environment variables template
-├── .gitignore                # Git ignore rules
-├── .pre-commit-config.yaml   # Pre-commit hooks
-├── alembic.ini               # Alembic configuration
-├── docker-compose.yml        # Docker Compose config
-├── docker-compose.prod.yml   # Production Docker config
-├── Dockerfile.backend        # Backend Docker image
-├── Dockerfile.frontend       # Frontend Docker image
-├── LICENSE                   # MIT License
-└── README.md                 # This file
 
-# Runtime Directories (Created Automatically)
-├── data/                     # Data storage (gitignored)
-│   ├── raw/                 # Raw data files
-│   ├── processed/           # Processed data
-│   └── external/            # External datasets
-│
-├── logs/                     # Application logs (gitignored)
-├── mlruns/                   # MLflow artifacts (gitignored)
-├── models/                   # Trained models (gitignored)
-└── data_versions/            # Data versions (gitignored)
+> [!TIP]
+> **Dialect Check**: If running in offline testing modes using SQLite, connection trigger registrations are bypassed cleanly, ensuring full backward-compatibility and zero test environment friction.
+
+---
+
+## 🏢 Enterprise B2B Multi-Tenancy
+
+To serve regional franchisees and national operators simultaneously, Darkstori features a complete B2B data schema:
+- **`organizations` Partitioning**: Separates configuration parameters and dark stores between distinct business organizations.
+- **Audit Logs (`audit_logs`)**: Generates system-wide trails for admin updates, capturing changing states, user identifiers, and IP coordinates.
+- **Stock Ledgers (`stock_ledger`)**: Maintains strict records of SKU inventory modifications, recording quantity changes and operational reasons (e.g., `RESTOCK`, `SPOILED`).
+
+---
+
+## 🔬 Interactive Algorithmic Mind Lab
+
+Exposed directly in the React frontend, the **Algorithmic Mind Lab** provides active simulations of our core mathematical models:
+
+```mermaid
+graph TD
+    A[Mind Lab Sidebar] --> B(Demand Seasonality Tab)
+    A --> C(Huff's Gravity Model Tab)
+    A --> D(Perishables Decay Tab)
+    A --> E(Safety Stock & ROP Tab)
+    A --> F(Price Elasticity & CPI Tab)
+    
+    C --> G[Live SVG Drawwave Canvas]
+    D --> H[Sigmoid expected revenue markdown peak]
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ System Data Flow & Architecture
 
+<<<<<<< HEAD
 ### Backend
 
 | Technology          | Purpose                        | Version |
@@ -600,6 +586,39 @@ Application → Metrics Collection → Prometheus → Grafana → Alerts
   Training      Histograms         Storage       Queries    Slack
   Errors        Gauges             Scraping      Viz        PagerDuty
   Performance   Custom Metrics     Retention     Analysis   Webhooks
+=======
+```mermaid
+flowchart LR
+    subgraph Client ["Client Interface"]
+        UI["React Web Dashboard"]
+        Socket["Socket.io Connection"]
+    end
+
+    subgraph API ["FastAPI Gateways"]
+        Auth["Auth Controller (JWT)"]
+        Routes["APIRoutes (Stores, Predictions, Resilience)"]
+        Lifespan["lifespan Hooks"]
+    end
+
+    subgraph ML ["AI & ML Pipeline"]
+        MLflow["ModelRegistry (XGBoost, Sklearn)"]
+        Predict["PredictionService (Heuristic / ML Ensembles)"]
+    end
+
+    subgraph Data ["Database Tier"]
+        PG["PostgreSQL (Neon Engine)"]
+        Triggers["PL/pgSQL Event Triggers"]
+    end
+
+    UI -->|HTTPS REST| Auth
+    Auth --> Routes
+    Routes --> Predict
+    Predict -->|Get Production Models| MLflow
+    Routes -->|Queries| PG
+    Triggers -->|pg_notify| Lifespan
+    Lifespan -->|Emit JSON| Socket
+    Socket -->|Real-time state push| UI
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 ```
 
 ---
@@ -607,76 +626,77 @@ Application → Metrics Collection → Prometheus → Grafana → Alerts
 ## 🚀 Getting Started
 
 ### Prerequisites
+<<<<<<< HEAD
 
 - **Python** 3.11 or higher
 - **Node.js** 18 or higher
 - **PostgreSQL** 15+ (or Neon DB account)
 - **Redis** 7+ (optional, for caching)
 - **Git** for version control
+=======
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL 15+ (or Neon PostgreSQL account)
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
-### Installation
+### Setup & Run (Local Development)
 
+<<<<<<< HEAD
 #### 1. Clone the Repository
 
+=======
+#### 1. Clone & Environment Configuration
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 ```bash
 git clone https://github.com/AadityaUniyal/Darkstori.git
 cd Darkstori
+
+# Create and configure .env from example
+cp .env.example .env
+# Edit .env with your PostgreSQL DATABASE_URL
 ```
 
+<<<<<<< HEAD
 #### 2. Backend Setup
 
+=======
+#### 2. Bootstrap the Backend API
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 ```bash
-# Navigate to backend
-cd backend
+# Set up Python virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
 
-# Create virtual environment
-python -m venv venv
+# Install backend dependencies
+pip install -r requirements.txt
+pip install -r backend/requirements/ml.txt
 
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements/base.txt
-pip install -r requirements/ml.txt
-pip install -r requirements/prod.txt
-
-# Set up environment variables
-cp ../.env.example ../.env
-# Edit .env with your credentials
-
-# Check and fix database schema (IMPORTANT!)
-cd ..
+# Run migrations and seed tables
 python database/scripts/check_and_fix_db.py
-
-# Run database migrations
 alembic upgrade head
 
-# Initialize MLflow database
-python backend/scripts/init_mlflow_db.py
-
-# Start backend server
+# Run development server
 cd backend
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+uvicorn app:app --reload --host 127.0.0.1 --port 8000
 ```
+- API swagger: http://127.0.0.1:8000/api/docs
+- Health check (with component checks): http://127.0.0.1:8000/health
 
+<<<<<<< HEAD
 Backend will be available at http://localhost:8000
 MLflow UI will be available at http://localhost:5000
 
 #### 3. Frontend Setup
 
+=======
+#### 3. Bootstrap the Frontend UI
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 ```bash
-# Open new terminal
-cd frontend
-
-# Install dependencies
+cd ../frontend
 npm install
-
-# Start development server
 npm run dev
 ```
+<<<<<<< HEAD
 
 #### 4. Database Setup
 
@@ -747,11 +767,15 @@ VITE_API_URL=http://localhost:8000
 | **MLflow UI**    | http://localhost:5000          | MLflow tracking server |
 | **Metrics**      | http://localhost:8000/metrics  | Prometheus metrics     |
 | **Health Check** | http://localhost:8000/health   | System status          |
+=======
+- React App: http://localhost:5173
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ---
 
-## 📚 API Documentation
+## 🧪 Running the Offline Test Suite
 
+<<<<<<< HEAD
 ### Authentication
 
 ```http
@@ -867,32 +891,18 @@ Authorization: Bearer <token>
 ---
 
 ## 🧪 Testing
+=======
+Darkstori features a complete test harness containing **44 unit and integration tests**. To prevent developer setup friction, `conftest.py` automatically configures MLflow into offline mode (`MLFLOW_ENABLE_TRACKING=false`), bypassing tracking server startup delays:
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
 ```bash
-# Run database migrations
-alembic upgrade head
-
-# Initialize MLflow
-python backend/scripts/init_mlflow_db.py
-
-# Train initial model
-python backend/ml/train_model.py
-
-# Start services
-docker-compose up -d
-
-# Check health
-curl http://localhost:8000/health
-
-# View MLflow UI
-open http://localhost:5000
-
-# View API docs
-open http://localhost:8000/api/docs
+# Run all tests cleanly and instantly
+pytest backend/tests --no-cov
 ```
 
 ---
 
+<<<<<<< HEAD
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
@@ -1024,3 +1034,11 @@ For support, email aaditya.uniyal22@gmail.com or open an issue on GitHub.
 ---
 
 _Built with ❤️ for India's quick commerce revolution_
+=======
+## 👥 Authors & License
+- **Aaditya Uniyal** - Lead Developer - [@AadityaUniyal](https://github.com/AadityaUniyal) (aaditya.uniyal22@gmail.com)
+- Distributed under the **MIT License**.
+
+---
+_Built with ❤️ for India's quick commerce expansion revolution._
+>>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
