@@ -4,19 +4,20 @@ This script initializes the MLflow database schema by creating all necessary
 tables for experiment tracking, model registry, and metadata storage.
 """
 
+from backend.ml.mlflow_config import get_mlflow_config
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine, inspect, text
 import logging
-import os
 import sys
 from pathlib import Path
 
-# Add project root to path
+# Add project root and backend dir to path
 project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+backend_dir = Path(__file__).parent.parent
+for p in [str(project_root), str(backend_dir)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.exc import SQLAlchemyError
-
-from backend.ml.mlflow_config import get_mlflow_config
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

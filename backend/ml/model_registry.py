@@ -5,6 +5,7 @@ for managing model versions and lifecycle stages.
 """
 
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -12,6 +13,7 @@ import mlflow
 from mlflow.entities.model_registry import ModelVersion, RegisteredModel
 from mlflow.tracking import MlflowClient
 
+from backend.core.config import settings
 from backend.ml.mlflow_config import get_mlflow_config
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,16 @@ class ModelRegistry:
         Args:
             tracking_uri: MLflow tracking URI (uses config if not provided)
         """
+        self.enable_tracking = settings.MLFLOW_ENABLE_TRACKING
+        if os.getenv("MLFLOW_ENABLE_TRACKING", "true").lower() != "true":
+            self.enable_tracking = False
+
+        if not self.enable_tracking:
+            self.tracking_uri = ""
+            self.client = None
+            logger.info("ModelRegistry initialized in offline/fallback mode (tracking disabled)")
+            return
+
         if tracking_uri:
             self.tracking_uri = tracking_uri
         else:
@@ -59,6 +71,9 @@ class ModelRegistry:
         Returns:
             ModelVersion object
         """
+        if not self.enable_tracking:
+            raise RuntimeError("MLflow tracking is disabled")
+
         try:
             # Register the model
             model_version = mlflow.register_model(model_uri, name)
@@ -422,6 +437,9 @@ class ModelRegistry:
         Returns:
             Loaded model object
         """
+        if not self.enable_tracking:
+            raise RuntimeError("MLflow tracking is disabled")
+
         try:
             if version:
                 model_uri = f"models:/{name}/{version}"

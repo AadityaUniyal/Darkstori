@@ -1,22 +1,8 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #f8fafc;
-}
-
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--color-bg);
 }
 
 .app-container {
@@ -26,54 +12,67 @@ body {
 
 .main-content {
   flex: 1;
+  padding: var(--space-6);
   overflow-y: auto;
-  background: #f8fafc;
+  background: var(--color-bg);
+  transition: background var(--transition-base);
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
+.page-loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 153, 51, 0.15);
+  border-top-color: var(--saffron-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--ink-950);
+  color: var(--color-text-on-dark);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.error-boundary-content {
+  text-align: center;
+  padding: var(--space-8);
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
+.error-boundary-content h2 {
+  margin-bottom: var(--space-4);
+  color: var(--spice-500);
 }
 
-/* Responsive */
+.error-boundary-content button {
+  margin-top: var(--space-6);
+  padding: var(--space-3) var(--space-8);
+  background: linear-gradient(135deg, var(--saffron-500), var(--saffron-600));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
   }
-  
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
+  .main-content {
+    padding: var(--space-4);
   }
 }

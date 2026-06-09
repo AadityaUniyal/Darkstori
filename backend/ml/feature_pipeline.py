@@ -4,7 +4,6 @@ This module wraps feature engineering with comprehensive logging to MLflow
 for reproducibility and documentation.
 """
 
-import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

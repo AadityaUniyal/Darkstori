@@ -7,12 +7,12 @@ in-memory caching and automatic reload capabilities.
 import asyncio
 import logging
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
 import joblib
 import mlflow
-from mlflow.pyfunc import PyFuncModel
+
 
 from backend.core.config import settings
 from backend.ml.model_registry import ModelRegistry

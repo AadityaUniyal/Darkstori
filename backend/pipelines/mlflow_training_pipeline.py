@@ -10,12 +10,10 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-import mlflow
 import numpy as np
 import pandas as pd
 from mlflow.models.signature import infer_signature
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.metrics import r2_score
 from xgboost import XGBRegressor
 
 from backend.ml.evaluation_engine import EvaluationEngine
@@ -59,6 +57,7 @@ class MLflowTrainingPipeline:
         target_col: str = "order_count",
         test_size: float = 0.2,
         model_types: Optional[List[str]] = None,
+        time_series_split: bool = False,
     ) -> Dict[str, Any]:
         """Run complete training pipeline with MLflow tracking.
 
@@ -78,6 +77,12 @@ class MLflowTrainingPipeline:
             if model_types is None:
                 model_types = ["xgboost", "random_forest", "gradient_boosting"]
 
+            # Start a parent run so FeaturePipeline logging has an active run
+            self.tracker.start_run(
+                run_name="feature_engineering",
+                tags={"stage": "feature_preparation"},
+            )
+
             # Prepare features
             logger.info("Preparing features...")
             X_train, X_test, y_train, y_test, feature_names = (
@@ -88,8 +93,12 @@ class MLflowTrainingPipeline:
                     random_seed=self.config.training.data.random_seed,
                     scaling_method=self.config.training.feature_engineering.scaling_method,
                     handle_missing=self.config.training.feature_engineering.missing_value_strategy,
+                    time_series_split=time_series_split,
                 )
             )
+
+            # End feature engineering run before model training runs
+            self.tracker.end_run()
 
             # Train all models
             results = {}
@@ -116,6 +125,7 @@ class MLflowTrainingPipeline:
             summary = {
                 "best_model_type": best_model_type,
                 "best_r2_score": best_result["test_r2"],
+                "run_id": best_result.get("run_id"),
                 "training_duration_seconds": training_duration,
                 "models_trained": len(results),
                 "results": results,
@@ -214,7 +224,7 @@ class MLflowTrainingPipeline:
             )
 
             # Calculate residuals
-            residual_stats = self.evaluator.calculate_residuals(y_test, y_test_pred)
+            self.evaluator.calculate_residuals(y_test, y_test_pred)
 
             # Generate plots
             feature_importance = self._get_feature_importance(model, feature_names)
@@ -240,13 +250,16 @@ class MLflowTrainingPipeline:
             if test_metrics["test_r2"] >= 0.85:
                 self.tracker.set_tag("high_accuracy", "true")
 
+            # Capture run_id before end_run() clears it
+            run_id = self.tracker.run_id
+
             # End run
             self.tracker.end_run()
 
             # Return results
             result = {
                 "model_type": model_type,
-                "run_id": self.tracker.run_id,
+                "run_id": run_id,
                 "train_r2": train_metrics["train_r2"],
                 "test_r2": test_metrics["test_r2"],
                 "train_rmse": train_metrics["train_rmse"],

@@ -5,8 +5,6 @@ starting, stopping, and health checking the server process.
 """
 
 import logging
-import os
-import signal
 import subprocess
 import sys
 import time

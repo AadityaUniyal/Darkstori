@@ -4,7 +4,6 @@ This module defines request and response schemas for ML prediction
 and model management endpoints.
 """
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
