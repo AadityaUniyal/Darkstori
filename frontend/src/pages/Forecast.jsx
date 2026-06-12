@@ -127,7 +127,7 @@ export default function Forecast() {
           <TrendingUp color="#10b981" size={32} /> Hyper-Local Demand Forecast
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '4px' }}>
-          Predict tomorrow's transaction velocity, order volume bottlenecks, and product replenishment spikes using live neural network modeling
+          Predict tomorrow{"'"}s transaction velocity, order volume bottlenecks, and product replenishment spikes using live neural network modeling
         </p>
       </div>
 
