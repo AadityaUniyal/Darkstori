@@ -4,6 +4,7 @@ Darkstori — Hyperlocal Delivery Intelligence Platform
 Focused on 5 key Indian cities: Bangalore, Delhi, Mumbai, Hyderabad, Pune
 """
 
+
 from backend.api.routes import (
     auth,
     seed_data,
@@ -22,19 +23,14 @@ from backend.api.routes import (
     ml_models,
 )
 import asyncio
-import sys
 import socketio
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy import text
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent))
 
 from backend.core.config import settings  # noqa: E402
 from backend.core.logger import logger  # noqa: E402
@@ -51,7 +47,7 @@ except Exception:
     mlflow_config = type("MLflowConfig", (), {"enable_tracking": False})()
     get_server_manager = None
 
-from database.connection import close_db, init_db  # noqa: E402
+from backend.database.connection import close_db, init_db  # noqa: E402
 
 
 # Lifespan context manager for startup/shutdown
@@ -88,10 +84,10 @@ async def lifespan(app: FastAPI):
     logger.info("[OK] Database connected")
 
     # Start Real-time database listener if PostgreSQL
-    from database.connection import engine
+    from backend.database.connection import engine
     listener_task = None
     if engine.dialect.name == "postgresql":
-        from database.realtime_listener import start_realtime_listener
+        from backend.database.realtime_listener import start_realtime_listener
         listener_task = asyncio.create_task(start_realtime_listener(sio))
         logger.info("[OK] Database listener background task spawned")
 
@@ -188,7 +184,7 @@ async def health_check():
 
     # Check database
     try:
-        from database.connection import engine
+        from backend.database.connection import engine
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         health_status["components"]["database"] = "healthy"

@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
 from backend.core.security import verify_token
-from database.connection import get_db
-from database.models.models import DarkStore
+from backend.database.connection import get_db
+from backend.database.models.models import DarkStore
 
 router = APIRouter()
 

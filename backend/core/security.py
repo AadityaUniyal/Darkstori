@@ -1,7 +1,9 @@
 """Security utilities — JWT with refresh rotation, API key auth, session management."""
 
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+import hashlib
+import secrets
+from typing import Dict, Optional, Tuple
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -12,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
 from backend.core.logger import logger
-from database.connection import get_db
-from database.models.models import ApiKey, RefreshToken, User
+from backend.database.connection import get_db
+from backend.database.models.models import ApiKey, RefreshToken, User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
@@ -54,6 +56,26 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     )
 
     return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> Tuple[str, str]:
+    """Create JWT refresh token. Returns (refresh_token_str, jti_string)."""
+    to_encode = data.copy()
+    jti = secrets.token_hex(16)
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=7)
+    to_encode.update({
+        "exp": expire,
+        "iat": datetime.utcnow(),
+        "type": "refresh",
+        "jti": jti
+    })
+    encoded_jwt = jwt.encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
+    return encoded_jwt, jti
 
 
 def decode_token(token: str) -> Dict:

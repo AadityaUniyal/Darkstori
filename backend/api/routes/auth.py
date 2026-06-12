@@ -20,8 +20,8 @@ from backend.core.security import (
     verify_token,
 )
 
-from database.connection import get_db
-from database.models.models import ApiKey, RefreshToken, User
+from backend.database.connection import get_db
+from backend.database.models.models import ApiKey, RefreshToken, User
 from backend.utils.email import send_welcome_email
 
 router = APIRouter()

@@ -77,6 +77,11 @@ def initialize_mlflow_schema(backend_store_uri: str) -> bool:
     try:
         logger.info("Initializing MLflow database schema...")
 
+        # If file URI, skip SQLAlchemy database engine initialization
+        if backend_store_uri.startswith("file://") or backend_store_uri.startswith("file:"):
+            logger.info("MLflow configured with filesystem backend. Skipping database schema initialization.")
+            return True
+
         # Create SQLAlchemy engine
         engine = create_engine(backend_store_uri)
 
@@ -202,6 +207,9 @@ def verify_mlflow_setup(backend_store_uri: str) -> bool:
             exp = client.get_experiment_by_name(test_exp_name)
             if not exp:
                 exp_id = client.create_experiment(test_exp_name)
+            elif exp.lifecycle_stage == "deleted":
+                client.restore_experiment(exp.experiment_id)
+                exp_id = exp.experiment_id
             else:
                 exp_id = exp.experiment_id
 
@@ -226,18 +234,42 @@ def verify_mlflow_setup(backend_store_uri: str) -> bool:
             return False
 
         # Test 3: Check database tables
-        engine = create_engine(backend_store_uri)
-        if check_mlflow_tables(engine):
-            logger.info("  ✓ All required tables exist")
+        if backend_store_uri.startswith("file://") or backend_store_uri.startswith("file:"):
+            logger.info("  ✓ Skipping database tables check (filesystem backend)")
         else:
-            logger.error("  ✗ Some required tables are missing")
-            return False
+            engine = create_engine(backend_store_uri)
+            if check_mlflow_tables(engine):
+                logger.info("  ✓ All required tables exist")
+            else:
+                logger.error("  ✗ Some required tables are missing")
+                return False
 
         logger.info("✓ MLflow setup verification passed")
         return True
 
     except Exception as e:
         logger.error(f"Error verifying MLflow setup: {e}")
+        return False
+
+
+async def init_mlflow_database() -> bool:
+    """Wrapper function to initialize and verify the MLflow database."""
+    try:
+        config = get_mlflow_config()
+        backend_store_uri = config.get_backend_store_uri()
+        
+        # Initialize schema
+        if not initialize_mlflow_schema(backend_store_uri):
+            return False
+            
+        # Create default experiments
+        if config.experiments:
+            create_default_experiments(backend_store_uri, config.experiments)
+            
+        # Verify setup
+        return verify_mlflow_setup(backend_store_uri)
+    except Exception as e:
+        logger.error(f"init_mlflow_database failed: {e}")
         return False
 
 

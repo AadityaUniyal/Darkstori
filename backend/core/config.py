@@ -128,6 +128,22 @@ class Settings(BaseSettings):
             raise ValueError("DEBUG must be False in production")
         return v
 
+    @field_validator("ALLOWED_ORIGINS", "FOCUS_CITIES", mode="before")
+    @classmethod
+    def validate_list_from_env(cls, v):
+        """Allow comma-separated list values in environment variables."""
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
+
+    @field_validator("PERFORMANCE_ROLLING_WINDOWS", mode="before")
+    @classmethod
+    def validate_int_list_from_env(cls, v):
+        """Allow comma-separated int list values in environment variables."""
+        if isinstance(v, str):
+            return [int(x.strip()) for x in v.split(",") if x.strip()]
+        return v
+
     model_config = {
         "env_file": ".env",
         "case_sensitive": True,

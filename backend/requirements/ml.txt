@@ -18,3 +18,9 @@ shap==0.51.0
 # Visualization
 matplotlib==3.10.9
 seaborn==0.13.2
+
+# Feature Augmentation (Section 6 datasets)
+holidays>=0.56         # India public holiday calendar (Dataset #10)
+openmeteo-requests>=1.2 # Open-Meteo weather API (Dataset #11)
+requests-cache>=1.2    # Cache weather API responses locally
+

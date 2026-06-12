@@ -135,7 +135,7 @@ class FeaturePipeline:
                 # Save scaler as artifact
                 import joblib
 
-                temp_path = Path("/tmp/scaler.joblib")
+                temp_path = Path("scaler.joblib")
                 joblib.dump(scaler, temp_path)
                 self.tracker.log_artifact(str(temp_path), artifact_path="scalers")
                 temp_path.unlink()
@@ -376,6 +376,8 @@ class FeaturePipeline:
 
             # Separate features and target
             X = df.drop(columns=[target_col])
+            numeric_cols = X.select_dtypes(include=[np.number]).columns
+            X = X[numeric_cols]
             y = df[target_col]
 
             # Handle missing values
