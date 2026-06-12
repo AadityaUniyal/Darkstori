@@ -15,7 +15,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ml.alert_manager import get_alert_manager
-from database.models.models import MLFeatureDrift, MLPerformanceMetric, MLPrediction
+from backend.database.models.models import MLFeatureDrift, MLPerformanceMetric, MLPrediction
 
 logger = logging.getLogger(__name__)
 

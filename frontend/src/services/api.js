@@ -229,7 +229,7 @@ const getStoreLayout = async (neighborhoodId, storeSizeSqft = 1500) => {
 
 const getOpportunityZones = async (city = null, limit = 20) => {
   const params = { limit, ...(city ? { city } : {}) };
-  const response = await apiClient.get('/api/predictions/opportunity-zones', { params });
+  const response = await apiClient.get('/api/placement/opportunity-zones', { params });
   return response.data;
 };
 

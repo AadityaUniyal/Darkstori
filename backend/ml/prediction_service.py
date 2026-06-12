@@ -3,18 +3,19 @@ import asyncio
 import logging
 import time
 import uuid
-from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+import hashlib
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ml.model_loader import ModelLoader
 from backend.ml.performance_monitor import PerformanceMonitor
 from backend.ml.schemas import PredictionRequest, PredictionResponse
-from database.models.models import Neighborhood
+from backend.database.models.models import Neighborhood
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,7 @@ logger = logging.getLogger(__name__)
 class PredictionService:
     """Service for making predictions with production models."""
 
-    def __init__(
-        self, model_loader: ModelLoader, db_session: Optional[AsyncSession] = None
-    ):
+    def __init__(self, model_loader: ModelLoader, db_session: Optional[AsyncSession] = None):
         self.model_loader = model_loader
         self.db_session = db_session
         self.default_model_name = "demand_forecasting_model"
@@ -35,67 +34,36 @@ class PredictionService:
 
         logger.info("PredictionService initialized")
 
-    async def predict(
-        self, request: PredictionRequest, model_name: Optional[str] = None
-    ) -> PredictionResponse:
+    async def _lookup_lag_orders(self, neighborhood_id: int, target_date: datetime, lag_days: int, default_val: float) -> float:
+        """Query orders_synthetic for the actual order count of a neighborhood on a specific lag day."""
+        if not self.db_session:
+            return default_val
+        try:
+            lag_date = (target_date - timedelta(days=lag_days)).date()
+            q = text(
+                """
+                SELECT COUNT(*)::float8 AS order_count
+                FROM orders_synthetic
+                WHERE neighborhood_id = :nid AND order_date = :ld
+                """
+            )
+            result = await self.db_session.execute(q, {"nid": neighborhood_id, "ld": lag_date})
+            row = result.one_or_none()
+            if row and row.order_count is not None and row.order_count > 0:
+                return float(row.order_count)
+        except Exception as e:
+            logger.warning(f"Lag query failed for nbhd {neighborhood_id} on {lag_days} days lag: {e}")
+        return default_val
+
+    async def predict(self, request: PredictionRequest, model_name: Optional[str] = None) -> PredictionResponse:
         start_time = time.time()
         model_name = model_name or self.default_model_name
 
         try:
-<<<<<<< HEAD
-            # Load production model (sync call -> thread)
-            model, scaler, feature_names = await asyncio.to_thread(
-                self.model_loader.load_production_model, model_name, False
-            )
-
             # Look up neighborhood demographics from pincode
             nbhd = await self._lookup_neighborhood(request.pincode)
             if nbhd is None:
                 raise ValueError(f"No neighborhood found for pincode: {request.pincode}")
-
-            # Build input DataFrame matching training features exactly
-            dt = pd.to_datetime(request.order_date)
-            nbhd_mean = nbhd.get("avg_daily_orders", 300)
-            is_holiday = nbhd.get("is_holiday", 0)
-            row = {
-                "order_date": dt.toordinal(),
-                "population": request.population or nbhd.get("population", 50000),
-                "population_density": nbhd.get("population_density", 5000),
-                "avg_household_income": nbhd.get("avg_household_income", 400000),
-                "working_professionals_pct": nbhd.get("working_professionals_pct", 60),
-                "platform_count": request.platform_count or 3,
-                "day_of_week": dt.dayofweek,
-                "is_weekend": int(dt.dayofweek >= 5),
-                "is_holiday": is_holiday,
-                "weather_Cloudy": 0,
-                "weather_Rainy": 0,
-                "avg_order_value": nbhd.get("avg_order_value", 450),
-                "avg_discount": nbhd.get("avg_discount", 30),
-                "total_stores": nbhd.get("total_stores", 5),
-                "comp_level": nbhd.get("comp_level", 1),
-                "lag_1": nbhd_mean,
-                "lag_7": nbhd_mean,
-                "rolling_7": nbhd_mean,
-                "lag_14": nbhd_mean,
-                "rolling_14": nbhd_mean,
-                "platform_diversity": nbhd.get("platform_diversity", 0.6),
-                "category_diversity": nbhd.get("category_diversity", 0.6),
-            }
-            input_df = pd.DataFrame([row])
-
-            # Select only the features the model expects
-            if feature_names:
-                missing = set(feature_names) - set(input_df.columns)
-                if missing:
-                    for col in missing:
-                        input_df[col] = 0
-                input_df = input_df[feature_names]
-
-=======
-            # Look up neighborhood demographics from pincode
-            nbhd = await self._lookup_neighborhood(request.pincode)
-            if nbhd is None:
-                nbhd = self._default_nbhd()
 
             # Load production model (sync call -> thread)
             try:
@@ -105,16 +73,33 @@ class PredictionService:
                 use_fallback = False
             except Exception as load_err:
                 logger.warning(
-                    f"Could not load MLflow production model: {load_err}. Using high-fidelity heuristic fallback model.")
+                    f"Could not load MLflow production model: {load_err}. Using high-fidelity heuristic fallback model."
+                )
                 use_fallback = True
 
             dt = pd.to_datetime(request.order_date)
             pop = request.population or nbhd.get("population", 50000)
             density = nbhd.get("population_density", 5000)
             avg_income = nbhd.get("avg_household_income", 400000)
-            active_platforms = request.platform_count or nbhd.get("platform_count", 3)
+            active_platforms = request.platform_count or nbhd.get("total_stores", 3)
             day_of_week = dt.dayofweek
             is_weekend = int(dt.dayofweek >= 5)
+
+            # Query actual lag features from backend.database if database session is present
+            nbhd_id = nbhd.get("neighborhood_id")
+            nbhd_mean = nbhd.get("avg_daily_orders", 300.0)
+
+            if nbhd_id is not None:
+                lag_1, lag_7, lag_14 = await asyncio.gather(
+                    self._lookup_lag_orders(nbhd_id, dt, 1, nbhd_mean),
+                    self._lookup_lag_orders(nbhd_id, dt, 7, nbhd_mean),
+                    self._lookup_lag_orders(nbhd_id, dt, 14, nbhd_mean)
+                )
+            else:
+                lag_1, lag_7, lag_14 = nbhd_mean, nbhd_mean, nbhd_mean
+
+            rolling_7 = (lag_1 + lag_7) / 2.0
+            rolling_14 = (lag_1 + lag_7 + lag_14) / 3.0
 
             if use_fallback:
                 # Upgraded Heuristic model with demographics, day-of-week, seasonality, and holidays
@@ -131,7 +116,7 @@ class PredictionService:
                     1: 1.05,   # Jan: Winter ends, New Year hangover
                     2: 0.98,   # Feb: Standard baseline
                     3: 1.02,   # Mar: Holi / Summer start
-                    4: 1.12,   # Apr: Peak Summer (high beverage/ice cream demand)
+                    4: 1.12,   # Apr: Peak Summer
                     5: 1.15,   # May: Peak Summer / school holidays
                     6: 1.05,   # Jun: Monsoon onset
                     7: 1.02,   # Jul: Rains (increased delivery demand)
@@ -148,15 +133,17 @@ class PredictionService:
                 holiday_multiplier = 1.30 if is_holiday else 1.0
 
                 # Add deterministic pseudo-random noise based on date & pincode
-                import hashlib
                 seed_str = f"{request.pincode}-{request.order_date}"
                 hash_val = int(hashlib.md5(seed_str.encode('utf-8')).hexdigest(), 16)
                 noise = ((hash_val % 40) - 20)  # -20 to +20 orders
 
                 prediction = max(40.0, (base_val * day_multiplier *
                                  seasonality_multiplier * holiday_multiplier) + noise)
-                lower_bound = max(10.0, prediction * 0.88)
-                upper_bound = prediction * 1.12
+                
+                # Derive confidence interval from standard deviation of historical orders (Flaw 11 fix)
+                std_dev = nbhd.get("std_daily_orders", 45.0)
+                lower_bound = max(10.0, prediction - 1.645 * std_dev)
+                upper_bound = prediction + 1.645 * std_dev
 
                 latency_ms = (time.time() - start_time) * 1000 + 4.5  # slight delay to feel realistic
                 prediction_id = self._generate_prediction_id()
@@ -173,8 +160,6 @@ class PredictionService:
                 )
 
             # Build input DataFrame matching training features exactly
-            nbhd_mean = nbhd.get("avg_daily_orders", 300)
-            is_holiday = nbhd.get("is_holiday", 0)
             row = {
                 "order_date": dt.toordinal(),
                 "population": pop,
@@ -184,18 +169,18 @@ class PredictionService:
                 "platform_count": active_platforms,
                 "day_of_week": day_of_week,
                 "is_weekend": is_weekend,
-                "is_holiday": is_holiday,
+                "is_holiday": nbhd.get("is_holiday", 0),
                 "weather_Cloudy": 0,
                 "weather_Rainy": 0,
                 "avg_order_value": nbhd.get("avg_order_value", 450),
                 "avg_discount": nbhd.get("avg_discount", 30),
                 "total_stores": nbhd.get("total_stores", 5),
                 "comp_level": nbhd.get("comp_level", 1),
-                "lag_1": nbhd_mean,
-                "lag_7": nbhd_mean,
-                "rolling_7": nbhd_mean,
-                "lag_14": nbhd_mean,
-                "rolling_14": nbhd_mean,
+                "lag_1": lag_1,
+                "lag_7": lag_7,
+                "rolling_7": rolling_7,
+                "lag_14": lag_14,
+                "rolling_14": rolling_14,
                 "platform_diversity": nbhd.get("platform_diversity", 0.6),
                 "category_diversity": nbhd.get("category_diversity", 0.6),
             }
@@ -204,13 +189,11 @@ class PredictionService:
             # Select only the features the model expects
             if feature_names:
                 missing = set(feature_names) - set(input_df.columns)
-                if missing:
-                    for col in missing:
-                        input_df[col] = 0
+                for col in missing:
+                    input_df[col] = 0
                 input_df = input_df[feature_names]
 
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
-            # Scale (preserve column names for MLflow signature validation)
+            # Scale if scaler exists
             if scaler is not None:
                 try:
                     scaled = scaler.transform(input_df)
@@ -218,19 +201,19 @@ class PredictionService:
                 except Exception as e:
                     logger.warning(f"Scaler transform failed: {e}, using raw")
 
-            # Predict with DataFrame (MLflow pyfunc requires named columns with float64)
+            # Predict
             prediction = model.predict(input_df.astype(float))[0]
-            lower_bound, upper_bound = self._calculate_confidence_intervals(
-                prediction, input_df.values
-            )
+            
+            # Confidence intervals based on std dev
+            std_dev = nbhd.get("std_daily_orders", 45.0)
+            lower_bound = max(0.0, prediction - 1.645 * std_dev)
+            upper_bound = prediction + 1.645 * std_dev
 
             latency_ms = (time.time() - start_time) * 1000
             prediction_id = self._generate_prediction_id()
 
             model_info = self.model_loader.get_model_info(model_name)
-            model_version = (
-                model_info.get("version", "unknown") if model_info else "unknown"
-            )
+            model_version = model_info.get("version", "unknown") if model_info else "unknown"
 
             await self._log_prediction(
                 prediction_id=prediction_id,
@@ -244,8 +227,7 @@ class PredictionService:
             )
 
             logger.info(
-                f"Prediction: {prediction:.2f} for pincode {request.pincode} "
-                f"(latency: {latency_ms:.2f}ms)"
+                f"Prediction: {prediction:.2f} for pincode {request.pincode} (latency: {latency_ms:.2f}ms)"
             )
 
             return PredictionResponse(
@@ -258,7 +240,6 @@ class PredictionService:
                 prediction_id=prediction_id,
                 timestamp=datetime.now().isoformat(),
             )
-
         except ValueError as e:
             logger.error(f"Validation error: {e}")
             raise
@@ -289,31 +270,24 @@ class PredictionService:
             upper_bounds = []
 
             for i in range(0, len(input_df), chunk_size):
-<<<<<<< HEAD
                 chunk = input_df.iloc[i : i + chunk_size].copy()
-=======
-                chunk = input_df.iloc[i: i + chunk_size].copy()
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 
                 # Engineer features matching training
                 dt = pd.to_datetime(chunk["order_date"])
                 chunk["order_date"] = dt.map(pd.Timestamp.toordinal)
                 chunk["day_of_week"] = dt.dt.dayofweek
                 chunk["is_weekend"] = (dt.dt.dayofweek >= 5).astype(int)
-                chunk["is_holiday"] = chunk.get("is_holiday", 0)
-                chunk["weather_Cloudy"] = chunk.get("weather_Cloudy", 0)
-                chunk["weather_Rainy"] = chunk.get("weather_Rainy", 0)
-                chunk["avg_order_value"] = chunk.get("avg_order_value", 450)
-                chunk["avg_discount"] = chunk.get("avg_discount", 30)
-                chunk["total_stores"] = chunk.get("total_stores", 5)
-                chunk["comp_level"] = chunk.get("comp_level", 1)
-                chunk["lag_1"] = chunk.get("lag_1", 300)
-                chunk["lag_7"] = chunk.get("lag_7", 300)
-                chunk["rolling_7"] = chunk.get("rolling_7", 300)
-                chunk["lag_14"] = chunk.get("lag_14", 300)
-                chunk["rolling_14"] = chunk.get("rolling_14", 300)
-                chunk["platform_diversity"] = chunk.get("platform_diversity", 0.6)
-                chunk["category_diversity"] = chunk.get("category_diversity", 0.6)
+                
+                # Fix pandas DataFrame `.get()` misuse (Flaw 15 fix)
+                for col in ["is_holiday", "weather_Cloudy", "weather_Rainy", "avg_order_value", "avg_discount", 
+                            "total_stores", "comp_level", "lag_1", "lag_7", "rolling_7", "lag_14", "rolling_14",
+                            "platform_diversity", "category_diversity"]:
+                    if col not in chunk.columns:
+                        chunk[col] = 0 if "diversity" not in col else 0.6
+                        if col in ["lag_1", "lag_7", "rolling_7", "lag_14", "rolling_14"]:
+                            chunk[col] = 300
+                    else:
+                        chunk[col] = chunk[col].fillna(0 if "diversity" not in col else 0.6)
 
                 for col in ["population_density", "avg_household_income", "working_professionals_pct", "platform_count"]:
                     if col not in chunk.columns:
@@ -336,9 +310,8 @@ class PredictionService:
                 chunk_predictions = model.predict(features)
                 predictions.extend(chunk_predictions)
                 for pred in chunk_predictions:
-                    lo, hi = self._calculate_confidence_intervals(pred, None)
-                    lower_bounds.append(lo)
-                    upper_bounds.append(hi)
+                    lower_bounds.append(max(0.0, pred - 1.645 * 45.0))
+                    upper_bounds.append(pred + 1.645 * 45.0)
 
             input_df["prediction"] = predictions
             input_df["lower_bound"] = lower_bounds
@@ -358,11 +331,8 @@ class PredictionService:
                 "output_path": output_path,
                 "processing_time_seconds": processing_time,
                 "model_name": model_name,
-                "version": str(
-                    self.model_loader.get_model_info(model_name).get("version", "unknown")
-                ),
+                "version": str(self.model_loader.get_model_info(model_name).get("version", "unknown")),
             }
-
         except Exception as e:
             logger.error(f"Batch prediction failed: {e}", exc_info=True)
             raise
@@ -371,21 +341,21 @@ class PredictionService:
         if not self.db_session:
             return self._default_nbhd()
         try:
-            from sqlalchemy import text as sql_text
-            q = sql_text("""
-                SELECT n.population, n.population_density, n.avg_household_income,
+            q = text("""
+                SELECT n.neighborhood_id, n.population, n.population_density, n.avg_household_income,
                        n.working_professionals_pct, n.total_stores,
                        CASE n.competition_intensity
                            WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 1 ELSE 0
                        END AS comp_level,
                        COALESCE(AVG(o.order_count), 300) AS avg_daily_orders,
+                       COALESCE(STDDEV(o.order_count), 45) AS std_daily_orders,
                        COALESCE(AVG(o.avg_ord_val), 450) AS avg_order_value,
                        COALESCE(AVG(o.avg_disc), 30) AS avg_discount,
                        COALESCE(AVG(dv.plat_div), 0.6) AS platform_diversity,
                        COALESCE(AVG(dv.cat_div), 0.6) AS category_diversity
                 FROM neighborhoods n
                 LEFT JOIN (
-                    SELECT neighborhood_id, COUNT(*)::float8 AS order_count,
+                    SELECT neighborhood_id, order_date, COUNT(*)::float8 AS order_count,
                            AVG(order_value) AS avg_ord_val,
                            AVG(discount) AS avg_disc
                     FROM orders_synthetic
@@ -410,18 +380,15 @@ class PredictionService:
                     GROUP BY order_date, neighborhood_id
                 ) dv ON dv.neighborhood_id = n.neighborhood_id
                 WHERE n.pincode = :p
-                GROUP BY n.population, n.population_density,
+                GROUP BY n.neighborhood_id, n.population, n.population_density,
                          n.avg_household_income, n.working_professionals_pct,
                          n.total_stores, n.competition_intensity
             """)
             result = await self.db_session.execute(q, {"p": pincode})
-<<<<<<< HEAD
             row = result.one_or_none()
-=======
-            row = result.first()
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
             if row:
                 return {
+                    "neighborhood_id": row.neighborhood_id,
                     "population": row.population or 50000,
                     "population_density": row.population_density or 5000,
                     "avg_household_income": row.avg_household_income or 400000,
@@ -429,6 +396,7 @@ class PredictionService:
                     "total_stores": row.total_stores or 5,
                     "comp_level": row.comp_level or 1,
                     "avg_daily_orders": row.avg_daily_orders or 300,
+                    "std_daily_orders": row.std_daily_orders or 45,
                     "avg_order_value": row.avg_order_value or 450,
                     "avg_discount": row.avg_discount or 30,
                     "platform_diversity": row.platform_diversity or 0.6,
@@ -441,11 +409,18 @@ class PredictionService:
     @staticmethod
     def _default_nbhd() -> Dict[str, Any]:
         return {
-            "population": 50000, "population_density": 5000,
-            "avg_household_income": 400000, "working_professionals_pct": 60,
-            "total_stores": 5, "comp_level": 1,
-            "avg_daily_orders": 300, "avg_order_value": 450,
-            "avg_discount": 30, "platform_diversity": 0.6,
+            "neighborhood_id": None,
+            "population": 50000,
+            "population_density": 5000,
+            "avg_household_income": 400000,
+            "working_professionals_pct": 60,
+            "total_stores": 5,
+            "comp_level": 1,
+            "avg_daily_orders": 300,
+            "std_daily_orders": 45,
+            "avg_order_value": 450,
+            "avg_discount": 30,
+            "platform_diversity": 0.6,
             "category_diversity": 0.6,
         }
 
@@ -455,13 +430,7 @@ class PredictionService:
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
 
-    def _calculate_confidence_intervals(
-        self, prediction: float, features: Optional[np.ndarray]
-    ) -> Tuple[float, float]:
-        margin = prediction * 0.1
-        lower_bound = max(0, prediction - margin)
-        upper_bound = prediction + margin
-        return lower_bound, upper_bound
+
 
     def _generate_prediction_id(self) -> str:
         return f"pred_{datetime.now().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}"

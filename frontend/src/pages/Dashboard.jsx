@@ -75,6 +75,7 @@ export default function Dashboard() {
     retry: 1,
   });
 
+  const isUsingFallback = !metrics || isError;
   const displayMetrics = metrics || FALLBACK_METRICS;
   const summary = displayMetrics.summary;
   const cities = displayMetrics.city_overview || [];
@@ -104,11 +105,11 @@ export default function Dashboard() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <h1 className="dash-title">Intelligence Dashboard</h1>
-            {isError && (
+            {isUsingFallback && (
               <span style={{
-                background: 'rgba(239, 68, 68, 0.12)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
-                color: '#f87171',
+                background: 'rgba(251, 191, 36, 0.12)',
+                border: '1px solid rgba(251, 191, 36, 0.25)',
+                color: '#fbbf24',
                 fontSize: '0.68rem',
                 fontWeight: 700,
                 padding: '3px 9px',
@@ -117,8 +118,8 @@ export default function Dashboard() {
                 alignItems: 'center',
                 gap: 5
               }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-                OFFLINE FALLBACK ACTIVE
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+                DEMO MODE — Connect database for real data
               </span>
             )}
           </div>
@@ -128,7 +129,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* ── Top KPIs ─────────────────────────────────────────────── */}
       <StaggerChildren className="dash-kpi-row">
         <AnimatedCounter
           value={summary?.total_stores || 0}
@@ -138,9 +138,16 @@ export default function Dashboard() {
         />
         <AnimatedCounter
           value={summary?.total_neighborhoods || 0}
-          label="Neighborhoods Analyzed"
+          label="Neighborhoods Mapped"
           icon={MapPin}
           color="#667eea"
+        />
+        <AnimatedCounter
+          value={summary?.pincode_coverage_rate || 0}
+          label="PIN Code Coverage"
+          icon={MapPin}
+          color="#a855f7"
+          suffix="%"
         />
         <AnimatedCounter
           value={summary?.total_orders_30d || 0}

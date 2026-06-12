@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.connection import get_db
-from database.models.models import Neighborhood
+from backend.database.connection import get_db
+from backend.database.models.models import Neighborhood
 from backend.core.security import verify_token
 from backend.ml.prediction_service import PredictionService
 from backend.ml.model_loader import ModelLoader

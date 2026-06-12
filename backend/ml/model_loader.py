@@ -14,7 +14,7 @@ import joblib
 import mlflow
 
 
-from backend.core.config import settings
+from backend.core.config import settings, MODELS_DIR
 from backend.ml.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
@@ -75,25 +75,35 @@ class ModelLoader:
                     else:
                         logger.info(f"Cache expired for {model_name} (age: {age:.0f}s)")
 
-                # Load from registry
-                logger.info(f"Loading model from registry: {model_name}")
+                # Try loading from MLflow registry
+                try:
+                    if not settings.MLFLOW_ENABLE_TRACKING or not self.registry.client:
+                        raise ValueError("MLflow tracking is disabled")
 
-                # Get latest production version
-                model_version = self.registry.get_latest_model(
-                    model_name, stage="Production"
-                )
+                    logger.info(f"Loading model from registry: {model_name}")
 
-                if not model_version:
-                    raise ValueError(f"No production model found for: {model_name}")
+                    # Get latest production version
+                    model_version = self.registry.get_latest_model(
+                        model_name, stage="Production"
+                    )
 
-                version = model_version.version
+                    if not model_version:
+                        raise ValueError(f"No production model found for: {model_name}")
 
-                # Load model
-                model_uri = f"models:/{model_name}/Production"
-                model = mlflow.pyfunc.load_model(model_uri)
+                    version = model_version.version
 
-                # Load scaler and feature names from artifacts
-                scaler, feature_names = self._load_artifacts(model_name, version)
+                    # Load model
+                    model_uri = f"models:/{model_name}/Production"
+                    model = mlflow.pyfunc.load_model(model_uri)
+
+                    # Load scaler and feature names from artifacts
+                    scaler, feature_names = self._load_artifacts(model_name, version)
+                except Exception as mlflow_err:
+                    logger.warning(
+                        f"MLflow load failed ({mlflow_err}). Falling back to local files..."
+                    )
+                    model, scaler, feature_names = self._load_local_production_model(model_name)
+                    version = "local-latest"
 
                 # Update cache
                 self._cache[model_name] = (
@@ -111,6 +121,48 @@ class ModelLoader:
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise
+
+    def _load_local_production_model(self, model_name: str) -> Tuple[Any, Any, list]:
+        """Load the latest trained model directly from the local models directory."""
+        import json
+        
+        # Find all timestamped subdirectories in models/
+        subdirs = [d for d in MODELS_DIR.iterdir() if d.is_dir() and d.name.replace("_", "").isdigit()]
+        if not subdirs:
+            raise ValueError("No local models found in models/ directory")
+            
+        # Sort by folder name (timestamp) descending to get latest
+        subdirs.sort(key=lambda d: d.name, reverse=True)
+        latest_dir = subdirs[0]
+        
+        # Read metadata.json
+        metadata_path = latest_dir / "metadata.json"
+        if not metadata_path.exists():
+            raise ValueError(f"No metadata.json found in {latest_dir}")
+            
+        with open(metadata_path, "r") as f:
+            metadata = json.load(f)
+            
+        best_model_name = metadata.get("best_model", "xgboost")
+        feature_names = metadata.get("feature_names", [])
+        
+        # Load the model
+        model_path = latest_dir / f"{best_model_name}.joblib"
+        if not model_path.exists():
+            raise ValueError(f"Model file {model_path} does not exist")
+        model = joblib.load(model_path)
+        
+        # Load the scaler (try standard, then robust)
+        scaler = None
+        for scaler_name in ["scaler_standard.joblib", "scaler_robust.joblib"]:
+            scaler_path = latest_dir / scaler_name
+            if scaler_path.exists():
+                scaler = joblib.load(scaler_path)
+                break
+                
+        logger.info(f"Successfully loaded local model {best_model_name} from {latest_dir}")
+        return model, scaler, feature_names
+
 
     def _load_artifacts(self, model_name: str, version: str) -> Tuple[Any, list]:
         """Load model artifacts (scaler and feature names).

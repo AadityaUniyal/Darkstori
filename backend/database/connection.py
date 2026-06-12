@@ -1,17 +1,11 @@
 """Database connection management."""
-
-<<<<<<< HEAD
-from typing import Optional
-=======
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
 from urllib.parse import urlparse, urlunparse
-
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
+from sqlalchemy import text
 
 from backend.core.config import settings
 from backend.core.logger import logger
-
 
 # Convert PostgreSQL URL to async format and handle SSL
 def convert_to_async_url(url: str) -> str:
@@ -23,7 +17,6 @@ def convert_to_async_url(url: str) -> str:
         new_query = "&".join(params)
     else:
         new_query = ""
-
     return urlunparse((
         "postgresql+asyncpg",
         parsed.netloc,
@@ -32,7 +25,6 @@ def convert_to_async_url(url: str) -> str:
         new_query,
         parsed.fragment,
     ))
-
 
 DATABASE_URL = convert_to_async_url(settings.DATABASE_URL)
 
@@ -52,31 +44,19 @@ AsyncSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
 
-
 async def init_db():
-    """Initialize database connection (no-op — tables created by seed script)."""
-    from database.models.models import Base
-<<<<<<< HEAD
-=======
-    from sqlalchemy import text
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
+    """Initialize database connection (create tables and trigger registrations)."""
+    from backend.database.models.models import Base
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
             logger.info("Database initialized successfully")
-<<<<<<< HEAD
-    except Exception as e:
-        logger.warning(f"Could not create tables (likely already exist): {e}")
-=======
-
-            # Setup real-time postgres notify triggers if using Postgres
+            
+            # Setup real-time PostgreSQL triggers if using Postgres
             if engine.dialect.name == "postgresql":
-                # Ensure organization_id columns exist in existing tables
-                await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INTEGER REFERENCES organizations(id);"))
-                await conn.execute(text("ALTER TABLE dark_stores ADD COLUMN IF NOT EXISTS organization_id INTEGER REFERENCES organizations(id);"))
-
+                # Drop incorrect legacy check constraint if exists
+                await conn.execute(text("ALTER TABLE pincode_coverage DROP CONSTRAINT IF EXISTS check_coverage;"))
                 trigger_statements = [
-                    # 1. Create the shared notify function
                     """
                     CREATE OR REPLACE FUNCTION notify_table_change()
                     RETURNS trigger AS $$
@@ -93,48 +73,42 @@ async def init_db():
                     END;
                     $$ LANGUAGE plpgsql;
                     """,
-                    # 2. Orders trigger setup
                     "DROP TRIGGER IF EXISTS trigger_order_changes ON orders_synthetic;",
                     """
                     CREATE TRIGGER trigger_order_changes
                     AFTER INSERT OR UPDATE ON orders_synthetic
                     FOR EACH ROW EXECUTE FUNCTION notify_table_change();
                     """,
-                    # 3. Product batches trigger setup
                     "DROP TRIGGER IF EXISTS trigger_batch_changes ON product_batches;",
                     """
                     CREATE TRIGGER trigger_batch_changes
                     AFTER INSERT OR UPDATE ON product_batches
                     FOR EACH ROW EXECUTE FUNCTION notify_table_change();
                     """,
-                    # 4. Dark stores trigger setup
                     "DROP TRIGGER IF EXISTS trigger_store_changes ON dark_stores;",
                     """
                     CREATE TRIGGER trigger_store_changes
                     AFTER INSERT OR UPDATE ON dark_stores
                     FOR EACH ROW EXECUTE FUNCTION notify_table_change();
                     """,
-                    # 5. Competitor stores trigger setup
                     "DROP TRIGGER IF EXISTS trigger_competitor_changes ON competitor_stores;",
                     """
                     CREATE TRIGGER trigger_competitor_changes
                     AFTER INSERT OR UPDATE ON competitor_stores
                     FOR EACH ROW EXECUTE FUNCTION notify_table_change();
                     """,
-                    # 6. Stock ledger trigger setup
                     "DROP TRIGGER IF EXISTS trigger_stock_ledger_changes ON stock_ledger;",
                     """
                     CREATE TRIGGER trigger_stock_ledger_changes
                     AFTER INSERT OR UPDATE ON stock_ledger
                     FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """
+                    """,
                 ]
                 for stmt in trigger_statements:
                     await conn.execute(text(stmt))
                 logger.info("Real-time PostgreSQL triggers registered successfully")
     except Exception as e:
-        logger.warning(f"Could not initialize database tables or triggers: {e}")
->>>>>>> b93c871 (Cleanup: prepare for push, ensure no secret keys exposed)
+        logger.error(f"Error initializing database: {e}")
 
 
 async def close_db():
@@ -142,17 +116,15 @@ async def close_db():
     await engine.dispose()
     logger.info("Database connection closed")
 
-
 async def get_db():
-    """Dependency to get database session."""
+    """Dependency to get a database session."""
     async with AsyncSessionLocal() as session:
         try:
             yield session
         finally:
             await session.close()
 
-
 # Alias for compatibility
-async def get_async_session():
+def get_async_session():
     """Get async database session (context manager)."""
     return AsyncSessionLocal()

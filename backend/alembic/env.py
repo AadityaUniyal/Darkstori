@@ -16,7 +16,7 @@ for p in [PROJECT_ROOT, BACKEND_DIR]:
         sys.path.insert(0, p)
 
 # Import models
-from database.models.models import Base  # noqa: E402
+from backend.database.models.models import Base  # noqa: E402
 from backend.core.config import settings  # noqa: E402
 
 # this is the Alembic Config object, which provides
