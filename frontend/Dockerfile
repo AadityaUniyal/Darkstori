@@ -14,7 +14,9 @@ FROM nginx:alpine
 
 COPY frontend/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY frontend/nginx/default.conf /etc/nginx/conf.d/default.conf
-RUN nginx -t
+RUN sed -i 's/backend:8000/127.0.0.1:8000/g' /etc/nginx/conf.d/default.conf && \
+    nginx -t && \
+    sed -i 's/127.0.0.1:8000/backend:8000/g' /etc/nginx/conf.d/default.conf
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
