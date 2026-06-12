@@ -64,7 +64,7 @@ export default function Login() {
     );
     
     if (!popup) {
-      alert("Popup blocked! Please allow popups for Google Sign In.");
+      window.alert("Popup blocked! Please allow popups for Google Sign In.");
       return;
     }
     

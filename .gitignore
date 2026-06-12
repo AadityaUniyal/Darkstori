@@ -169,7 +169,7 @@ docker-compose.override.yml
 *.pkl
 *.joblib
 *.model
-models/
+/models/
 checkpoints/
 mlruns/
 data_versions/
