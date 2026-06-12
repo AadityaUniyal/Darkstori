@@ -128,6 +128,15 @@ class Settings(BaseSettings):
             raise ValueError("DEBUG must be False in production")
         return v
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v, info):
+        """Ensure DATABASE_URL is set in non-test environments."""
+        env = info.data.get("ENVIRONMENT", "development")
+        if env != "testing" and not v:
+            raise ValueError("DATABASE_URL must be set in the environment or .env file")
+        return v
+
     @field_validator("ALLOWED_ORIGINS", "FOCUS_CITIES", mode="before")
     @classmethod
     def validate_list_from_env(cls, v):

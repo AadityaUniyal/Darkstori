@@ -152,10 +152,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Initialize Socket.io server
-sio = socketio.AsyncServer(async_mode="asgi")
-app.mount("/socket.io", socketio.ASGIApp(sio))
-
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -167,6 +163,10 @@ app.add_middleware(
 
 # GZip compression
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Initialize Socket.io server (configured with CORS allowed origins and mounted after middleware)
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.ALLOWED_ORIGINS)
+app.mount("/socket.io", socketio.ASGIApp(sio))
 
 # Health check endpoint
 

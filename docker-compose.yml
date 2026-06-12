@@ -19,21 +19,6 @@ services:
     networks:
       - darkstori-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: darkstori-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    networks:
-      - darkstori-network
-
   backend:
     build:
       context: .
@@ -41,7 +26,6 @@ services:
     container_name: darkstori-backend
     environment:
       - DATABASE_URL=postgresql+asyncpg://darkstori:darkstori_dev_password@postgres:5432/darkstori_db
-      - REDIS_URL=redis://redis:6379/0
       - ENVIRONMENT=development
       - DEBUG=True
       - SECRET_KEY=darkstore-dev-secret-key-min-32-chars-long
@@ -68,13 +52,9 @@ services:
       - darkstori-network
 
   mlflow:
-    image: python:3.12-slim
+    image: ghcr.io/mlflow/mlflow:v2.10.0
     container_name: darkstori-mlflow
-    command: >
-      sh -c "pip install mlflow sqlalchemy &&
-             mlflow server --host 0.0.0.0 --port 5000
-             --backend-store-uri sqlite:///mlflow.db
-             --default-artifact-root /mlflow/artifacts"
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
     ports:
       - "5000:5000"
     volumes:
@@ -98,7 +78,6 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
   mlflow_data:
 
 networks:
