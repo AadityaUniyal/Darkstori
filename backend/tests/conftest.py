@@ -38,7 +38,7 @@ async def override_get_db():
 async def override_verify_token():
     return {"sub": "test_user_id", "email": "test@example.com", "role": "admin"}
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_client():
     # Store original overrides
     orig_get_db = app.dependency_overrides.get(get_db)
