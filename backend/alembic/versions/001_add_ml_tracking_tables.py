@@ -16,6 +16,16 @@ branch_labels = None
 depends_on = None
 
 
+def get_json_type():
+    """Return JSONB for postgresql, standard JSON for other dialects like SQLite."""
+    bind = op.get_bind()
+    if bind.dialect.name == 'sqlite':
+        return sa.JSON()
+    else:
+        from sqlalchemy.dialects import postgresql
+        return postgresql.JSONB()
+
+
 def upgrade() -> None:
     """Create ML tracking tables."""
     
@@ -26,7 +36,7 @@ def upgrade() -> None:
         sa.Column('prediction_id', sa.String(50), unique=True, nullable=False, index=True),
         sa.Column('model_name', sa.String(100), nullable=False, index=True),
         sa.Column('model_version', sa.String(50), nullable=False),
-        sa.Column('input_data', postgresql.JSONB(), nullable=False),
+        sa.Column('input_data', get_json_type(), nullable=False),
         sa.Column('prediction', sa.Float(), nullable=False),
         sa.Column('lower_bound', sa.Float(), nullable=True),
         sa.Column('upper_bound', sa.Float(), nullable=True),
@@ -98,7 +108,7 @@ def upgrade() -> None:
         sa.Column('experiment_name', sa.String(100), nullable=False, index=True),
         sa.Column('run_id', sa.String(100), nullable=True),
         sa.Column('status', sa.String(50), nullable=False, index=True),  # 'running', 'completed', 'failed'
-        sa.Column('config', postgresql.JSONB(), nullable=True),
+        sa.Column('config', get_json_type(), nullable=True),
         sa.Column('dataset_version', sa.String(50), nullable=True),
         sa.Column('dataset_size', sa.Integer(), nullable=True),
         sa.Column('best_model_type', sa.String(50), nullable=True),

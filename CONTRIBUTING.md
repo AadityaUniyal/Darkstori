@@ -111,9 +111,9 @@ npm run dev
 ### Database Setup
 
 ```bash
-cd database
-pip install -r requirements.txt
-python scripts/init_neon_db.py
+# Database initialization is handled automatically on startup.
+# To run Alembic migrations manually:
+alembic upgrade head
 ```
 
 ## 📁 Project Structure

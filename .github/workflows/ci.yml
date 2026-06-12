@@ -270,6 +270,5 @@ jobs:
           pip install -r backend/requirements/base.txt
 
       - name: Run migration check
-        working-directory: backend
         run: |
-          python database/scripts/init_neon_db.py
+          alembic upgrade head

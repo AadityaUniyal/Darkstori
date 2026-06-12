@@ -9,7 +9,13 @@ from backend.core.logger import logger
 
 # Convert PostgreSQL URL to async format and handle SSL
 def convert_to_async_url(url: str) -> str:
-    """Convert PostgreSQL URL to asyncpg format, stripping sslmode param."""
+    """Convert database URL to async format, stripping sslmode param."""
+    if not url:
+        return "postgresql+asyncpg://"
+    if url.startswith("sqlite"):
+        if url.startswith("sqlite+aiosqlite://"):
+            return url
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     parsed = urlparse(url)
     # Strip sslmode — asyncpg uses connect_args={"ssl": True} instead
     if parsed.query:
@@ -26,7 +32,10 @@ def convert_to_async_url(url: str) -> str:
         parsed.fragment,
     ))
 
-DATABASE_URL = convert_to_async_url(settings.DATABASE_URL)
+if settings.ENVIRONMENT == "testing":
+    DATABASE_URL = "postgresql+asyncpg://dummy_user:dummy_pass@localhost/dummy_db"
+else:
+    DATABASE_URL = convert_to_async_url(settings.DATABASE_URL)
 
 # SSL required for Neon PostgreSQL
 connect_args = {"ssl": True} if "neon.tech" in settings.DATABASE_URL else {}
