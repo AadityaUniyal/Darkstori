@@ -195,6 +195,26 @@ const compareNeighborhoods = async (neighborhoodIds, investment) => {
   return response.data;
 };
 
+const proposeLocation = async (simId) => {
+  const response = await apiClient.post(`/api/simulator/propose/${simId}`);
+  return response.data;
+};
+
+const reviewLocation = async (simId, comments) => {
+  const response = await apiClient.post(`/api/simulator/review/${simId}`, { comments });
+  return response.data;
+};
+
+const approveLocation = async (simId) => {
+  const response = await apiClient.post(`/api/simulator/approve/${simId}`);
+  return response.data;
+};
+
+const getProposals = async () => {
+  const response = await apiClient.get('/api/simulator/proposals');
+  return response.data;
+};
+
 // ── Recommendations ───────────────────────────────────────────────────────────
 
 const getCompleteRecommendation = async (neighborhoodId) => {
@@ -275,6 +295,31 @@ const getModelInfo = async (modelName = 'demand_forecasting_model', stage = 'Pro
   const response = await apiClient.get('/api/v1/ml/model/info', {
     params: { model_name: modelName, stage },
   });
+  return response.data;
+};
+
+const getSchedulerJobs = async () => {
+  const response = await apiClient.get('/api/v1/ml/scheduler/jobs');
+  return response.data;
+};
+
+const getMLSettings = async () => {
+  const response = await apiClient.get('/api/v1/ml/settings');
+  return response.data;
+};
+
+const updateMLSettings = async (autoRetrain) => {
+  const response = await apiClient.post('/api/v1/ml/settings', { auto_retrain_enabled: autoRetrain });
+  return response.data;
+};
+
+const checkDriftAndRetrain = async () => {
+  const response = await apiClient.post('/api/v1/ml/check-drift');
+  return response.data;
+};
+
+const getAuditLogs = async () => {
+  const response = await apiClient.get('/api/simulator/audit-logs');
   return response.data;
 };
 
@@ -408,6 +453,10 @@ export const api = {
   predictROI,
   quickEstimate,
   compareNeighborhoods,
+  proposeLocation,
+  reviewLocation,
+  approveLocation,
+  getProposals,
 
   // Recommendations
   getCompleteRecommendation,
@@ -441,6 +490,11 @@ export const api = {
   // ML Models
   getModelList,
   getModelInfo,
+  getSchedulerJobs,
+  getMLSettings,
+  updateMLSettings,
+  checkDriftAndRetrain,
+  getAuditLogs,
 
   // Resilience
   getResilienceBatches,

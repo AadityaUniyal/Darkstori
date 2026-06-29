@@ -34,14 +34,14 @@ export default function AnimatedCounter({ value, label, icon: Icon, color = '#3b
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
       style={{
-        background: 'rgba(30, 41, 59, 0.45)',
+        background: 'var(--color-bg-card)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '16px',
-        padding: '20px',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-5)',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
+        gap: 'var(--space-4)',
         minWidth: '220px',
         flex: 1
       }}
@@ -49,8 +49,8 @@ export default function AnimatedCounter({ value, label, icon: Icon, color = '#3b
       <div style={{
         background: `${color}18`,
         color: color,
-        borderRadius: '12px',
-        padding: '12px',
+        borderRadius: 'var(--radius-md)',
+        padding: 'var(--space-3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -59,17 +59,19 @@ export default function AnimatedCounter({ value, label, icon: Icon, color = '#3b
       </div>
       <div>
         <div style={{
+          fontFamily: 'var(--font-display)',
           fontSize: '1.8rem',
-          fontWeight: 800,
-          color: '#ffffff',
+          fontWeight: 700,
+          color: 'var(--color-text-primary)',
           lineHeight: '1.2'
         }}>
           {typeof count === 'number' ? count.toLocaleString() : count}{suffix}
         </div>
         <div style={{
+          fontFamily: 'var(--font-body)',
           fontSize: '0.78rem',
           fontWeight: 600,
-          color: '#94a3b8',
+          color: 'var(--color-text-secondary)',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           marginTop: '4px'

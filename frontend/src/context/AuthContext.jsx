@@ -103,8 +103,12 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
   }, []);
 
+  const setRole = useCallback((newRole) => {
+    setUser(prev => prev ? { ...prev, role: newRole } : null);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, setRole }}>
       {!isLoading && children}
     </AuthContext.Provider>
   );

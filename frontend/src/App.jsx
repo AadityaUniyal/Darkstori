@@ -10,6 +10,7 @@ const Neighborhoods    = lazy(() => import('./pages/Neighborhoods'));
 const Analytics        = lazy(() => import('./pages/Analytics'));
 const Forecast         = lazy(() => import('./pages/Forecast'));
 const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
+const Recommendations  = lazy(() => import('./pages/Recommendations'));
 const Login            = lazy(() => import('./pages/Login'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
 
@@ -89,6 +90,7 @@ function AppContent() {
                 <Route path="/analytics"     element={<PrivateRoute><AnimatedPage><Analytics /></AnimatedPage></PrivateRoute>} />
                 <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Forecast /></AnimatedPage></PrivateRoute>} />
                 <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><AlgorithmLab /></AnimatedPage></PrivateRoute>} />
+                <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><Recommendations /></AnimatedPage></PrivateRoute>} />
                 <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
                 <Route path="*"              element={<Navigate to="/not-found" replace />} />
               </Routes>

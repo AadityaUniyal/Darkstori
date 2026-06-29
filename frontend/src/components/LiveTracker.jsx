@@ -79,25 +79,25 @@ export default function LiveTracker({ onOrder }) {
   return (
     <div
       style={{
-        background: 'rgba(30, 41, 59, 0.45)',
+        background: 'var(--color-bg-card)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '16px',
-        padding: '20px',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-5)',
         height: '460px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: 'var(--space-4)'
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Radio size={16} color="#ef4444" style={{ animation: 'pulse 1s infinite' }} />
-          <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+          <Radio size={16} color="var(--saffron-500)" style={{ animation: 'pulse 1.2s infinite ease-in-out' }} />
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0 }}>
             Live Orders Stream
           </h2>
         </div>
-        <span style={{ fontSize: '0.68rem', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#f87171', fontWeight: 700, padding: '3px 8px', borderRadius: '12px' }}>
+        <span style={{ fontSize: '0.68rem', background: 'var(--saffron-100)', border: '1px solid var(--saffron-500)', color: 'var(--saffron-500)', fontWeight: 700, padding: '3px 8px', borderRadius: '12px', fontFamily: 'var(--font-mono)' }}>
           REALTIME
         </span>
       </div>
@@ -123,20 +123,20 @@ export default function LiveTracker({ onOrder }) {
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700 }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                   {order.id} · {order.timestamp}
                 </span>
-                <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 700 }}>
+                <span style={{ fontSize: '0.88rem', color: 'var(--color-text-primary)', fontWeight: 700 }}>
                   {order.items.join(', ')}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
-                  <MapPin size={12} color="#3b82f6" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                  <MapPin size={12} color="var(--peacock-500)" />
                   <span>from {order.store_name}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#43e97b', fontWeight: 800, fontSize: '0.94rem' }}>
-                  <Zap size={12} fill="#43e97b" stroke="none" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--monsoon-500)', fontWeight: 800, fontSize: '0.94rem', fontFamily: 'var(--font-mono)' }}>
+                  <Zap size={12} fill="var(--monsoon-500)" stroke="none" />
                   ₹{order.value}
                 </div>
               </div>

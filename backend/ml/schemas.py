@@ -308,7 +308,7 @@ class PerformanceMetricsResponse(BaseModel):
                 "model_name": "demand_forecasting_model",
                 "model_version": "1",
                 "window_days": 7,
-                "metrics": {"r2_score": 0.85, "rmse": 48.5, "mae": 35.2, "mape": 13.5},
+                "metrics": {"r2_score": 0.9506, "rmse": 10.28, "mae": 7.86, "mape": 7.98},
                 "prediction_count": 1500,
                 "metric_date": "2026-05-10",
             }

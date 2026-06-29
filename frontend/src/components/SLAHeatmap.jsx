@@ -15,15 +15,15 @@ export default function SLAHeatmap() {
   const metrics = slaMetrics || [];
 
   const getBreachColor = (rate) => {
-    if (rate >= 10) return '#ef4444'; // Red
-    if (rate >= 5) return '#f59e0b';  // Orange
-    return '#10b981';                 // Green
+    if (rate >= 10) return 'var(--spice-500)';
+    if (rate >= 5) return 'var(--marigold-500)';
+    return 'var(--monsoon-500)';
   };
 
   const getBreachBackground = (rate) => {
-    if (rate >= 10) return 'rgba(239, 68, 68, 0.12)';
-    if (rate >= 5) return 'rgba(245, 158, 11, 0.12)';
-    return 'rgba(16, 185, 129, 0.12)';
+    if (rate >= 10) return 'rgba(194, 59, 59, 0.12)';
+    if (rate >= 5) return 'rgba(232, 163, 61, 0.12)';
+    return 'rgba(46, 158, 91, 0.12)';
   };
 
   // Compute aggregates

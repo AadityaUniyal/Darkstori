@@ -1,39 +1,33 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, ArrowLeft } from "lucide-react";
 import "./NotFound.css";
 
 const NotFound = () => {
   return (
-    <div className="not-found-container">
+    <div className="not-found-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center' }}>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="not-found-content"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
-        <motion.h1
-          initial={{ scale: 0.5 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="not-found-title"
+        <h1 
+          className="not-found-title" 
+          style={{ 
+            fontFamily: 'var(--font-display)', 
+            fontSize: '6rem', 
+            fontWeight: 700, 
+            color: 'var(--saffron-500)',
+            margin: 0
+          }}
         >
           404
-        </motion.h1>
-        <h2 className="not-found-subtitle">Page Not Found</h2>
-        <p className="not-found-description">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        </h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-5)' }}>
+          This page doesn't exist.
         </p>
-        <div className="not-found-actions">
-          <Link to="/" className="not-found-btn not-found-btn-primary">
-            <Home size={20} />
-            Go to Dashboard
-          </Link>
-          <button onClick={() => window.history.back()} className="not-found-btn not-found-btn-secondary">
-            <ArrowLeft size={20} />
-            Go Back
-          </button>
-        </div>
+        <Link to="/" className="btn-primary" style={{ textDecoration: 'none' }}>
+          Back to Dashboard
+        </Link>
       </motion.div>
     </div>
   );

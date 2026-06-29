@@ -7,7 +7,7 @@ import './Navbar.css';
 import './CitySelector.css';
 
 const Navbar = memo(() => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, setRole } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -90,10 +90,9 @@ const Navbar = memo(() => {
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand">
-        <Store className="brand-icon" />
+      <div className="navbar-brand" onClick={() => navigate('/')}>
         <span className="brand-text">Darkstori</span>
-        <span className="brand-tag">Hyperlocal Intelligence</span>
+        <span className="brand-pulse-dot" />
       </div>
       <div className="navbar-actions">
         {isAuthenticated && (
@@ -164,7 +163,23 @@ const Navbar = memo(() => {
                 <div className="user-dropdown">
                   <div className="user-dropdown-header">
                     <span className="user-dropdown-email">{user?.email}</span>
-                    <span className="user-dropdown-role">{user?.role}</span>
+                    <span className="user-dropdown-role">Role: <strong>{user?.role}</strong></span>
+                  </div>
+                  <div className="user-dropdown-divider" />
+                  <div style={{ padding: '8px 16px' }}>
+                    <label style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Switch Role (Demo):</label>
+                    <select
+                      value={user?.role || 'admin'}
+                      onChange={(e) => {
+                        setRole(e.target.value);
+                      }}
+                      style={{ width: '100%', background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: '4px', padding: '4px', fontSize: '0.8rem', cursor: 'pointer' }}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="expansion_lead">Expansion Lead</option>
+                      <option value="finance_reviewer">Finance Reviewer</option>
+                      <option value="regional_head">Regional Head</option>
+                    </select>
                   </div>
                   <div className="user-dropdown-divider" />
                   <button

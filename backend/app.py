@@ -95,6 +95,11 @@ async def lifespan(app: FastAPI):
     await redis_cache.init()
     logger.info("[OK] Cache layer ready")
 
+    # Start Background Scheduler
+    from backend.utils.scheduler import global_scheduler
+    scheduler_task = asyncio.create_task(global_scheduler.run())
+    logger.info("[OK] Background scheduler task spawned")
+
     # Start MLflow server if enabled
     if mlflow_config.enable_tracking:
         try:
@@ -113,6 +118,14 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down Darkstori API...")
+
+    if scheduler_task:
+        logger.info("Cancelling scheduler task...")
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            logger.info("Scheduler task cancelled cleanly")
 
     if listener_task:
         logger.info("Cancelling database listener task...")

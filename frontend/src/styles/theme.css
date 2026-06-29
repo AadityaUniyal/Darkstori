@@ -1,7 +1,8 @@
 :root {
   /* Typography */
-  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  --font-heading: 'Poppins', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Spacing System */
@@ -32,37 +33,38 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow-purple: 0 0 20px rgba(168, 85, 247, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(255, 122, 26, 0.1);
 
   /* Curated Color Palette (Dark Theme First) */
-  --color-bg: #090d16;
-  --color-bg-card: rgba(15, 23, 42, 0.55);
-  --color-surface: rgba(255, 255, 255, 0.03);
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-glow: rgba(168, 85, 247, 0.3);
+  --color-bg: #0B0D14;
+  --color-bg-card: rgba(18, 16, 28, 0.55);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-glow: rgba(255, 122, 26, 0.25);
 
   /* Text Colors */
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #64748b;
+  --color-text-primary: #F7F5F2;
+  --color-text-secondary: #C7C2D9;
+  --color-text-muted: #6E6A80;
   --color-text-on-dark: #ffffff;
 
   /* Theme Core Colors */
-  --saffron-100: rgba(249, 115, 22, 0.1);
-  --saffron-200: #fed7aa;
-  --saffron-500: #f97316;
-  --saffron-600: #ea580c;
-  --peacock-100: rgba(14, 165, 233, 0.1);
-  --peacock-500: #0ea5e9;
-  --monsoon-500: #10b981;
-  --spice-500: #ef4444;
+  --saffron-100: rgba(255, 122, 26, 0.12);
+  --saffron-200: #ffd1b3;
+  --saffron-500: #FF7A1A;
+  --saffron-600: #E8650A;
+  --peacock-100: rgba(14, 124, 134, 0.14);
+  --peacock-500: #0E7C86;
+  --monsoon-500: #2E9E5B;
+  --spice-500: #C23B3B;
+  --marigold-500: #E8A33D;
 
   /* Ink shades */
-  --ink-100: #1e293b;
-  --ink-300: #334155;
-  --ink-400: #475569;
-  --ink-900: #0f172a;
-  --ink-950: #020617;
+  --ink-100: #121420;
+  --ink-300: #1e2238;
+  --ink-400: #2e3454;
+  --ink-900: #05060a;
+  --ink-950: #020305;
 }
 
 /* Base Scrollbar Styling */
