@@ -24,6 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated CI workflow to use PostgreSQL service for tests
 - Improved Docker build process with better caching
 
+## [3.0.0] - 2026-06-29
+
+### Added
+- **Recommendations View**: Hyperlocal inventory space allocation maps, peak hour pricing adjustments, and layout zones.
+- **Interactive Layout Optimizer**: Sliders to configure space percentages with live Fulfillment Bottleneck rating calculations.
+- **OSRM Drive-Time Routing**: Integrates real road distance calculations into demand forecasts instead of straight-line metrics.
+- **Drive-Time Isochrones**: Visualizes delivery boundaries on the map canvas using multi-vertex OSRM constraint shapes.
+- **MLOps Background Job Scheduler**: Daemon that periodically syncs pricing, forecasts, and scans drift. Added manual check controls.
+- **Closed-Loop Outcome Tracking**: A/B testing panel comparing model-driven lifts vs gut-feel outcomes.
+- **Model Registry Offline Fallbacks**: Local caches labeled as fallbacks with warning cards in the UI.
+- **Decision Provenance Audits**: Saves model credentials and capex parameters snapshot on store approval. Added a tabbed Ledger.
+
 ## [2.0.0] - 2026-05-11
 
 ### Added
