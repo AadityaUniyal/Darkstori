@@ -50,5 +50,8 @@
     "vite": "^5.0.8",
     "vitest": "^4.1.6",
     "esbuild": "^0.28.1"
+  },
+  "overrides": {
+    "form-data": "4.0.6"
   }
 }
