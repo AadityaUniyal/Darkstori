@@ -7,11 +7,12 @@ Darkstori is an enterprise-grade quick-commerce analytics and prescriptive optim
 ## 📋 Table of Contents
 1. [🎯 Project Aim & Why It Matters](#1-project-aim--why-it-matters)
 2. [💻 Technology Stack](#2-technology-stack)
-3. [🚶 User Journey: How the Platform Works](#3-user-journey-how-the-platform-works)
-4. [🧠 Algorithmic Core (Simplified)](#4-algorithmic-core-simplified)
-5. [🚀 Step-by-Step Onboarding Guide (For New Users)](#5-step-by-step-onboarding-guide-for-new-users)
-6. [🧪 Running the Backend Test Suite](#6-running-the-backend-test-suite)
-7. [👥 Authors & License](#7-authors--license)
+3. [🏛️ Architectural Upgrades & Design Patterns](#3-architectural-upgrades--design-patterns)
+4. [🚶 User Journey: How the Platform Works](#4-user-journey-how-the-platform-works)
+5. [🧠 Algorithmic Core (Simplified)](#5-algorithmic-core-simplified)
+6. [🚀 Step-by-Step Onboarding Guide (For New Users)](#6-step-by-step-onboarding-guide-for-new-users)
+7. [🧪 Running the Backend Test Suite](#7-running-the-backend-test-suite)
+8. [👥 Authors & License](#8-authors--license)
 
 ---
 
@@ -24,7 +25,7 @@ Quick commerce platforms (delivering groceries and household goods in under 10 m
 * **Optimize Placement:** Find the best location to open a new dark store where customer demand is high but competitor coverage is weak.
 * **Prescriptive Recommendations:** Allocate space zones (ambient vs cold storage) dynamically using the **Interactive Layout Optimizer** which calculates fulfillment bottleneck ratings on the fly.
 * **OSRM Serviceability Constraints:** Penalize sales projection models based on actual driving road-network distances, instead of straight-line coordinates.
-* **MLOps Background Job Scheduler:** Periodically update demand predictions, competitor scraping, and drift models in the background with manual check controls.
+* **MLOps Background Job Scheduler & Simulator:** Periodically update demand predictions, competitor scraping, and drift models in the background. Now features a **Real-Time Live Order Simulator** generating realistic sales records to feed frontend feeds.
 * **Governance Audit Ledger:** Run multi-role workflows (Propose → Review → Approve) and log the model version and capex parameters snapshot for absolute provenance.
 * **Prevent Stockouts:** Dynamically adjust safety stock levels per neighborhood, incorporating localized delivery SLA constraints.
 * **Forecast Orders:** Predict tomorrow's load to ensure staff are scheduled efficiently.
@@ -38,7 +39,8 @@ Darkstori is built using a modern, scalable, and decoupled stack:
 ### Backend (API & Analytics Engine)
 * **FastAPI:** High-performance Python web framework used to build RESTful API endpoints.
 * **SQLAlchemy:** SQL Toolkit and Object-Relational Mapper (ORM) used to manage complex database queries asynchronously.
-* **PostgreSQL:** Primary relational database (Neon Postgres) for storing dark store mappings, pincodes, and transaction records.
+* **PostgreSQL:** Primary relational database (Neon Postgres / Local Docker Postgres) for storing dark store mappings, pincodes, and transaction records.
+* **Redis:** Slides request logs in a rolling 1-minute window to implement high-throughput sliding window rate limiting.
 * **XGBoost, RandomForest, & Gradient Boosting (scikit-learn):** Core Machine Learning models used for demand forecasting.
 * **MLflow:** Used to register, version, track, and serve production-ready ML models.
 * **Socket.io:** Powers real-time, bi-directional events to update the dashboard maps and activity feeds.
@@ -52,7 +54,27 @@ Darkstori is built using a modern, scalable, and decoupled stack:
 
 ---
 
-## 3. 🚶 User Journey: How the Platform Works
+## 3. 🏛️ Architectural Upgrades & Design Patterns
+
+We recently upgraded the system architecture to incorporate enterprise-grade performance optimization and clean Object-Oriented Design:
+
+### ⚡ Performance & Scalability Upgrades
+1. **Redis-Backed Rate Limiting:** Request checking uses a sliding window log logic implemented via Redis sorted sets (`ZSET`) and transaction pipelines, falling back gracefully to memory if Redis is unavailable.
+2. **Database Connection Pooling:** Implemented a robust connection pool configuration using SQLAlchemy parameters (`pool_size`, `max_overflow`, `pool_recycle`, `pool_pre_ping=True`) to recycle connections and handle database idle timeouts, while auto-bypassing pooling on SQLite.
+3. **In-Database PostGIS Clustering:** Substituted slow Python-side DBSCAN clustering with in-database PostGIS spatial queries (`ST_ClusterDBSCAN` with mercator coordinate projections), falling back to Python-side Haversine DBSCAN calculations if PostGIS is not available in the target database.
+4. **Decoupled MLflow Lifespan:** Decoupled MLflow server lifecycles from FastAPI, utilizing network HTTP endpoint pings to check service availability instead of local subprocess management.
+
+### 🏛️ Clean System Architecture & OOP Design Patterns
+1. **Repository Pattern:** Isolated all database querying logic from route handlers into dedicated repository classes:
+   * `NeighborhoodRepository`: DEMO neighborhood lookups and profiles.
+   * `RecommendationRepository`: Fetches precomputed recommendations.
+   * `OrderRepository`: Handles raw SQL aggregations of customer transaction counts.
+2. **Strategy Pattern:** Modeled fallback logic for our recommendation endpoints (`/inventory`, `/pricing`, `/layout`) polymorphically. The router invokes a `RecommendationEngine` (Context) which executes the assigned concrete strategy (`InventoryStrategy`, `PricingStrategyContext`, or `LayoutStrategy`). 
+   * *Example:* If no precomputed inventory strategy is registered in the database, `InventoryStrategy` falls back to aggregating order trends in `OrderRepository`, and finally defaults to standard quick-commerce categories.
+
+---
+
+## 4. 🚶 User Journey: How the Platform Works
 
 Here is how a new operator or manager interacts with the Darkstori dashboard:
 
@@ -83,7 +105,7 @@ A store manager needs to schedule delivery riders for next Monday.
 
 ---
 
-## 4. 🧠 Algorithmic Core (Simplified)
+## 5. 🧠 Algorithmic Core (Simplified)
 
 For developers and advanced users, Darkstori's intelligence relies on three main mathematical models:
 
@@ -93,7 +115,7 @@ For developers and advanced users, Darkstori's intelligence relies on three main
 
 ---
 
-## 5. 🚀 Step-by-Step Onboarding Guide (For New Users)
+## 6. 🚀 Step-by-Step Onboarding Guide (For New Users)
 
 Follow these steps to get Darkstori up and running on your local machine:
 
@@ -101,6 +123,7 @@ Follow these steps to get Darkstori up and running on your local machine:
 * **Python 3.11+** installed.
 * **Node.js 18+** installed.
 * **PostgreSQL** installed locally or a free cloud account on **Neon.tech**.
+* **Redis** (optional, fallback to in-memory cache is automatic).
 
 ---
 
@@ -130,17 +153,37 @@ source .venv/bin/activate
 # Install backend dependencies
 pip install -r backend/requirements/base.txt
 pip install -r backend/requirements/ml.txt
+```
 
-# Run the seeding script to populate database tables with metro cities, store coordinates, and order lists
+#### 3. Generate Mock Datasets & Seed the Database
+```bash
+# Generate the raw and external datasets
+python data/scripts/generate_raw_data.py
+
+# Run the seeding script to populate database tables
 python backend/scripts/seed_option_a.py
+```
 
+#### 4. Run the Machine Learning Training Pipeline
+To train and save the demand forecasting models:
+```bash
+# On Windows/PowerShell:
+$env:PYTHONPATH="."
+python backend/pipelines/training_pipeline.py
+
+# On Mac/Linux/Bash:
+PYTHONPATH=. python backend/pipelines/training_pipeline.py
+```
+
+#### 5. Start the FastAPI Web Server
+```bash
 # Start the FastAPI web server
 uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
 ```
 * **Interactive API Documentation (Swagger):** Visit http://127.0.0.1:8000/api/docs
 * **API Health check status:** Visit http://127.0.0.1:8000/health
 
-#### 3. Install and Start the Frontend UI
+#### 6. Install and Start the Frontend UI
 Open a new terminal window:
 ```bash
 cd frontend
@@ -155,17 +198,21 @@ npm run dev
 
 ---
 
-## 6. 🧪 Running the Backend Test Suite
+## 7. 🧪 Running the Backend Test Suite
 
-Darkstori includes a complete backend test harness. Running tests automatically disables online MLflow tracking to run instantly without external server dependencies:
+To run all unit tests in the project, ensure your virtual environment is active and run:
 
 ```bash
-# Set PYTHONPATH and execute pytest
-$env:PYTHONPATH="."; .venv\Scripts\pytest backend/tests
+# On Windows/PowerShell:
+$env:PYTHONPATH="."
+pytest
+
+# On Mac/Linux/Bash:
+PYTHONPATH=. pytest
 ```
 
 ---
 
-## 7. 👥 Authors & License
+## 8. 👥 Authors & License
 * **Aaditya Uniyal** - Lead Developer - [@AadityaUniyal](https://github.com/AadityaUniyal) (aaditya.uniyal22@gmail.com)
 * Distributed under the **MIT License**.

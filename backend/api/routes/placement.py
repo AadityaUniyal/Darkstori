@@ -121,25 +121,78 @@ async def get_opportunity_zones(
     payload: dict = Depends(verify_token),
 ):
     """DBSCAN clustering of dark stores to find saturated & greenfield zones."""
-    query = select(DarkStore).where(DarkStore.is_active.is_(True))
-    if city:
-        query = query.where(DarkStore.city == city)
+    # Check if database is PostgreSQL and try to use PostGIS ST_ClusterDBSCAN
+    use_postgis = False
+    clusters = {}
+    if getattr(db, "bind", None) and db.bind.dialect.name == "postgresql":
+        try:
+            from sqlalchemy import text
+            eps_meters = eps_km * 1000.0
+            sql = """
+                SELECT 
+                  id,
+                  platform,
+                  latitude,
+                  longitude,
+                  ST_ClusterDBSCAN(
+                    ST_Transform(ST_SetSRID(ST_MakePoint(longitude, latitude), 4326), 3857),
+                    eps := :eps_m,
+                    minpoints := :min_samples
+                  ) OVER() AS cid
+                FROM dark_stores
+                WHERE is_active = true
+            """
+            params = {"eps_m": eps_meters, "min_samples": min_stores}
+            if city:
+                sql += " AND city = :city"
+                params["city"] = city
 
-    result = await db.execute(query)
-    stores = result.scalars().all()
+            db_res = await db.execute(text(sql), params)
+            rows = db_res.mappings().all()
 
-    if len(stores) < min_stores:
-        # Fallback zones
-        return [
-            OpportunityZone(
-                cluster_id=0, centroid_lat=12.93, centroid_lng=77.62,
-                store_count=5, dominant_platform="Zepto", platforms={"Zepto": 3, "Blinkit": 2},
-                opportunity_score=85.0, zone_type="growth"
-            )
-        ]
+            if len(rows) < min_stores:
+                # Use standard fallback zones if too few stores
+                return [
+                    OpportunityZone(
+                        cluster_id=0, centroid_lat=12.93, centroid_lng=77.62,
+                        store_count=5, dominant_platform="Zepto", platforms={"Zepto": 3, "Blinkit": 2},
+                        opportunity_score=85.0, zone_type="growth"
+                    )
+                ]
 
-    coords = [(s.latitude, s.longitude, {"platform": s.platform, "id": s.id}) for s in stores]
-    clusters = _simple_dbscan(coords, eps_km=eps_km, min_samples=min_stores)
+            for r in rows:
+                cid = r["cid"]
+                if cid is None:
+                    cid = -1
+                clusters.setdefault(cid, []).append(
+                    (r["latitude"], r["longitude"], {"platform": r["platform"], "id": r["id"]})
+                )
+            use_postgis = True
+            logger.info("Successfully calculated opportunity zones using PostGIS ST_ClusterDBSCAN")
+        except Exception as e:
+            logger.warning(f"PostGIS DBSCAN query failed, falling back to python DBSCAN: {e}")
+            use_postgis = False
+
+    if not use_postgis:
+        query = select(DarkStore).where(DarkStore.is_active.is_(True))
+        if city:
+            query = query.where(DarkStore.city == city)
+
+        result = await db.execute(query)
+        stores = result.scalars().all()
+
+        if len(stores) < min_stores:
+            # Fallback zones
+            return [
+                OpportunityZone(
+                    cluster_id=0, centroid_lat=12.93, centroid_lng=77.62,
+                    store_count=5, dominant_platform="Zepto", platforms={"Zepto": 3, "Blinkit": 2},
+                    opportunity_score=85.0, zone_type="growth"
+                )
+            ]
+
+        coords = [(s.latitude, s.longitude, {"platform": s.platform, "id": s.id}) for s in stores]
+        clusters = _simple_dbscan(coords, eps_km=eps_km, min_samples=min_stores)
 
     zones = []
     for cid, members in clusters.items():
