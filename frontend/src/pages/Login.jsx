@@ -104,7 +104,7 @@ export default function Login() {
               Darkstori<span className="saffron-dot">.</span>
             </h1>
             <p className="brand-tagline">
-              Quick-commerce intelligence for India's dark stores.
+              Quick-commerce intelligence for India&apos;s dark stores.
             </p>
           </div>
 

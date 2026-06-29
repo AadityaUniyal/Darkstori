@@ -23,7 +23,7 @@ const NotFound = () => {
           404
         </h1>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-5)' }}>
-          This page doesn't exist.
+          This page doesn&apos;t exist.
         </p>
         <Link to="/" className="btn-primary" style={{ textDecoration: 'none' }}>
           Back to Dashboard
