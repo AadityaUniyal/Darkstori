@@ -1,34 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  MapPin,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Award,
-  Search,
-  FileDown,
-  Activity,
-  ArrowRight,
-  Compass,
-  PieChart,
-  ShieldAlert,
-  Flame,
-} from 'lucide-react';
+import { Compass, Users, DollarSign, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
-import AnimatedCard from '../components/AnimatedCard';
-import StaggerChildren from '../components/StaggerChildren';
+import RangoliGauge from '../components/RangoliGauge';
 
 export default function Neighborhoods() {
-  const [selectedCityId, setSelectedCityId] = useState(1);
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isExporting, setIsExporting] = useState(false);
+  const [activeCityName, setActiveCityName] = useState('Bangalore');
+  const [sortBy, setSortBy] = useState('score'); // 'score' | 'population' | 'intensity'
+  const [expandedCards, setExpandedCards] = useState({}); // mapping ID -> boolean
 
   // Fetch Focus Cities
-  const { data: cities, isLoading: isCitiesLoading } = useQuery({
+  const { data: cities } = useQuery({
     queryKey: ['focus-cities'],
     queryFn: () => api.getFocusCities(),
     staleTime: 60000,
@@ -42,455 +26,221 @@ export default function Neighborhoods() {
     { city_id: 5, city_name: 'Pune', state: 'Maharashtra', num_pincodes: 85, total_dark_stores: 5, market_maturity: 'Growth' },
   ];
 
-  const activeCity = cityList.find((c) => c.city_id === selectedCityId) || cityList[0];
-
-  // Fetch Neighborhoods for Selected City
-  const { data: neighborhoods, isLoading: isNeighborhoodsLoading } = useQuery({
-    queryKey: ['neighborhoods', selectedCityId],
-    queryFn: () => api.getNeighborhoods(selectedCityId),
-    staleTime: 30000,
+  // Fetch All Neighborhoods (or get for active city)
+  const { data: neighborhoods, isLoading } = useQuery({
+    queryKey: ['neighborhoods-all'],
+    queryFn: () => api.getNeighborhoods(),
+    staleTime: 60000,
   });
 
-  const neighborhoodList = neighborhoods || [
-    { neighborhood_id: 1, city_id: 1, neighborhood_name: 'Koramangala', pincode: '560034', population: 150000, avg_age: 28.5, avg_household_income: 950000.0, working_professionals_pct: 72.0, price_sensitivity: 'High', total_stores: 3, competition_intensity: 'High', market_potential_score: 9.2, opportunity_rank: 1, area_sqkm: 5.5, population_density: 27272 },
-    { neighborhood_id: 2, city_id: 1, neighborhood_name: 'Indiranagar', pincode: '560038', population: 120000, avg_age: 29.2, avg_household_income: 1100000.0, working_professionals_pct: 68.0, price_sensitivity: 'High', total_stores: 4, competition_intensity: 'High', market_potential_score: 8.9, opportunity_rank: 2, area_sqkm: 4.8, population_density: 25000 },
-    { neighborhood_id: 3, city_id: 1, neighborhood_name: 'HSR Layout', pincode: '560102', population: 180000, avg_age: 27.8, avg_household_income: 850000.0, working_professionals_pct: 75.0, price_sensitivity: 'Medium', total_stores: 3, competition_intensity: 'Medium', market_potential_score: 8.2, opportunity_rank: 3, area_sqkm: 6.2, population_density: 29032 },
+  const fallbackNeighborhoods = [
+    { neighborhood_id: 1, city: 'Bangalore', neighborhood_name: 'Koramangala', pincode: '560034', population: 150000, avg_household_income: 950000.0, working_professionals_pct: 72.0, price_sensitivity: 'High', competition_intensity: 'High', market_potential_score: 9.2 },
+    { neighborhood_id: 2, city: 'Bangalore', neighborhood_name: 'Indiranagar', pincode: '560038', population: 120000, avg_household_income: 1100000.0, working_professionals_pct: 68.0, price_sensitivity: 'High', competition_intensity: 'High', market_potential_score: 8.9 },
+    { neighborhood_id: 3, city: 'Bangalore', neighborhood_name: 'HSR Layout', pincode: '560102', population: 180000, avg_household_income: 850000.0, working_professionals_pct: 75.0, price_sensitivity: 'Medium', competition_intensity: 'Medium', market_potential_score: 8.2 },
+    { neighborhood_id: 4, city: 'Delhi', neighborhood_name: 'Saket', pincode: '110017', population: 95000, avg_household_income: 890000.0, working_professionals_pct: 65.0, price_sensitivity: 'Medium', competition_intensity: 'Medium', market_potential_score: 9.0 },
+    { neighborhood_id: 5, city: 'Hyderabad', neighborhood_name: 'Gachibowli', pincode: '500032', population: 110000, avg_household_income: 1050000.0, working_professionals_pct: 78.0, price_sensitivity: 'Low', competition_intensity: 'Low', market_potential_score: 8.8 },
   ];
 
-  // Fetch DNA for Selected Neighborhood
-  const { data: neighborhoodDNA, isLoading: isDNALoading } = useQuery({
-    queryKey: ['neighborhood-dna', selectedNeighborhoodId],
-    queryFn: () => api.getNeighborhoodDNA(selectedNeighborhoodId),
-    enabled: !!selectedNeighborhoodId,
-    staleTime: 30000,
+  const neighborhoodList = neighborhoods && neighborhoods.length > 0 ? neighborhoods : fallbackNeighborhoods;
+
+  // Filter by active city
+  const filtered = neighborhoodList.filter(n => n.city?.toLowerCase() === activeCityName.toLowerCase());
+
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'score') {
+      return (b.market_potential_score || b.opportunity_score || 0) - (a.market_potential_score || a.opportunity_score || 0);
+    } else if (sortBy === 'population') {
+      return b.population - a.population;
+    } else {
+      // Competition intensity sorting: High -> Medium -> Low
+      const intensityMap = { High: 3, Medium: 2, Low: 1 };
+      return (intensityMap[b.competition_intensity] || 0) - (intensityMap[a.competition_intensity] || 0);
+    }
   });
 
-  const activeDNA = neighborhoodDNA || {
-    dna_id: selectedNeighborhoodId,
-    neighborhood_id: selectedNeighborhoodId,
-    dominant_demographic: 'Young Professionals & Techies',
-    lifestyle_profile: 'Premium lifestyle, high convenience dependency, late-night snacking orders',
-    order_triggers: { Rain: 1.45, Heatwave: 1.3, Festival: 1.6, FridayNight: 1.5 },
-    peak_times: { Morning: '08:00 - 11:00', Evening: '18:00 - 21:00', LateNight: '23:00 - 02:00' },
-    preferred_categories: { 'Fresh Fruits & Veg': 0.35, 'Dairy & Breakfast': 0.28, 'Snacks & Beverages': 0.22, 'Gourmet Produce': 0.15 },
-    loyalty_pattern: 'Platform switcher (highly coupon sensitive)',
-    growth_trajectory: 'Robust upward trend (+22% YoY orders)',
-    opportunity_score: 9.2,
-  };
-
-  const activeNeighborhood = neighborhoodList.find(
-    (n) => n.neighborhood_id === selectedNeighborhoodId
-  ) || neighborhoodList[0];
-
-  const filteredNeighborhoods = neighborhoodList.filter((n) =>
-    n.neighborhood_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.pincode.includes(searchQuery)
-  );
-
-  const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      await api.exportNeighborhoodsCSV(activeCity.city_name);
-    } catch (err) {
-      console.error('Failed to export neighborhoods CSV', err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const selectCity = (cityId) => {
-    setSelectedCityId(cityId);
-    // Auto-select first neighborhood of the chosen city
-    const firstOfCity = neighborhoodList.find((n) => n.city_id === cityId);
-    if (firstOfCity) {
-      setSelectedNeighborhoodId(firstOfCity.neighborhood_id);
-    } else {
-      // Find the first default neighborhood for that city
-      const defaults = [
-        { id: 1, city: 1 }, { id: 2, city: 1 }, { id: 3, city: 1 },
-        { id: 4, city: 2 }, { id: 5, city: 4 }, { id: 6, city: 3 }
-      ];
-      const match = defaults.find((d) => d.city === cityId);
-      setSelectedNeighborhoodId(match ? match.id : 1);
-    }
+  const toggleExpand = (id) => {
+    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
-    <div style={{ padding: '24px', color: '#e2e8f0', fontFamily: 'Inter, sans-serif', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Compass color="#a855f7" size={32} /> Neighborhood Intelligence
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '4px' }}>
-            Demographic heat profiling, consumer persona mapping, and geographic expansion opportunities
-          </p>
-        </div>
-
-        <button
-          onClick={handleExport}
-          disabled={isExporting}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-            border: 'none',
-            borderRadius: '10px',
-            color: '#ffffff',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
-            transition: 'transform 0.2s, opacity 0.2s',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <FileDown size={18} />
-          {isExporting ? 'Exporting...' : 'Export Intelligence Report'}
-        </button>
+      <div>
+        <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Compass color="var(--saffron-500)" size={32} /> Neighborhood Intelligence
+        </h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
+          Compare neighborhood profiles, demographics, and expansion opportunity scores.
+        </p>
       </div>
 
-      {/* City Selector Pill Bar */}
-      <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px' }}>
+      {/* City Tabs Selector */}
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', borderBottom: '1px solid var(--color-border)' }}>
         {cityList.map((c) => (
           <button
-            key={c.city_id}
-            onClick={() => selectCity(c.city_id)}
+            key={c.city_name}
+            onClick={() => setActiveCityName(c.city_name)}
             style={{
-              padding: '10px 20px',
-              borderRadius: '9999px',
-              background: selectedCityId === c.city_id ? 'rgba(168, 85, 247, 0.15)' : 'rgba(30, 41, 59, 0.45)',
-              border: selectedCityId === c.city_id ? '1px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.08)',
-              color: selectedCityId === c.city_id ? '#d8b4fe' : '#94a3b8',
-              fontWeight: 700,
+              padding: '8px 18px',
+              borderRadius: 'var(--radius-full)',
+              background: activeCityName === c.city_name ? 'var(--peacock-100)' : 'transparent',
+              border: activeCityName === c.city_name ? '1px solid var(--peacock-500)' : '1px solid transparent',
+              color: activeCityName === c.city_name ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+              fontWeight: 600,
+              fontSize: '0.88rem',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              transition: 'all 0.25s ease',
+              transition: 'all var(--transition-fast)',
             }}
           >
             {c.city_name}
-            <span style={{
-              marginLeft: '8px',
-              fontSize: '0.74rem',
-              opacity: 0.7,
-              background: selectedCityId === c.city_id ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              {c.total_dark_stores} stores
-            </span>
           </button>
         ))}
       </div>
 
-      {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
-        
-        {/* Left Sidebar - Neighborhood List */}
-        <div style={{
-          background: 'rgba(30, 41, 59, 0.45)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '16px',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          maxHeight: 'calc(100vh - 200px)',
-          overflowY: 'auto'
-        }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} color="#64748b" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-            <input
-              type="text"
-              placeholder="Search pincode or area..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+      {/* Sort controls button group */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>SORT BY:</span>
+        <div style={{ display: 'flex', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '2px' }}>
+          {[
+            { id: 'score', label: '★ Opportunity Score' },
+            { id: 'population', label: '👥 Population' },
+            { id: 'intensity', label: '🔥 Competition' }
+          ].map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setSortBy(opt.id)}
               style={{
-                width: '100%',
-                padding: '10px 10px 10px 36px',
-                background: '#1e293b',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '8px',
-                color: '#ffffff',
-                fontSize: '0.88rem',
-                outline: 'none',
+                padding: '6px 12px',
+                border: 'none',
+                background: sortBy === opt.id ? 'var(--saffron-500)' : 'transparent',
+                color: sortBy === opt.id ? '#0B0D14' : 'var(--color-text-secondary)',
+                borderRadius: 'var(--radius-sm)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                transition: 'background var(--transition-fast)'
               }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', paddingLeft: '4px' }}>
-              Neighborhoods ({filteredNeighborhoods.length})
-            </div>
-
-            {filteredNeighborhoods.length > 0 ? (
-              filteredNeighborhoods.map((n) => (
-                <button
-                  key={n.neighborhood_id}
-                  onClick={() => setSelectedNeighborhoodId(n.neighborhood_id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    gap: '4px',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    background: selectedNeighborhoodId === n.neighborhood_id ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                    border: selectedNeighborhoodId === n.neighborhood_id ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid transparent',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedNeighborhoodId !== n.neighborhood_id) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedNeighborhoodId !== n.neighborhood_id) {
-                      e.currentTarget.style.background = 'transparent';
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', width: '100%' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.94rem' }}>{n.neighborhood_name}</span>
-                    <span style={{
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                      color: n.market_potential_score >= 9.0 ? '#10b981' : n.market_potential_score >= 8.0 ? '#a855f7' : '#f59e0b',
-                      background: 'rgba(255,255,255,0.02)',
-                      padding: '2px 6px',
-                      borderRadius: '4px'
-                    }}>
-                      {n.market_potential_score} ★
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>PIN Code: {n.pincode}</span>
-                </button>
-              ))
-            ) : (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '0.88rem' }}>
-                No neighborhoods match search
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Area - Selected Neighborhood Demographics & DNA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {/* Demographic Card Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-            <AnimatedCard delay={0.05}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '10px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '10px' }}>
-                  <Users color="#a855f7" size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Population</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>
-                    {activeNeighborhood?.population?.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </AnimatedCard>
-
-            <AnimatedCard delay={0.1}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '10px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '10px' }}>
-                  <DollarSign color="#10b981" size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Avg Income (INR)</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>
-                    ₹{activeNeighborhood?.avg_household_income?.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </AnimatedCard>
-
-            <AnimatedCard delay={0.15}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px' }}>
-                  <Activity color="#3b82f6" size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Working Pros</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>
-                    {activeNeighborhood?.working_professionals_pct}%
-                  </div>
-                </div>
-              </div>
-            </AnimatedCard>
-
-            <AnimatedCard delay={0.2}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '10px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '10px' }}>
-                  <Award color="#fbbf24" size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Opportunity Index</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>
-                    {activeNeighborhood?.market_potential_score} / 10
-                  </div>
-                </div>
-              </div>
-            </AnimatedCard>
-          </div>
-
-          {/* DNA Details Section */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
-            
-            {/* Behavior & DNA Profile */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.45)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px'
-            }}>
-              <div>
-                <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                  <Flame color="#fbbf24" size={20} /> Local Consumer DNA Profile
-                </h2>
-                <p style={{ color: '#64748b', fontSize: '0.78rem', marginTop: '4px' }}>
-                  Hyper-local demographic preferences, order incentives and speed requirements
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Dominant Persona</span>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginTop: '4px' }}>
-                    {activeDNA.dominant_demographic}
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Lifestyle Profile</span>
-                  <div style={{ fontSize: '0.9rem', color: '#e2e8f0', marginTop: '4px', lineHeight: '1.5' }}>
-                    {activeDNA.lifestyle_profile}
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Growth Trajectory</span>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#10b981', marginTop: '4px' }}>
-                      {activeDNA.growth_trajectory}
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Loyalty Pattern</span>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fbbf24', marginTop: '4px' }}>
-                      {activeDNA.loyalty_pattern}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Preferred Categories progress bars */}
-                <div>
-                  <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                    Preferred Product Categories
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {Object.entries(activeDNA.preferred_categories).map(([category, val]) => (
-                      <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                          <span style={{ color: '#ffffff', fontWeight: 600 }}>{category}</span>
-                          <span style={{ color: '#a855f7', fontWeight: 700 }}>{(val * 100).toFixed(0)}%</span>
-                        </div>
-                        <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${val * 100}%`, background: 'linear-gradient(90deg, #a855f7, #6366f1)', borderRadius: '3px' }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Demographics & Competition Analysis */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {/* Competition Card */}
-              <div style={{
-                background: 'rgba(30, 41, 59, 0.45)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '16px',
-                padding: '24px',
-              }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldAlert color="#f59e0b" size={16} /> Market Saturation
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>Competitor Stores</span>
-                    <strong style={{ color: '#ffffff' }}>{activeNeighborhood?.total_stores} stores</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>Competition Level</span>
-                    <strong style={{ color: activeNeighborhood?.competition_intensity === 'High' ? '#ef4444' : '#10b981' }}>
-                      {activeNeighborhood?.competition_intensity}
-                    </strong>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>Price Sensitivity</span>
-                    <strong style={{ color: '#60a5fa' }}>{activeNeighborhood?.price_sensitivity}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', paddingBottom: '4px' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>Density</span>
-                    <strong style={{ color: '#ffffff' }}>
-                      {activeNeighborhood?.population_density ? Math.round(activeNeighborhood.population_density).toLocaleString() : 'N/A'} / km²
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Triggers Weather/Monsoon */}
-              <div style={{
-                background: 'rgba(30, 41, 59, 0.45)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '16px',
-                padding: '24px',
-              }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <TrendingUp color="#10b981" size={16} /> Demand Multipliers
-                </h3>
-                <p style={{ color: '#64748b', fontSize: '0.76rem', marginTop: '-10px', marginBottom: '16px' }}>
-                  Order surge multipliers under specific seasonal or atmospheric triggers
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {Object.entries(activeDNA.order_triggers).map(([trigger, multiplier]) => (
-                    <div key={trigger} style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>{trigger} Surge</span>
-                      <span style={{
-                        fontSize: '0.78rem',
-                        fontWeight: 800,
-                        color: '#10b981',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        padding: '3px 8px',
-                        borderRadius: '6px'
-                      }}>
-                        {multiplier}x
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Grid of Neighborhood Cards */}
+      {isLoading ? (
+        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 'var(--space-8)' }}>Loading neighborhood insights...</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
+          {sorted.map((n) => {
+            const isExpanded = !!expandedCards[n.neighborhood_id];
+            const score = n.market_potential_score || n.opportunity_score || 0;
+            return (
+              <div
+                key={n.neighborhood_id}
+                className="glass-card interactive"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                  alignSelf: 'start',
+                }}
+              >
+                {/* Header Row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0 }}>
+                      {n.neighborhood_name}
+                    </h3>
+                    <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'var(--peacock-100)', color: 'var(--peacock-500)', border: 'none' }}>
+                      PIN {n.pincode}
+                    </span>
+                  </div>
+                  <RangoliGauge value={score} max={10} type="opportunity" size={54} />
+                </div>
+
+                {/* Expand trigger button */}
+                <button
+                  onClick={() => toggleExpand(n.neighborhood_id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    padding: '8px 0',
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--color-text-secondary)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'border-color var(--transition-fast)'
+                  }}
+                  className="nbhd-expand-btn"
+                >
+                  {isExpanded ? (
+                    <>Hide Details <ChevronUp size={14} /></>
+                  ) : (
+                    <>Analyze DNA & Demographics <ChevronDown size={14} /></>
+                  )}
+                </button>
+
+                {/* Expandable Details Section */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}
+                    >
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.82rem', fontFamily: 'var(--font-body)' }}>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Population:</span>
+                          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{n.population?.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Avg Income:</span>
+                          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>₹{n.avg_household_income?.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Competition:</span>
+                          <div style={{ fontWeight: 600, color: n.competition_intensity === 'High' ? 'var(--spice-500)' : 'var(--monsoon-500)' }}>{n.competition_intensity}</div>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Professionals:</span>
+                          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{n.working_professionals_pct}%</div>
+                        </div>
+                      </div>
+
+                      {/* Feature DNA breakdown */}
+                      <div style={{ background: 'var(--color-surface)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>Feature Breakdown</span>
+                        <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Price Sensitivity:</span>
+                            <span style={{ fontWeight: 600 }}>{n.price_sensitivity || 'Medium'}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Preferred Segments:</span>
+                            <span style={{ fontWeight: 600, color: 'var(--peacock-500)' }}>Fresh Produce, Snacks</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

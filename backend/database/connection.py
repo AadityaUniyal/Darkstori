@@ -61,8 +61,12 @@ async def init_db():
             await conn.run_sync(Base.metadata.create_all)
             logger.info("Database initialized successfully")
             
-            # Setup real-time PostgreSQL triggers if using Postgres
+            # Setup real-time PostgreSQL triggers and migrations if using Postgres
             if engine.dialect.name == "postgresql":
+                # Auto-migrate store_simulations table with status and comments columns
+                await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'proposed';"))
+                await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS comments TEXT;"))
+                
                 # Drop incorrect legacy check constraint if exists
                 await conn.execute(text("ALTER TABLE pincode_coverage DROP CONSTRAINT IF EXISTS check_coverage;"))
                 trigger_statements = [

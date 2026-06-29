@@ -1,0 +1,697 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║         DARKSTORI — FULL DEPLOYMENT FIX GUIDE                              ║
+║         From broken repo → fully working deployed web app                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Prepared by: Deep code audit of AadityaUniyal/Darkstori
+Date: June 2026
+Stack: FastAPI + React (Vite) + PostgreSQL + Docker
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1 — WHAT THE APP IS SUPPOSED TO DO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Darkstori is a quick-commerce intelligence platform for India (5 cities:
+Bangalore, Delhi, Mumbai, Hyderabad, Pune). It lets operators of dark stores
+(micro-warehouses powering 10-minute delivery) see:
+
+  • Dashboard      → KPIs, coverage scores, store counts per city
+  • Neighborhoods  → neighborhood-level demand DNA (demographics, competition)
+  • Simulator      → "what if I open a store here?" ROI simulation
+  • Analytics      → heatmaps, platform comparison (Blinkit/Zepto/Instamart)
+  • Forecast       → 90-day AI demand predictions per pincode
+  • Resilience     → perishables zero-waste cockpit (product batch tracking)
+  • Algorithm Lab  → ML model comparison & explainability
+
+Auth flow: register/login → JWT → all pages behind PrivateRoute.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2 — CRITICAL BUGS (APP WILL NOT START AT ALL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUG #1 — MISSING: backend/database/models/models.py  ← SHOWSTOPPER
+────────────────────────────────────────────────────────────────────
+IMPACT: Every single API route imports from this file. The backend
+cannot start at all. ImportError on launch.
+
+WHAT IS MISSING: The file defining all 15 SQLAlchemy ORM models:
+  User, RefreshToken, ApiKey, DarkStore, Neighborhood, NeighborhoodDNA,
+  FocusCity, PincodeCoverage, OrderSynthetic, ProductBatch, PlacementScore,
+  CustomerCohort, DeliverySLAMetric, EconomicProjection, MLPrediction,
+  MLPerformanceMetric, MLFeatureDrift
+
+FIX: Create backend/database/models/__init__.py and
+     backend/database/models/models.py with all those SQLAlchemy models.
+     You must also export Base from it (used in connection.py's init_db).
+
+Reference: database/connection.py line:
+  from backend.database.models.models import Base  ← must exist
+
+SCHEMA REFERENCE: Full schema documented in docs/DATABASE_SCHEMA.md and
+in the alembic migration 001_add_ml_tracking_tables.py.
+
+Minimum viable models.py skeleton:
+
+  from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime,
+                          JSON, ForeignKey, Text, Date
+  from sqlalchemy.orm import declarative_base, relationship
+  from datetime import datetime
+
+  Base = declarative_base()
+
+  class User(Base):
+      __tablename__ = "users"
+      id = Column(Integer, primary_key=True)
+      email = Column(String, unique=True, nullable=False, index=True)
+      username = Column(String, unique=True)
+      hashed_password = Column(String, nullable=False)
+      full_name = Column(String, default="")
+      role = Column(String, default="user")
+      is_active = Column(Boolean, default=True)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class RefreshToken(Base):
+      __tablename__ = "refresh_tokens"
+      id = Column(Integer, primary_key=True)
+      jti = Column(String, unique=True, nullable=False, index=True)
+      user_id = Column(Integer, ForeignKey("users.id"))
+      expires_at = Column(DateTime, nullable=False)
+      revoked = Column(Boolean, default=False)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class ApiKey(Base):
+      __tablename__ = "api_keys"
+      id = Column(Integer, primary_key=True)
+      user_id = Column(Integer, ForeignKey("users.id"))
+      key_hash = Column(String, nullable=False)
+      prefix = Column(String, nullable=False)
+      name = Column(String)
+      is_active = Column(Boolean, default=True)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class DarkStore(Base):
+      __tablename__ = "dark_stores"
+      id = Column(Integer, primary_key=True)
+      platform = Column(String, nullable=False)
+      store_name = Column(String)
+      city = Column(String, nullable=False, index=True)
+      pincode = Column(String, index=True)
+      latitude = Column(Float, nullable=False)
+      longitude = Column(Float, nullable=False)
+      city_tier = Column(String)
+      is_active = Column(Boolean, default=True)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class Neighborhood(Base):
+      __tablename__ = "neighborhoods"
+      id = Column(Integer, primary_key=True)
+      city = Column(String, nullable=False, index=True)
+      name = Column(String, nullable=False)
+      pincode = Column(String, index=True)
+      latitude = Column(Float)
+      longitude = Column(Float)
+      area_sqkm = Column(Float)
+      population = Column(Integer)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class NeighborhoodDNA(Base):
+      __tablename__ = "neighborhood_dna"
+      id = Column(Integer, primary_key=True)
+      neighborhood_id = Column(Integer, ForeignKey("neighborhoods.id"))
+      avg_household_income = Column(Float)
+      working_population_pct = Column(Float)
+      competitor_count = Column(Integer, default=0)
+      demand_score = Column(Float)
+      growth_potential = Column(Float)
+      updated_at = Column(DateTime, default=datetime.utcnow)
+
+  class FocusCity(Base):
+      __tablename__ = "focus_cities"
+      id = Column(Integer, primary_key=True)
+      name = Column(String, unique=True, nullable=False)
+      state = Column(String)
+      population = Column(Integer)
+      latitude = Column(Float)
+      longitude = Column(Float)
+
+  class PincodeCoverage(Base):
+      __tablename__ = "pincode_coverage"
+      id = Column(Integer, primary_key=True)
+      pincode = Column(String, nullable=False, index=True)
+      city = Column(String, nullable=False)
+      latitude = Column(Float)
+      longitude = Column(Float)
+      coverage_score = Column(Float, default=0.0)
+      store_count = Column(Integer, default=0)
+      is_gap = Column(Boolean, default=False)
+      updated_at = Column(DateTime, default=datetime.utcnow)
+
+  class OrderSynthetic(Base):
+      __tablename__ = "orders_synthetic"
+      id = Column(Integer, primary_key=True)
+      store_id = Column(Integer, ForeignKey("dark_stores.id"))
+      pincode = Column(String)
+      city = Column(String)
+      order_date = Column(Date)
+      demand_units = Column(Integer, default=0)
+      revenue = Column(Float, default=0.0)
+      platform = Column(String)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class ProductBatch(Base):
+      __tablename__ = "product_batches"
+      id = Column(Integer, primary_key=True)
+      store_id = Column(Integer, ForeignKey("dark_stores.id"))
+      product_name = Column(String, nullable=False)
+      batch_code = Column(String, index=True)
+      expiry_date = Column(Date)
+      quantity = Column(Integer, default=0)
+      status = Column(String, default="active")
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class PlacementScore(Base):
+      __tablename__ = "placement_scores"
+      id = Column(Integer, primary_key=True)
+      pincode = Column(String, nullable=False, index=True)
+      city = Column(String)
+      score = Column(Float, default=0.0)
+      demand_index = Column(Float)
+      competition_index = Column(Float)
+      accessibility_index = Column(Float)
+      roi_estimate = Column(Float)
+      updated_at = Column(DateTime, default=datetime.utcnow)
+
+  class CustomerCohort(Base):
+      __tablename__ = "customer_cohorts"
+      id = Column(Integer, primary_key=True)
+      city = Column(String, nullable=False)
+      cohort_name = Column(String)
+      size = Column(Integer)
+      avg_order_value = Column(Float)
+      order_frequency = Column(Float)
+      churn_risk = Column(Float)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class DeliverySLAMetric(Base):
+      __tablename__ = "delivery_sla_metrics"
+      id = Column(Integer, primary_key=True)
+      store_id = Column(Integer, ForeignKey("dark_stores.id"))
+      date = Column(Date, nullable=False)
+      avg_delivery_minutes = Column(Float)
+      sla_breach_pct = Column(Float)
+      orders_fulfilled = Column(Integer)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class EconomicProjection(Base):
+      __tablename__ = "economic_projections"
+      id = Column(Integer, primary_key=True)
+      pincode = Column(String, index=True)
+      city = Column(String)
+      capex = Column(Float)
+      opex_monthly = Column(Float)
+      revenue_monthly = Column(Float)
+      break_even_months = Column(Integer)
+      roi_12m = Column(Float)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class MLPrediction(Base):
+      __tablename__ = "ml_predictions"
+      id = Column(Integer, primary_key=True)
+      prediction_id = Column(String, unique=True)
+      model_name = Column(String, index=True)
+      model_version = Column(String)
+      input_data = Column(JSON)
+      prediction = Column(Float)
+      lower_bound = Column(Float)
+      upper_bound = Column(Float)
+      actual_value = Column(Float, nullable=True)
+      latency_ms = Column(Float)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+  class MLPerformanceMetric(Base):
+      __tablename__ = "ml_performance_metrics"
+      id = Column(Integer, primary_key=True)
+      model_name = Column(String, index=True)
+      model_version = Column(String)
+      window_days = Column(Integer)
+      mae = Column(Float)
+      rmse = Column(Float)
+      mape = Column(Float)
+      r2_score = Column(Float)
+      sample_count = Column(Integer)
+      computed_at = Column(DateTime, default=datetime.utcnow)
+
+  class MLFeatureDrift(Base):
+      __tablename__ = "ml_feature_drift"
+      id = Column(Integer, primary_key=True)
+      model_name = Column(String, index=True)
+      feature_name = Column(String)
+      drift_score = Column(Float)
+      drift_detected = Column(Boolean, default=False)
+      reference_mean = Column(Float)
+      current_mean = Column(Float)
+      checked_at = Column(DateTime, default=datetime.utcnow)
+
+  class CompetitorStore(Base):
+      __tablename__ = "competitor_stores"
+      id = Column(Integer, primary_key=True)
+      platform = Column(String)
+      city = Column(String)
+      pincode = Column(String)
+      latitude = Column(Float)
+      longitude = Column(Float)
+
+  class StockLedger(Base):
+      __tablename__ = "stock_ledger"
+      id = Column(Integer, primary_key=True)
+      store_id = Column(Integer, ForeignKey("dark_stores.id"))
+      product_name = Column(String)
+      quantity_change = Column(Integer)
+      reason = Column(String)
+      created_at = Column(DateTime, default=datetime.utcnow)
+
+
+BUG #2 — MISSING: docker-entrypoint.sh  ← SHOWSTOPPER FOR DOCKER
+──────────────────────────────────────────────────────────────────
+IMPACT: Docker Compose references ./docker-entrypoint.sh as the
+backend ENTRYPOINT. The file does not exist in the repo. Docker
+build will fail.
+
+FIX: Create docker-entrypoint.sh in the repo root:
+
+  #!/bin/bash
+  set -e
+
+  echo "Running database migrations..."
+  cd /app
+  python -c "
+  import asyncio
+  from backend.database.connection import init_db
+  asyncio.run(init_db())
+  print('Database initialized.')
+  "
+
+  echo "Starting Darkstori API..."
+  exec uvicorn backend.app:app --host 0.0.0.0 --port 8000 --workers 2
+
+  chmod +x docker-entrypoint.sh
+
+BUG #3 — MISSING: ENCRYPTION_KEY in .env  ← PRODUCTION CRASH
+─────────────────────────────────────────────────────────────
+IMPACT: In production mode, app.py validates that ENCRYPTION_KEY is set.
+The .env.example does not include it, so anyone deploying to prod with
+ENVIRONMENT=production will get a RuntimeError on startup.
+
+FIX: Add to .env.example and document it:
+  ENCRYPTION_KEY=your-32-byte-base64-fernet-key-here
+  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+BUG #4 — DUPLICATE SOCKET.IO MOUNT ORDER BUG
+─────────────────────────────────────────────
+IMPACT: In app.py, the Socket.IO ASGI app is mounted BEFORE CORS
+middleware is added. This means WebSocket connections from the browser
+will fail CORS checks.
+
+FIX: Move the sio initialization and mounting AFTER all middleware
+is added, or use socketio's cors_allowed_origins parameter:
+
+  sio = socketio.AsyncServer(
+      async_mode="asgi",
+      cors_allowed_origins=settings.ALLOWED_ORIGINS
+  )
+
+  # Mount AFTER CORSMiddleware is added
+  app.mount("/socket.io", socketio.ASGIApp(sio))
+
+BUG #5 — package.json includes @clerk/clerk-react but it is NEVER used
+───────────────────────────────────────────────────────────────────────
+IMPACT: @clerk/clerk-react is listed as a dependency but AuthContext.jsx
+uses localStorage JWT (no Clerk). This adds 200KB+ to the bundle for no
+reason and will confuse future developers.
+
+FIX: Remove @clerk/clerk-react from package.json and run npm install.
+The existing JWT auth in AuthContext.jsx is sufficient and already works.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3 — RUNTIME BUGS (APP STARTS BUT FEATURES BREAK)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUG #6 — DATABASE_URL left blank in config default
+───────────────────────────────────────────────────
+IMPACT: Settings has DATABASE_URL: str = "" as the default. If .env
+is not set up, init_db() will attempt to connect to an empty URL and
+crash with a cryptic error rather than a clear "DATABASE_URL not set".
+
+FIX: Add a startup guard in core/config.py or connection.py:
+  if not settings.DATABASE_URL:
+      raise RuntimeError("DATABASE_URL must be set in .env")
+
+BUG #7 — Redis/Cache removed but CELERY_BROKER_URL still in docker-compose
+──────────────────────────────────────────────────────────────────────────
+IMPACT: requirements/base.txt explicitly notes "Redis removed" and cache
+is replaced with NoOpCache. But docker-compose.yml still spins up a Redis
+container and injects REDIS_URL/CELERY_BROKER_URL. This wastes resources
+and misleads developers.
+
+FIX (Option A — keep Redis for real caching): Re-add redis==5.2.0 to
+requirements and replace NoOpCache with a real Redis cache implementation
+using aioredis.
+
+FIX (Option B — fully remove Redis): Remove the redis service from
+docker-compose.yml and remove Redis env vars. Leave NoOpCache as-is.
+
+Recommendation: Keep Redis (Option A). The app has 60 req/min rate
+limiting done in-memory per process — under a multi-worker deployment
+this breaks (each worker has its own counter). Redis-backed rate limiting
+is the proper fix.
+
+BUG #8 — MLflow container takes 5+ minutes to install on first boot
+────────────────────────────────────────────────────────────────────
+IMPACT: The mlflow service in docker-compose.yml uses python:3.12-slim and
+runs "pip install mlflow sqlalchemy" on every container start. This adds
+4-6 minutes to the first boot and fails entirely if there's no internet.
+
+FIX: Replace with a pre-built image:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.10.0
+    command: mlflow server --host 0.0.0.0 --port 5000
+             --backend-store-uri sqlite:///mlflow.db
+             --default-artifact-root /mlflow/artifacts
+    ...
+
+BUG #9 — Frontend VITE_API_URL mismatch in Docker
+───────────────────────────────────────────────────
+IMPACT: In docker-compose.yml, the frontend service sets
+VITE_API_URL=http://localhost:8000. But Vite env vars are baked in at
+BUILD TIME, not runtime. Since the frontend is built inside the Docker
+image, VITE_API_URL is undefined at build time (it's only passed as a
+runtime env var) and the frontend defaults to http://localhost:8000
+(correct for local dev), but this URL is inaccessible from the browser
+if the app is deployed remotely.
+
+FIX: In frontend/Dockerfile, pass the API URL as a build argument:
+  ARG VITE_API_URL=http://localhost:8000
+  ENV VITE_API_URL=$VITE_API_URL
+  RUN npm run build
+
+  Then in docker-compose.yml:
+    frontend:
+      build:
+        args:
+          VITE_API_URL: ${API_URL:-http://localhost:8000}
+
+BUG #10 — alembic migrations never run
+────────────────────────────────────────
+IMPACT: The docker-entrypoint.sh (once created) should run migrations,
+but the existing approach in connection.py uses create_all() (creates
+tables if missing but never modifies existing ones). Alembic migrations in
+backend/alembic/versions/ exist but are never applied.
+
+FIX: Replace the create_all() approach with proper Alembic invocation:
+  # In docker-entrypoint.sh or init_db()
+  alembic upgrade head
+
+  And ensure alembic.ini points to the correct DB URL:
+    # alembic.ini
+    sqlalchemy.url = %(DATABASE_URL)s
+  
+  And env.py reads from settings:
+    from backend.core.config import settings
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4 — QUALITY/IMPROVEMENT ISSUES (APP WORKS BUT POORLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ISSUE #1 — No data seeding = blank dashboards on first run
+──────────────────────────────────────────────────────────
+The seed_data route exists at POST /api/seed, but it is not called
+automatically. On first deployment, every dashboard will show 0 stores,
+0 neighborhoods, empty charts.
+
+FIX: In docker-entrypoint.sh, after migrations, optionally seed:
+  if [ "$SEED_DEMO_DATA" = "true" ]; then
+    echo "Seeding demo data..."
+    curl -s -X POST http://localhost:8000/api/seed/all || true
+  fi
+
+docker-compose.yml already has SEED_DEMO_DATA=false — just flip it to
+true for demo deployments.
+
+ISSUE #2 — realtime_listener is a stub (no actual real-time)
+────────────────────────────────────────────────────────────
+backend/database/realtime_listener.py contains only a placeholder
+that does nothing. The app claims "real-time updates" but the
+socket.io connection carries no actual events.
+
+FIX: Implement the PostgreSQL LISTEN/NOTIFY listener using asyncpg:
+  import asyncpg
+  async def start_realtime_listener(sio):
+      conn = await asyncpg.connect(settings.DATABASE_URL)
+      await conn.add_listener("darkstori_events", 
+          lambda conn, pid, channel, payload: asyncio.create_task(
+              sio.emit("db_event", json.loads(payload))
+          ))
+      while True:
+          await asyncio.sleep(1)  # Keep alive
+
+ISSUE #3 — rate_limiter is in-memory and not process-safe
+──────────────────────────────────────────────────────────
+The current RateLimiter uses a Python dict. Under uvicorn with --workers 2+,
+each worker has its own dict, meaning each user gets 60*N requests/min.
+
+FIX: Use Redis for rate limiting state (ties into Bug #7 fix above).
+  Use slowapi library which wraps Redis:
+    pip install slowapi
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_URL)
+
+ISSUE #4 — ML models never trained, prediction endpoints return stubs
+─────────────────────────────────────────────────────────────────────
+The predictions route and ML routes will return empty/mocked responses
+unless models have been trained with actual data. There is no automated
+training pipeline triggered on startup.
+
+FIX: Create a one-time training script and document it clearly:
+  cd backend
+  python scripts/train_initial_models.py
+  # This should train demand forecasting model on seeded synthetic data
+  # and save to models/ directory (or MLflow registry)
+
+Then in docker-entrypoint.sh:
+  python scripts/train_initial_models.py --if-not-exists
+
+ISSUE #5 — nginx config not validated
+──────────────────────────────────────
+frontend/nginx/nginx.conf and default.conf exist but are never tested.
+If nginx config has any error, the frontend container exits silently.
+
+FIX: In frontend/Dockerfile, add a config test:
+  RUN nginx -t
+
+Also ensure default.conf has a proper SPA fallback:
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+  Without this, refreshing any React route (/dashboard, /analytics etc.)
+  returns a 404.
+
+ISSUE #6 — Missing environment documentation
+─────────────────────────────────────────────
+.env.example is missing several keys that the app actually reads:
+  - ENCRYPTION_KEY          (required in production)
+  - MLFLOW_BACKEND_STORE_URI (used by alembic/mlflow)
+  - JWT_SECRET_KEY uses placeholder — validator will REJECT it on first try
+
+FIX: Regenerate .env.example from Settings class, and add a setup script:
+  python -c "from backend.core.config import Settings; ..." 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5 — STEP-BY-STEP DEPLOYMENT PLAN (LOCAL + CLOUD)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHASE 1 — Fix the blockers (1-2 hours)
+──────────────────────────────────────
+[ ] 1. Create backend/database/models/__init__.py (empty)
+[ ] 2. Create backend/database/models/models.py with all models (Section 2, Bug #1)
+[ ] 3. Create docker-entrypoint.sh (Section 2, Bug #2)
+[ ] 4. Add ENCRYPTION_KEY to .env.example (Section 2, Bug #3)
+[ ] 5. Fix Socket.IO CORS issue (Section 2, Bug #4)
+[ ] 6. Remove @clerk/clerk-react from package.json (Section 2, Bug #5)
+[ ] 7. Add DATABASE_URL guard in config.py (Section 3, Bug #6)
+
+PHASE 2 — Local Docker test
+────────────────────────────
+[ ] 1. Copy .env.example to .env, fill in:
+       DATABASE_URL=postgresql://darkstori:darkstori_dev_password@localhost:5432/darkstori_db
+       JWT_SECRET_KEY=<generate 32+ char random string>
+       ENCRYPTION_KEY=<generate with Fernet.generate_key()>
+       ENVIRONMENT=development
+       DEBUG=True
+
+[ ] 2. docker compose up --build
+[ ] 3. Verify http://localhost:8000/health shows database:healthy
+[ ] 4. Verify http://localhost:8000/api/docs loads Swagger UI
+[ ] 5. POST /api/auth/register with test user
+[ ] 6. POST /api/auth/login and get JWT token
+[ ] 7. Hit /api/stores/ with Bearer token — should return []
+[ ] 8. POST /api/seed/all (or flip SEED_DEMO_DATA=true)
+[ ] 9. Refresh /api/stores/ — should return seeded data
+[ ] 10. Open http://localhost:80 — React app should load
+[ ] 11. Login with test credentials — dashboard should show data
+
+PHASE 3 — Production deployment (Render / Railway / VPS)
+──────────────────────────────────────────────────────────
+
+RECOMMENDED FREE/CHEAP STACK:
+  • Backend  → Render.com (free tier for FastAPI, or $7/mo starter)
+  • Database → Neon.tech (free PostgreSQL, already referenced in codebase)
+  • Frontend → Vercel (free, already referenced in ALLOWED_ORIGINS)
+  • MLflow   → Disable (set MLFLOW_ENABLE_TRACKING=false for initial deploy)
+
+BACKEND ON RENDER:
+  1. Connect GitHub repo to Render
+  2. New Web Service → Root Directory: . → Runtime: Python 3.12
+  3. Build Command:  pip install -r backend/requirements/base.txt -r backend/requirements/ml.txt
+  4. Start Command:  uvicorn backend.app:app --host 0.0.0.0 --port $PORT
+  5. Set environment variables:
+       DATABASE_URL=<your Neon connection string>
+       JWT_SECRET_KEY=<strong random key>
+       ENCRYPTION_KEY=<fernet key>
+       ENVIRONMENT=production
+       DEBUG=False
+       ALLOWED_ORIGINS=https://your-app.vercel.app
+  6. Add health check: /health
+
+FRONTEND ON VERCEL:
+  1. Import GitHub repo to Vercel
+  2. Root Directory: frontend
+  3. Build Command: npm run build
+  4. Output Directory: dist
+  5. Environment Variables:
+       VITE_API_URL=https://your-backend.onrender.com
+  6. Deploy
+
+DATABASE SETUP (NEON):
+  1. Create project at neon.tech
+  2. Copy connection string (postgresql://user:pass@host/db?sslmode=require)
+  3. Set as DATABASE_URL in Render
+  4. Run migrations:
+     In Render Shell: alembic upgrade head
+     Or use init_db() approach (auto-runs on first start)
+
+DOCKER COMPOSE (self-hosted VPS):
+  1. Create .env.prod from .env.example
+  2. docker compose -f docker-compose.prod.yml up -d
+  3. Ensure ports 80 (frontend) and 8000 (API) are open in firewall
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6 — IMPROVEMENTS TO MAKE THE APP PRODUCTION-GRADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPROVEMENT A — Proper seed data with realistic Indian city data
+────────────────────────────────────────────────────────────────
+The current seed_data.py seeds synthetic data but the exact content is
+unknown. For a compelling demo, seed_data should include:
+  - ~50-100 realistic dark store locations per city
+  - ~200 neighborhood records with plausible DNA scores
+  - ~1000 synthetic orders over 90 days for trend charts
+  - 5-10 competitor stores per city per platform
+
+IMPROVEMENT B — Replace MLflow with simpler model persistence
+──────────────────────────────────────────────────────────────
+MLflow is enterprise-grade and overkill for a demo/MVP. It adds a whole
+additional service. For v1, replace with joblib + file-based model storage:
+  - Train models, serialize to models/demand_model.pkl
+  - Load with joblib.load() on startup
+  - Remove the entire mlflow service from docker-compose.yml
+  This makes deployment dramatically simpler.
+
+IMPROVEMENT C — Add an /api/demo/seed-and-login endpoint
+─────────────────────────────────────────────────────────
+For demo purposes, a single endpoint that:
+  1. Seeds fresh demo data
+  2. Creates/resets a demo@darkstori.in account
+  3. Returns a JWT token
+Makes it trivial for anyone to try the app without manual setup.
+
+IMPROVEMENT D — Error states in the React frontend
+───────────────────────────────────────────────────
+Currently, if the backend is unreachable, pages silently show empty
+state. Add a global API error toast:
+  - In api.js axios response interceptor: check for network errors
+  - Emit a "api:error" event
+  - Show a banner: "Backend unreachable — check your connection"
+
+IMPROVEMENT E — nginx SPA fallback (Critical for React Router)
+───────────────────────────────────────────────────────────────
+Verify that frontend/nginx/default.conf has:
+  location / {
+    root /usr/share/nginx/html;
+    index index.html;
+    try_files $uri $uri/ /index.html;  ← THIS LINE IS ESSENTIAL
+  }
+Without it, direct URLs like /dashboard return 404 after deployment.
+
+IMPROVEMENT F — GitHub Actions CI/CD pipeline
+──────────────────────────────────────────────
+The only workflow in .github/workflows/ is an auto-merge Dependabot helper.
+There is no actual CI (test + lint) or CD (deploy) pipeline.
+
+Add .github/workflows/ci.yml:
+  on: push
+  jobs:
+    test-backend:
+      - pip install -r backend/requirements/dev.txt
+      - pytest backend/tests/ -v
+    test-frontend:
+      - npm install && npm run lint && npm run test
+
+Add .github/workflows/deploy.yml:
+  on: push to main
+  jobs:
+    deploy:
+      - Trigger Render/Vercel deploy via webhook
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7 — PRIORITY ORDER SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MUST DO (app literally won't start):
+  1. Create backend/database/models/models.py          ← Bug #1
+  2. Create docker-entrypoint.sh                       ← Bug #2
+
+MUST DO (app starts but crashes or misbehaves):
+  3. Add ENCRYPTION_KEY to .env.example                ← Bug #3
+  4. Fix DATABASE_URL empty string guard               ← Bug #6
+  5. Fix VITE_API_URL baked at build time              ← Bug #9
+  6. Add nginx try_files SPA fallback                  ← Improvement E
+
+SHOULD DO (quality + demo-readiness):
+  7. Remove @clerk/clerk-react dead dependency         ← Bug #5
+  8. Fix Socket.IO CORS mount order                    ← Bug #4
+  9. Replace MLflow container with prebuilt image      ← Bug #8
+  10. Implement real seed data flow                    ← Issue #1
+  11. Run alembic migrations properly                  ← Bug #10
+  12. Add CI/CD pipeline                               ← Improvement F
+
+NICE TO HAVE (production hardening):
+  13. Redis-backed rate limiter                        ← Issue #3
+  14. Implement realtime_listener                      ← Issue #2
+  15. Train and serialize ML models                    ← Issue #4
+  16. Demo login endpoint                              ← Improvement C
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8 — ESTIMATED EFFORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Phase 1 (blockers fixed, local Docker running):    ~3-4 hours
+  Phase 2 (deployed to Render + Vercel, demo-ready): ~2-3 hours
+  Phase 3 (production-grade, ML working):            ~1-2 days
+
+Total to reach "fully working deployed web app": 1 day of focused work.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF DOCUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,338 +1,110 @@
-/* ==========================================================================
-   Analytics & Reporting Page
-   ========================================================================== */
-
 .ana-page {
-  padding: 1.5rem;
-  max-width: 1500px;
-  margin: 0 auto;
-  color: #f3f4f6;
-  font-family: 'Inter', sans-serif;
-  animation: anaFade 0.4s ease-out;
-}
-
-@keyframes anaFade {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Header ──────────────────────────────────────────────────────────────── */
-.ana-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
+  flex-direction: column;
+  gap: var(--space-6);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
 }
 
-.ana-title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #3b82f6, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.3rem;
-}
-
-.ana-subtitle { color: #9ca3af; font-size: 0.88rem; }
-
-.ana-header-actions {
+/* Sticky filter bar */
+.ana-filter-bar {
+  position: sticky;
+  top: 64px; /* below navbar */
+  z-index: 800;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4);
+  background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-sm);
   flex-wrap: wrap;
 }
 
-.ana-period-tabs {
-  display: flex;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 0.5rem;
-  padding: 3px;
-}
-
-.ana-period-btn {
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  padding: 0.35rem 0.8rem;
-  border-radius: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s;
-  font-family: 'Inter', sans-serif;
-}
-.ana-period-btn.active {
-  background: rgba(59,130,246,0.2);
-  color: #60a5fa;
-}
-
-.ana-export-btn {
+.ana-search-wrap, .ana-date-wrap {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #9ca3af;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s;
-  font-family: 'Inter', sans-serif;
-}
-.ana-export-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-
-/* ── KPI Strip ───────────────────────────────────────────────────────────── */
-.ana-kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.75rem;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
 }
 
-.ana-kpi-card {
-  background: rgba(17,24,39,0.7);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 0.85rem;
-  padding: 1rem;
-  backdrop-filter: blur(10px);
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  transition: transform 0.2s, border-color 0.2s;
-}
-.ana-kpi-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.13); }
-
-.ana-kpi-icon {
-  width: 36px; height: 36px;
-  border-radius: 0.5rem;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 0.25rem;
-}
-
-.ana-kpi-val {
-  font-size: 1.35rem;
-  font-weight: 800;
-  font-family: 'JetBrains Mono', monospace;
-  line-height: 1.2;
-}
-
-.ana-kpi-label {
-  font-size: 0.7rem;
-  color: #6b7280;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.ana-kpi-delta {
-  font-size: 0.7rem;
-  color: #10b981;
-  font-weight: 700;
-  margin-top: 2px;
-}
-
-/* ── Tabs ────────────────────────────────────────────────────────────────── */
-.ana-tabs {
-  display: flex;
-  gap: 0.35rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 0.65rem;
-}
-
-.ana-tab {
+.ana-search-wrap input, .ana-date-wrap select {
   background: transparent;
   border: none;
-  color: #6b7280;
-  padding: 0.5rem 1.1rem;
-  border-radius: 0.5rem;
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
   cursor: pointer;
-  transition: all 0.18s;
-  font-family: 'Inter', sans-serif;
 }
-.ana-tab.active {
-  background: rgba(59,130,246,0.12);
-  color: #60a5fa;
-  border: 1px solid rgba(59,130,246,0.25);
-}
-.ana-tab:hover:not(.active) { background: rgba(255,255,255,0.05); color: #9ca3af; }
 
-/* ── Content ─────────────────────────────────────────────────────────────── */
-.ana-content {
+.search-icon, .date-icon {
+  color: var(--color-text-muted);
+}
+
+/* Split Layout */
+.ana-split-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-6);
+}
+
+.ana-map-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.ana-list-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
 }
 
-.ana-section-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.5rem;
-}
-
-/* ── Charts ──────────────────────────────────────────────────────────────── */
-.ana-charts-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-}
-
-@media (max-width: 768px) {
-  .ana-charts-row { grid-template-columns: 1fr; }
-}
-
-.ana-chart-wrap {
-  background: rgba(17,24,39,0.7);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 0.85rem;
-  padding: 1.1rem;
-  backdrop-filter: blur(10px);
-}
-
-.ana-chart-label {
-  font-size: 0.78rem;
-  color: #9ca3af;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-/* ── Platform ────────────────────────────────────────────────────────────── */
-.ana-platform-table {
-  background: rgba(17,24,39,0.7);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 0.85rem;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  margin-top: 1rem;
-}
-
-.ana-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.ana-table th, .ana-table td {
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 0.82rem;
-}
-
-.ana-table th {
-  background: rgba(255,255,255,0.02);
-  color: #6b7280;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-}
-
-.ana-table tr:last-child td { border-bottom: none; }
-.ana-table td { color: #9ca3af; }
-
-/* ── City Grid ───────────────────────────────────────────────────────────── */
-.ana-city-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-}
-
-.ana-city-card {
-  background: rgba(17,24,39,0.7);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 0.85rem;
-  padding: 1.1rem;
-  backdrop-filter: blur(10px);
+.ana-ranked-list {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.ana-city-card-header {
+.ana-ranked-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 }
 
-.ana-city-name {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #fff;
+.ana-ranked-row:hover {
+  border-color: var(--peacock-500);
+  background: rgba(14, 124, 134, 0.05);
+  transform: translateX(2px);
 }
 
-.ana-city-growth {
-  font-size: 0.78rem;
-  font-weight: 800;
+.ana-ranked-row.active {
+  border-color: var(--peacock-500);
+  background: var(--peacock-100);
 }
 
-.ana-city-metric-bar {
-  height: 6px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.ana-city-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.35rem;
-}
-
-.ana-city-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  color: #9ca3af;
-}
-
-/* ── Waste Grid ──────────────────────────────────────────────────────────── */
-.ana-waste-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.ana-waste-card {
-  background: rgba(17,24,39,0.7);
-  border: 1px solid;
-  border-radius: 0.85rem;
-  padding: 1.25rem;
-  backdrop-filter: blur(10px);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  transition: transform 0.2s;
-}
-.ana-waste-card:hover { transform: translateY(-3px); }
-
-.ana-waste-emoji { font-size: 1.75rem; margin-bottom: 0.25rem; }
-
-.ana-waste-val {
-  font-size: 1.5rem;
-  font-weight: 900;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.ana-waste-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #d1d5db;
-}
-
-.ana-waste-sub {
-  font-size: 0.65rem;
-  color: #4b5563;
-  margin-top: 2px;
+@media (max-width: 1024px) {
+  .ana-split-layout {
+    grid-template-columns: 1fr;
+  }
 }

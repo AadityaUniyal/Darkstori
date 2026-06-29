@@ -387,6 +387,8 @@ class StoreSimulation(Base):
     break_even_month = Column(Integer)
     roi_months = Column(Integer)
     confidence_level = Column(Float)
+    status = Column(String(50), server_default="proposed")
+    comments = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 

@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
+  padding-top: 64px; /* Space for fixed Navbar */
 }
 
 .app-container {
@@ -13,9 +14,9 @@
 .main-content {
   flex: 1;
   padding: var(--space-6);
-  overflow-y: auto;
   background: var(--color-bg);
   transition: background var(--transition-base);
+  min-width: 0; /* Prevents flex children from breaking parent layout */
 }
 
 .page-loader {

@@ -1,58 +1,48 @@
 .navbar {
-  height: var(--nav-height);
-  background: var(--ink-900);
-  color: var(--color-text-on-dark);
+  height: 64px;
+  background: rgba(11, 13, 20, 0.85); /* var(--color-bg) at 85% */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-6);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   cursor: pointer;
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--saffron-500);
-  animation: pulse 2s ease-in-out infinite;
-}
-
 .brand-text {
-  font-family: var(--font-heading);
-  font-size: 1.35rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
   font-weight: 700;
+  color: var(--color-text-primary);
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--saffron-400), var(--saffron-500));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-.brand-tag {
-  font-size: 0.6rem;
-  font-weight: 500;
-  background: rgba(255, 153, 51, 0.12);
-  border: 1px solid rgba(255, 153, 51, 0.25);
-  border-radius: var(--radius-full);
-  padding: 2px 8px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--saffron-400);
-  -webkit-text-fill-color: var(--saffron-400);
+.brand-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--saffron-500);
+  margin-left: 4px;
+  display: inline-block;
+  animation: slowPulse 4s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+@keyframes slowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1.0; }
 }
 
 .navbar-actions {
@@ -108,13 +98,13 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--saffron-500), var(--saffron-600));
+  background: var(--saffron-100);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.75rem;
-  color: white;
+  color: var(--saffron-600);
 }
 
 .user-name {

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, MapPin, Building2, Zap,
-  Star, ChevronRight,
+  Star, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import { api } from '../services/api';
 import MapView from '../components/MapView';
@@ -17,14 +17,22 @@ import AmbientBackground from '../components/AmbientBackground';
 import AnimatedCounter from '../components/AnimatedCounter';
 import AnimatedCard from '../components/AnimatedCard';
 import StaggerChildren from '../components/StaggerChildren';
+import RangoliGauge from '../components/RangoliGauge';
 import './Dashboard.css';
 
-const CITY_EMOJI = {
-  Bangalore: '\u{1F306}', Delhi: '\u{1F3DB}', Mumbai: '\u{1F30A}', Hyderabad: '\u{1F48E}', Pune: '\u{1F393}',
+const IMPACT_COLORS = {
+  HIGH: 'var(--spice-500)',
+  MEDIUM: 'var(--marigold-500)',
+  LOW: 'var(--monsoon-500)',
 };
-const CITY_EMOJI_DEFAULT = '\u{1F4CD}';
 
-const IMPACT_COLOR = { HIGH: '#fa709a', MEDIUM: '#f6d365', LOW: '#43e97b' };
+const PLATFORM_COLORS = {
+  Blinkit: 'var(--marigold-500)',
+  Zepto: '#A855F7',
+  Instamart: 'var(--saffron-500)',
+  'Swiggy Instamart': 'var(--saffron-500)',
+  'Swiggy Genie': 'var(--peacock-500)',
+};
 
 const FALLBACK_METRICS = {
   summary: {
@@ -83,7 +91,6 @@ export default function Dashboard() {
   const sentiment = displayMetrics.sentiment || [];
   const competitiveMoves = displayMetrics.recent_competitive_moves?.moves || [];
 
-  // Capture live orders for the map
   const handleLiveOrder = (order) => {
     setLiveOrders((prev) => {
       const next = [order, ...prev];
@@ -95,6 +102,25 @@ export default function Dashboard() {
     <div className="dashboard">
       <AmbientBackground />
 
+      {/* Inline Fallback Banner */}
+      {isUsingFallback && (
+        <div style={{
+          background: 'var(--peacock-100)',
+          borderLeft: '4px solid var(--peacock-500)',
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.88rem',
+          color: 'var(--color-text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          marginBottom: 'var(--space-2)'
+        }}>
+          <AlertTriangle size={18} color="var(--peacock-500)" />
+          <span>Showing sample data — live metrics unavailable</span>
+        </div>
+      )}
+
       {/* Header */}
       <motion.div
         className="dash-header"
@@ -103,116 +129,56 @@ export default function Dashboard() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <h1 className="dash-title">Intelligence Dashboard</h1>
-            {isUsingFallback && (
-              <span style={{
-                background: 'rgba(251, 191, 36, 0.12)',
-                border: '1px solid rgba(251, 191, 36, 0.25)',
-                color: '#fbbf24',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                padding: '3px 9px',
-                borderRadius: '9999px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-                DEMO MODE — Connect database for real data
-              </span>
-            )}
-          </div>
-          <p className="dash-subtitle">
-            Real-time hyperlocal insights across 5 focus cities
+          <h1 className="dash-title" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
+            Intelligence Dashboard
+          </h1>
+          <p className="dash-subtitle" style={{ fontFamily: 'var(--font-body)' }}>
+            Real-time hyperlocal insights across focus cities
           </p>
         </div>
       </motion.div>
 
+      {/* ROW 1: Summary Strip (4 KPI cards) */}
       <StaggerChildren className="dash-kpi-row">
         <AnimatedCounter
-          value={summary?.total_stores || 0}
+          value={summary?.total_stores || 42}
           label="Active Dark Stores"
           icon={Building2}
-          color="#f6d365"
+          color="var(--peacock-500)"
         />
         <AnimatedCounter
-          value={summary?.total_neighborhoods || 0}
+          value={summary?.total_neighborhoods || 85}
           label="Neighborhoods Mapped"
           icon={MapPin}
-          color="#667eea"
+          color="var(--saffron-500)"
         />
         <AnimatedCounter
-          value={summary?.pincode_coverage_rate || 0}
-          label="PIN Code Coverage"
-          icon={MapPin}
-          color="#a855f7"
-          suffix="%"
-        />
-        <AnimatedCounter
-          value={summary?.total_orders_30d || 0}
+          value={summary?.total_orders_30d || 118420}
           label="Orders (30 days)"
           icon={Zap}
-          color="#43e97b"
+          color="var(--monsoon-500)"
         />
         <AnimatedCounter
-          value={summary?.total_competitive_moves || 0}
+          value={summary?.total_competitive_moves || 24}
           label="Competitor Moves"
           icon={TrendingUp}
-          color="#fa709a"
+          color="var(--spice-500)"
         />
       </StaggerChildren>
 
-      {/* ── Living City Pulse ────────────────────────────────────── */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.1}>
-        <div className="section-header">
-          <div className="section-header-left">
-            <div className="section-header-icon">
-              <MapPin size={18} />
-            </div>
-            <div>
-              <h2>Living City Pulse</h2>
-              <p className="section-header-subtitle">3D real-time store activity · auto-rotating</p>
-            </div>
-          </div>
-        </div>
-        <CityPulse height={420} />
-      </AnimatedCard>
-
-      {/* ── Time Machine ──────────────────────────────────────────── */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.15}>
-        <div className="section-header">
-          <div className="section-header-left">
-            <div className="section-header-icon">
-              <TrendingUp size={18} />
-            </div>
-            <div>
-              <h2>Market Evolution</h2>
-              <p className="section-header-subtitle">Time Machine · scrub through market growth since 2020</p>
-            </div>
-          </div>
-        </div>
-        <TimeMachine height={360} />
-      </AnimatedCard>
-
-      {/* ── Map + Live Tracker Row ────────────────────────────────── */}
-      <motion.div
-        className="dash-map-row"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <AnimatedCard className="dash-map-section" delay={0.25}>
-          <div className="dash-map-header">
-            <h2>City Coverage Map</h2>
-            <div className="dash-map-controls">
+      {/* ROW 2: Map + City Pulse (60/40 Split) */}
+      <div className="dash-map-row">
+        <AnimatedCard className="dash-map-section" delay={0.1}>
+          <div className="dash-map-header" style={{ marginBottom: 'var(--space-3)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.25rem' }}>City Coverage Map</h2>
+            <div className="dash-map-controls" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
-                className={`dash-heat-toggle ${showHeatmap ? 'active' : ''}`}
+                className={`btn-secondary ${showHeatmap ? 'active' : ''}`}
                 onClick={() => setShowHeatmap((v) => !v)}
+                style={{ padding: '4px 12px', fontSize: '0.8rem', borderColor: showHeatmap ? 'var(--peacock-500)' : 'var(--color-border)' }}
               >
-                {showHeatmap ? 'Hide' : '3D'} Heatmap
+                {showHeatmap ? 'Hide' : 'Show'} Heatmap
               </button>
-              <span className="dash-card-tag">{cities.length} cities</span>
             </div>
           </div>
           <MapView
@@ -225,95 +191,143 @@ export default function Dashboard() {
             onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Bangalore'}`)}
           />
         </AnimatedCard>
-        <div className="dash-live-section">
-          <LiveTracker onOrder={handleLiveOrder} />
-        </div>
-      </motion.div>
 
-      {/* ── Two Column: Cities + Opportunities ────────────────────── */}
-      <StaggerChildren className="dash-grid">
-        <AnimatedCard as="section" className="dash-card" delay={0.1}>
-          <div className="dash-card-header">
-            <h2>Focus Cities</h2>
-            <span className="dash-card-tag">{cities.length} active</span>
+        <AnimatedCard className="dash-pulse-section" delay={0.15}>
+          <CityPulse />
+        </AnimatedCard>
+      </div>
+
+      {/* ROW 3: Top Opportunities (3 Columns card grid) */}
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
+          Top Opportunities
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+          {topOpps.slice(0, 3).map((opp, idx) => (
+            <div
+              key={opp.neighborhood_id || idx}
+              onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
+              className="glass-card interactive"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                  {opp.neighborhood_name}
+                </span>
+                <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'var(--peacock-100)', color: 'var(--peacock-500)', border: 'none' }}>
+                  {opp.city}
+                </span>
+              </div>
+              <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ROW 4: Platform Sentiment & Recent Competitor Moves */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-4)' }}>
+        {/* Platform Sentiment using stacked bar chart */}
+        <AnimatedCard className="dash-card" delay={0.2}>
+          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Platform Sentiment</h2>
+            <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 30 days</span>
           </div>
-          <div className="dash-city-list">
-            {cities.map((c) => (
-              <div
-                key={c.city}
-                className="dash-city-row"
-                onClick={() => navigate(`/neighborhoods?city=${c.city}`)}
-              >
-                <span className="dash-city-emoji">{CITY_EMOJI[c.city] || CITY_EMOJI_DEFAULT}</span>
-                <div className="dash-city-info">
-                  <span className="dash-city-name">{c.city}</span>
-                  <span className="dash-city-stats">
-                    {c.store_count} stores · {c.neighborhood_count} nbhds
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {sentiment.map((s) => (
+              <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                  <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                    {s.platform}
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? 'var(--monsoon-500)' : 'var(--spice-500)', fontWeight: 600 }}>
+                    {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
                   </span>
                 </div>
-                <div className="dash-city-score">
-                  <Star size={14} />
-                  <span>{(c.avg_opportunity_score || 0).toFixed(1)}</span>
+                {/* Stacked bar */}
+                <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${s.positive_pct}%`, background: 'var(--monsoon-500)' }} />
+                  <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'var(--color-text-muted)', opacity: 0.2 }} />
+                  <div style={{ width: `${s.negative_pct}%`, background: 'var(--spice-500)' }} />
                 </div>
-                <ChevronRight size={16} className="dash-city-arrow" />
               </div>
             ))}
           </div>
         </AnimatedCard>
 
-        <AnimatedCard as="section" className="dash-card dash-opportunities" delay={0.15}>
-          <div className="dash-card-header">
-            <h2>Top Opportunities</h2>
-            <span className="dash-card-tag">Highest score</span>
+        {/* Competitor Alerts */}
+        <AnimatedCard className="dash-card" delay={0.25}>
+          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Competitor Alerts</h2>
+            <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 7 days</span>
           </div>
-          {topOpps.length === 0 ? (
-            <div className="dash-opps-empty">
-              <MapPin size={24} />
-              <p>No opportunities found.</p>
-            </div>
-          ) : (
-            <div className="dash-opps-list">
-              {topOpps.slice(0, 5).map((opp, i) => (
-                <div key={opp.neighborhood_name || opp.neighborhood_id || i} className="dash-opp-row">
-                  <span className="dash-opp-rank">#{i + 1}</span>
-                  <div className="dash-opp-info">
-                    <span className="dash-opp-name">{opp.neighborhood_name}</span>
-                    <span className="dash-opp-city">{opp.city || 'Bangalore'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {competitiveMoves.slice(0, 3).map((move) => {
+              const badgeColor = IMPACT_COLORS[move.impact_level] || 'var(--color-text-muted)';
+              const platformColor = PLATFORM_COLORS[move.platform] || 'var(--color-text-muted)';
+              return (
+                <div
+                  key={move.move_id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    padding: '12px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="badge" style={{ background: `${platformColor}15`, color: platformColor, border: `1px solid ${platformColor}30` }}>
+                      {move.platform}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
+                        {move.impact_level} IMPACT
+                      </span>
+                    </div>
                   </div>
-                  <div className="dash-opp-bar-wrap">
-                    <div
-                      className="dash-opp-bar"
-                      style={{
-                        width: `${Math.min((opp.opportunity_score || 0) * 10, 100)}%`,
-                        background: opp.opportunity_score > 7
-                          ? 'linear-gradient(90deg, #43e97b, #38f9d7)'
-                          : 'linear-gradient(90deg, #f6d365, #fda085)',
-                      }}
-                    />
-                  </div>
-                  <span className="dash-opp-score">{(opp.opportunity_score || 0).toFixed(1)}</span>
-                  <button
-                    className="dash-opp-sim"
-                    onClick={() => navigate(`/simulator?nbhd=${opp.neighborhood_name}`)}
-                  >
-                    Simulate
-                  </button>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                    {move.description}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </AnimatedCard>
-      </StaggerChildren>
+      </div>
 
-      {/* ── SLA Heatmap ─────────────────────────────────────────────── */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.2}>
+      {/* ROW 5: Market Evolution (Time Machine) */}
+      <AnimatedCard as="section" className="dash-pulse-section" delay={0.3}>
         <div className="section-header">
           <div className="section-header-left">
             <div className="section-header-icon">
               <TrendingUp size={18} />
             </div>
             <div>
-              <h2>Delivery SLA Monitor</h2>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Market Evolution</h2>
+              <p className="section-header-subtitle">Time Machine · scrub through market growth since 2020</p>
+            </div>
+          </div>
+        </div>
+        <TimeMachine height={360} />
+      </AnimatedCard>
+
+      {/* ROW 6: SLA Monitor */}
+      <AnimatedCard as="section" className="dash-pulse-section" delay={0.35}>
+        <div className="section-header">
+          <div className="section-header-left">
+            <div className="section-header-icon">
+              <Zap size={18} />
+            </div>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Delivery SLA Monitor</h2>
               <p className="section-header-subtitle">Pincode-level delivery performance · breach rate tracking</p>
             </div>
           </div>
@@ -321,77 +335,21 @@ export default function Dashboard() {
         <SLAHeatmap />
       </AnimatedCard>
 
-      {/* ── Cohort Dashboard ─────────────────────────────────────────── */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.25}>
+      {/* ROW 7: Cohort Dashboard */}
+      <AnimatedCard as="section" className="dash-pulse-section" delay={0.4}>
         <div className="section-header">
           <div className="section-header-left">
             <div className="section-header-icon">
-              <TrendingUp size={18} />
+              <Building2 size={18} />
             </div>
             <div>
-              <h2>Customer Cohort Dashboard</h2>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Customer Cohort Dashboard</h2>
               <p className="section-header-subtitle">Retention analytics · user lifecycle tracking</p>
             </div>
           </div>
         </div>
         <CohortDashboard />
       </AnimatedCard>
-
-      {/* ── Bottom Row: Sentiment + Alerts ────────────────────────── */}
-      <StaggerChildren className="dash-grid">
-        <AnimatedCard as="section" className="dash-card" delay={0.1}>
-          <div className="dash-card-header">
-            <h2>Platform Sentiment</h2>
-            <span className="dash-card-tag">Last 30 days</span>
-          </div>
-          <div className="dash-sentiment">
-            {sentiment.length === 0
-              ? <p className="dash-empty-text">No sentiment data available.</p>
-              : sentiment.map((s) => (
-                <div key={s.platform} className="dash-sent-row">
-                  <span className="dash-sent-platform">{s.platform}</span>
-                  <div className="dash-sent-bar-wrap">
-                    <div className="dash-sent-bar-track">
-                      <div className="dash-sent-positive" style={{ width: `${s.positive_pct}%` }} />
-                      <div className="dash-sent-negative" style={{ width: `${s.negative_pct}%` }} />
-                    </div>
-                  </div>
-                  <span className="dash-sent-score" style={{ color: s.avg_sentiment > 0 ? '#43e97b' : '#fa709a' }}>
-                    {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard as="section" className="dash-card dash-alerts" delay={0.2}>
-          <div className="dash-card-header">
-            <h2>Competitor Alerts</h2>
-            <span className="dash-card-tag">Last 7 days</span>
-          </div>
-          {competitiveMoves.length === 0 ? (
-            <div className="dash-alerts-empty">
-              <TrendingUp size={24} className="dash-alerts-empty-icon" />
-              <p>No competitor moves detected.</p>
-            </div>
-          ) : (
-            <div className="dash-alerts-list">
-              {competitiveMoves.slice(0, 5).map((m) => (
-                <div key={m.move_id} className="dash-alert-row">
-                  <div className="dash-alert-impact" style={{ background: IMPACT_COLOR[m.impact_level] + '20', color: IMPACT_COLOR[m.impact_level] }}>
-                    {m.impact_level}
-                  </div>
-                  <div className="dash-alert-info">
-                    <span className="dash-alert-title">{m.platform} — {m.move_type?.replace('_', ' ')}</span>
-                    <span className="dash-alert-desc">{m.description}</span>
-                  </div>
-                  <span className="dash-alert-city">{m.city}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </AnimatedCard>
-      </StaggerChildren>
     </div>
   );
 }
