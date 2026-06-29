@@ -218,7 +218,7 @@ export default function ResilienceCockpit() {
                 <span>●</span> WHATSAPP SIMULATOR STREAM
               </div>
               <div style={{ color: 'var(--color-text-secondary)' }}>
-                [System] Outbound to +91 98765 43210: "ALERT [HIGH] SLA Breach PIN 560001 (Koramangala) Spiked to 18.2 min."
+                [System] Outbound to +91 98765 43210: &quot;ALERT [HIGH] SLA Breach PIN 560001 (Koramangala) Spiked to 18.2 min.&quot;
               </div>
             </div>
           </div>

@@ -102,7 +102,7 @@ export default function Simulator() {
   const handleMapSelect = (nb) => {
     if (!placementMode) return;
     if (drafts.length >= 3) {
-      alert("Maximum of 3 simultaneous simulations allowed for comparison.");
+      window.alert("Maximum of 3 simultaneous simulations allowed for comparison.");
       return;
     }
 

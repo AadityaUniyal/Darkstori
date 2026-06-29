@@ -44,7 +44,7 @@ export default function AlgorithmLab() {
         ]);
         triggerTraining();
       } else {
-        alert(`Drift scan complete. Drift detected: ${data.drift_detected}. Auto-retraining is ${mlSettings?.auto_retrain_enabled ? 'ENABLED' : 'DISABLED'}.`);
+        window.alert(`Drift scan complete. Drift detected: ${data.drift_detected}. Auto-retraining is ${mlSettings?.auto_retrain_enabled ? 'ENABLED' : 'DISABLED'}.`);
       }
     }
   });
