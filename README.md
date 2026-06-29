@@ -22,6 +22,10 @@ Quick commerce platforms (delivering groceries and household goods in under 10 m
 **Darkstori is prescriptive.** It uses machine learning models and spatial algorithms to actively recommend decisions for dark store operators to:
 * **Minimize Waste:** Automatically mark down perishables (fruits, vegetables, dairy) dynamically before they spoil.
 * **Optimize Placement:** Find the best location to open a new dark store where customer demand is high but competitor coverage is weak.
+* **Prescriptive Recommendations:** Allocate space zones (ambient vs cold storage) dynamically using the **Interactive Layout Optimizer** which calculates fulfillment bottleneck ratings on the fly.
+* **OSRM Serviceability Constraints:** Penalize sales projection models based on actual driving road-network distances, instead of straight-line coordinates.
+* **MLOps Background Job Scheduler:** Periodically update demand predictions, competitor scraping, and drift models in the background with manual check controls.
+* **Governance Audit Ledger:** Run multi-role workflows (Propose → Review → Approve) and log the model version and capex parameters snapshot for absolute provenance.
 * **Prevent Stockouts:** Dynamically adjust safety stock levels per neighborhood, incorporating localized delivery SLA constraints.
 * **Forecast Orders:** Predict tomorrow's load to ensure staff are scheduled efficiently.
 
