@@ -102,13 +102,28 @@ async def lifespan(app: FastAPI):
 
     # Start MLflow server if enabled
     if mlflow_config.enable_tracking:
-        try:
-            mlflow_manager = get_server_manager()
-            mlflow_manager.start_server()
-            logger.info("[OK] MLflow server started")
-        except Exception as e:
-            logger.error(f"Failed to start MLflow server: {e}")
-            logger.warning("Continuing without MLflow tracking")
+        if settings.MLFLOW_START_SERVER_SUBPROCESS:
+            try:
+                mlflow_manager = get_server_manager()
+                mlflow_manager.start_server()
+                logger.info("[OK] MLflow server started as subprocess")
+            except Exception as e:
+                logger.error(f"Failed to start MLflow server: {e}")
+                logger.warning("Continuing without MLflow tracking")
+        else:
+            logger.info("Decoupled MLflow mode: Skipping server subprocess startup")
+            # Verify connectivity to decoupled MLflow tracking server
+            try:
+                import httpx
+                with httpx.Client(timeout=2.0) as client:
+                    # Simple GET request to verify server is reachable
+                    response = client.get(f"{settings.MLFLOW_TRACKING_URI}/health")
+                    if response.status_code == 200:
+                        logger.info(f"[OK] Successfully verified connection to decoupled MLflow server at {settings.MLFLOW_TRACKING_URI}")
+                    else:
+                        logger.warning(f"Decoupled MLflow server at {settings.MLFLOW_TRACKING_URI} returned status {response.status_code}")
+            except Exception as conn_err:
+                logger.warning(f"Could not connect to decoupled MLflow server at {settings.MLFLOW_TRACKING_URI}: {conn_err}. Fallbacks will be used.")
     else:
         logger.info("MLflow tracking disabled")
 
@@ -135,8 +150,8 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             logger.info("Database listener task cancelled cleanly")
 
-    # Stop MLflow server
-    if mlflow_config.enable_tracking:
+    # Stop MLflow server if started as subprocess
+    if mlflow_config.enable_tracking and settings.MLFLOW_START_SERVER_SUBPROCESS:
         try:
             mlflow_manager = get_server_manager()
             mlflow_manager.stop_server()

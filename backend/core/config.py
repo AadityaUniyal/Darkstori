@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     # Database — must be set via environment variable
     DATABASE_URL: str = ""
 
+    # Database Connection Pool Settings
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+    DB_POOL_RECYCLE: int = 1800
+    DB_POOL_TIMEOUT: int = 30
+
     # JWT Security
     JWT_SECRET_KEY: str = "change-me-in-production-min-32-chars-long"
     JWT_ALGORITHM: str = "HS256"
@@ -96,6 +102,7 @@ class Settings(BaseSettings):
     MLFLOW_SERVER_PORT: int = 5000
     MLFLOW_SERVER_WORKERS: int = 1
     MLFLOW_ENABLE_TRACKING: bool = True
+    MLFLOW_START_SERVER_SUBPROCESS: bool = False
 
     # Model Serving Configuration
     MODEL_CACHE_TTL_SECONDS: int = 3600
