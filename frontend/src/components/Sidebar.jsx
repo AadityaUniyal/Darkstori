@@ -10,7 +10,8 @@ import {
   Leaf,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Calendar
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -42,6 +43,7 @@ const Sidebar = memo(() => {
     { path: '/algorithm-lab',icon: Cpu,               label: 'Algorithm Lab' },
     { path: '/recommendations',icon: Sparkles,         label: 'Recommendations' },
     { path: '/resilience',   icon: Leaf,             label: 'Resilience Cockpit' },
+    { path: '/events',       icon: Calendar,         label: 'Local Events' },
   ];
 
   // Mobile navigation below 640px: show 5 most-used routes as a bottom bar

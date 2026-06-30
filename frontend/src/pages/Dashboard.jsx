@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, MapPin, Building2, Zap,
-  Star, ChevronRight, AlertTriangle
+  Star, ChevronRight, AlertTriangle, CloudRain
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useCity } from '../context/CityContext';
 import MapView from '../components/MapView';
 import LiveTracker from '../components/LiveTracker';
 import CityPulse from '../components/CityPulse';
@@ -75,6 +76,24 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [liveOrders, setLiveOrders] = useState([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const { selectedCity } = useCity();
+
+  // Fetch first store in the selected city to get weather details
+  const { data: stores = [] } = useQuery({
+    queryKey: ['stores-list', selectedCity],
+    queryFn: () => api.getStores({ city: selectedCity, limit: 1 }),
+    enabled: !!selectedCity,
+  });
+
+  const activeStoreId = stores[0]?.id;
+
+  // Fetch weather alerts
+  const { data: weatherAlert } = useQuery({
+    queryKey: ['weather-alert', activeStoreId],
+    queryFn: () => api.getStoreWeatherAlert(activeStoreId),
+    enabled: !!activeStoreId,
+    refetchInterval: 15 * 60 * 1000,
+  });
 
   const { data: metrics, isError } = useQuery({
     queryKey: ['dashboard-metrics'],
@@ -118,6 +137,35 @@ export default function Dashboard() {
         }}>
           <AlertTriangle size={18} color="var(--peacock-500)" />
           <span>Showing sample data — live metrics unavailable</span>
+        </div>
+      )}
+
+      {/* Weather Forecast Alert Banner */}
+      {weatherAlert?.alert && (
+        <div style={{
+          background: 'rgba(235, 94, 85, 0.1)',
+          borderLeft: '4px solid var(--saffron-500)',
+          border: '1px solid rgba(235, 94, 85, 0.15)',
+          padding: '14px 18px',
+          borderRadius: 'var(--radius-md)',
+          fontSize: '0.9rem',
+          color: 'var(--color-text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: 'var(--space-4)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <CloudRain size={20} color="var(--saffron-500)" style={{ animation: 'pulse 2s infinite' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span style={{ fontWeight: 700, color: 'var(--saffron-500)' }}>Hyperlocal Weather Alert</span>
+            <span style={{ fontSize: '0.84rem', color: 'var(--color-text-primary)' }}>
+              {weatherAlert.alert}
+              <span style={{ marginLeft: '8px', fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)', padding: '2px 6px', borderRadius: '4px' }}>
+                [Open-Meteo Forecast]
+              </span>
+            </span>
+          </div>
         </div>
       )}
 
@@ -261,8 +309,13 @@ export default function Dashboard() {
 
         {/* Competitor Alerts */}
         <AnimatedCard className="dash-card" delay={0.25}>
-          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Competitor Alerts</h2>
+          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+              Competitor Alerts
+              <span style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--color-text-muted)', marginLeft: '8px', verticalAlign: 'middle', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px' }}>
+                [OSM Data]
+              </span>
+            </h2>
             <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 7 days</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

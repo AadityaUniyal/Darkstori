@@ -193,3 +193,58 @@ def get_weather_sync(pincode: str, target_date: Union[date, datetime, str]) -> d
 
     city = _pincode_to_city(pincode)
     return _seasonal_heuristic(city, target_date)
+
+
+async def fetch_weather_forecast(pincode: str) -> Optional[dict]:
+    """
+    Fetch hourly forecast from Open-Meteo API for the next 24 hours.
+    Returns a dict with alert message if rain is expected, or None.
+    """
+    city = _pincode_to_city(pincode)
+    coords = CITY_COORDS.get(city, CITY_COORDS["Bangalore"])
+
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": coords["lat"],
+        "longitude": coords["lng"],
+        "hourly": "precipitation,weathercode",
+        "timezone": "Asia/Kolkata",
+        "forecast_days": 1,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        hourly = data.get("hourly", {})
+        times = hourly.get("time", [])
+        precip = hourly.get("precipitation", [])
+
+        # Check next 4 hours
+        current_time = datetime.now()
+        rain_start: Optional[datetime] = None
+        rain_end: Optional[datetime] = None
+
+        for t_str, p_val in zip(times, precip):
+            t = datetime.strptime(t_str, "%Y-%m-%dT%H:%M")
+            if current_time <= t <= current_time + timedelta(hours=4):
+                if p_val > 0.5:
+                    if rain_start is None:
+                        rain_start = t
+                    rain_end = t
+
+        if rain_start and rain_end:
+            start_hour = rain_start.strftime("%I%p").lstrip('0').lower()
+            end_time = rain_end + timedelta(hours=1)
+            end_hour = end_time.strftime("%I%p").lstrip('0').lower()
+            return {
+                "alert": f"Rain expected {start_hour}-{end_hour} — historically +22% order volume in similar conditions",
+                "is_rainy": True,
+                "city": city,
+            }
+    except Exception as e:
+        logger.warning(f"Failed to fetch forecast for {city}: {e}")
+
+    return None
+

@@ -11,6 +11,7 @@ const Analytics        = lazy(() => import('./pages/Analytics'));
 const Forecast         = lazy(() => import('./pages/Forecast'));
 const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
 const Recommendations  = lazy(() => import('./pages/Recommendations'));
+const LocalEvents      = lazy(() => import('./pages/LocalEvents'));
 const Login            = lazy(() => import('./pages/Login'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
 
@@ -19,6 +20,7 @@ import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 import PrivateRoute from './components/PrivateRoute';
 import RangoliLoader from './components/RangoliLoader';
+import LiveSocketListener from './components/LiveSocketListener';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
 
@@ -91,6 +93,7 @@ function AppContent() {
                 <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Forecast /></AnimatedPage></PrivateRoute>} />
                 <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><AlgorithmLab /></AnimatedPage></PrivateRoute>} />
                 <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><Recommendations /></AnimatedPage></PrivateRoute>} />
+                <Route path="/events"        element={<PrivateRoute><AnimatedPage><LocalEvents /></AnimatedPage></PrivateRoute>} />
                 <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
                 <Route path="*"              element={<Navigate to="/not-found" replace />} />
               </Routes>
@@ -108,6 +111,7 @@ function App() {
       <ErrorBoundary>
         <CityProvider>
           <AuthProvider>
+            <LiveSocketListener />
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AppContent />
             </Router>

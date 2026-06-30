@@ -21,6 +21,7 @@ from backend.api.routes import (
     economics,
     analytics_heatmap,
     ml_models,
+    events,
 )
 import asyncio
 import socketio
@@ -293,6 +294,7 @@ app.include_router(analytics_heatmap.router, prefix="/api/analytics", tags=["Hea
 app.include_router(sla.router, prefix="/api/sla", tags=["Delivery SLA"])
 app.include_router(cohorts.router, prefix="/api/cohorts", tags=["Customer Cohorts"])
 app.include_router(economics.router, prefix="/api/economics", tags=["Unit Economics"])
+app.include_router(events.router, prefix="/api/events", tags=["Local Events"])
 
 # ── Seed Data ────────────────────────────────────────────────────────────────────
 app.include_router(seed_data.router, prefix="/api", tags=["Seed Data"])

@@ -44,7 +44,13 @@ export default function Neighborhoods() {
   const neighborhoodList = neighborhoods && neighborhoods.length > 0 ? neighborhoods : fallbackNeighborhoods;
 
   // Filter by active city
-  const filtered = neighborhoodList.filter(n => n.city?.toLowerCase() === activeCityName.toLowerCase());
+  const filtered = neighborhoodList.filter(n => {
+    if (n.city) {
+      return n.city.toLowerCase() === activeCityName.toLowerCase();
+    }
+    const cityObj = cityList.find(c => c.city_id === n.city_id);
+    return cityObj ? cityObj.city_name.toLowerCase() === activeCityName.toLowerCase() : false;
+  });
 
   // Sort
   const sorted = [...filtered].sort((a, b) => {

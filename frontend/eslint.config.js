@@ -42,6 +42,7 @@ export default [
         Blob: 'readonly',
         EventSource: 'readonly',
         ResizeObserver: 'readonly',
+        WebSocket: 'readonly',
       },
     },
     plugins: {

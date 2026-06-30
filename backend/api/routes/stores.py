@@ -11,6 +11,7 @@ from backend.core.logger import logger
 from backend.core.security import verify_token
 from backend.database.connection import get_db
 from backend.database.models.models import DarkStore
+from backend.ml.weather_service import fetch_weather_forecast
 
 router = APIRouter()
 
@@ -51,10 +52,13 @@ async def get_stores(
     platform: Optional[str] = None,
     city: Optional[str] = None,
     city_tier: Optional[str] = None,
+    include_competitors: bool = Query(True),
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
     """Get all active dark stores, optionally filtered."""
+    from backend.database.models.models import CompetitorStore
+
     query = select(DarkStore).where(DarkStore.is_active.is_(True))
 
     if platform:
@@ -67,7 +71,18 @@ async def get_stores(
     query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
-    stores = result.scalars().all()
+    stores = list(result.scalars().all())
+
+    if include_competitors:
+        comp_query = select(CompetitorStore).where(CompetitorStore.is_active.is_(True))
+        if platform:
+            comp_query = comp_query.where(CompetitorStore.platform == platform)
+        if city:
+            comp_query = comp_query.where(CompetitorStore.city == city)
+        comp_query = comp_query.limit(limit)
+        comp_result = await db.execute(comp_query)
+        competitors = comp_result.scalars().all()
+        stores.extend(competitors)
 
     return stores
 
@@ -136,3 +151,21 @@ async def create_store(store: StoreCreate, db: AsyncSession = Depends(get_db)):
     logger.info(f"New store created: {store.store_name}")
 
     return db_store
+
+
+@router.get("/{store_id}/weather-alert")
+async def get_store_weather_alert(
+    store_id: int,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
+):
+    """Fetch live weather forecasts and return alert if rain expected."""
+    result = await db.execute(select(DarkStore).where(DarkStore.id == store_id))
+    store = result.scalar_one_or_none()
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+
+    pincode = str(store.pincode) if store.pincode else "560034"
+    alert_info = await fetch_weather_forecast(pincode)
+    return alert_info or {"alert": None, "is_rainy": False, "city": store.city}
+
