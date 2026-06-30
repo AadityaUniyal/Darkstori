@@ -488,7 +488,10 @@ export default function MapView({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(194, 59, 59, 0.6)' }} />
-          <span style={{ color: 'var(--color-text-primary)', fontWeight: 500, fontFamily: 'var(--font-body)' }}>Competitor / Saturated</span>
+          <span style={{ color: 'var(--color-text-primary)', fontWeight: 500, fontFamily: 'var(--font-body)' }}>
+            Competitor / Saturated
+            <span style={{ fontSize: '0.62rem', color: 'var(--color-text-muted)', marginLeft: '6px', opacity: 0.8 }}>[OSM Data]</span>
+          </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--saffron-500)', animation: 'pulse 1.2s infinite' }} />

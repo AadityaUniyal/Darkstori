@@ -81,6 +81,11 @@ const getStores = async (params = {}) => {
   return response.data;
 };
 
+const getStoreWeatherAlert = async (storeId) => {
+  const response = await apiClient.get(`/api/stores/${storeId}/weather-alert`);
+  return response.data;
+};
+
 const getStoreStats = async () => {
   const response = await apiClient.get('/api/stores/stats');
   return response.data;
@@ -416,9 +421,37 @@ const getHealth = async () => {
   return response.data;
 };
 
+// ── Local Events ──────────────────────────────────────────────────────────────
+
+const getEvents = async (params) => {
+  const response = await apiClient.get('/api/events/', { params });
+  return response.data;
+};
+
+const createEvent = async (payload) => {
+  const response = await apiClient.post('/api/events/', payload);
+  return response.data;
+};
+
+const updateEvent = async (eventId, payload) => {
+  const response = await apiClient.put(`/api/events/${eventId}`, payload);
+  return response.data;
+};
+
+const deleteEvent = async (eventId) => {
+  const response = await apiClient.delete(`/api/events/${eventId}`);
+  return response.data;
+};
+
 // ── Named export ──────────────────────────────────────────────────────────────
 
 export const api = {
+  // Local Events
+  getEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+
   // Auth
   login,
   register,
@@ -428,6 +461,7 @@ export const api = {
   // Stores
   getStores,
   getStoreStats,
+  getStoreWeatherAlert,
 
   // Analytics
   getCoverageGaps,

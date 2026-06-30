@@ -710,3 +710,18 @@ class CompetitorStore(Base):
         Index("idx_competitor_store_location", "latitude", "longitude"),
         Index("idx_competitor_store_city_platform", "city", "platform"),
     )
+
+
+class LocalEvent(Base):
+    __tablename__ = "local_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(200), nullable=False)
+    city = Column(String(100), nullable=False)
+    pincode = Column(String(10), nullable=True)
+    event_date = Column(Date, nullable=False)
+    event_time = Column(Time, nullable=True)
+    event_type = Column(String(50), default="Other")  # concert, match, exam, festival
+    expected_impact_pct = Column(Float, default=10.0)  # expected percentage change in orders
+    created_at = Column(DateTime, server_default=func.now())
+

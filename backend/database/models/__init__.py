@@ -25,6 +25,7 @@ from backend.database.models.models import (
     PricingStrategy,
     StoreLayout,
     CompetitiveMove,
+    LocalEvent,
 )
 
 __all__ = [
@@ -48,4 +49,5 @@ __all__ = [
     "PricingStrategy",
     "StoreLayout",
     "CompetitiveMove",
+    "LocalEvent",
 ]
