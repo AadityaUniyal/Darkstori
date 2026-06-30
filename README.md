@@ -4,6 +4,24 @@ Darkstori is an enterprise-grade quick-commerce analytics and prescriptive optim
 
 ---
 
+## 🏆 Project Status & Realized Features
+
+The project is fully functional, structured, and ready for deployment. The following implementations are realized and active in the codebase:
+
+1. **Enterprise-Grade ML Pipeline**: Real demand forecasting using trained machine learning models (XGBoost, RandomForest, Gradient Boosting). Features automated Kolmogorov-Smirnov feature drift scanning (`scipy.stats.ks_2samp`) and performance tracking.
+2. **Decoupled MLflow Integration**: Connects dynamically to decoupled MLflow servers for model tracking, with clean HTTP connection checks and local pickle/onnx model cache loaders as fallbacks.
+3. **Advanced Spatial Analytics**: In-database PostGIS spatial opportunity zones clustering using `ST_ClusterDBSCAN` queries, falling back gracefully to Python-side Haversine DBSCAN when PostgreSQL PostGIS is unavailable.
+4. **OSRM Route Serviceability**: Connects to the live OSRM routing API to calculate actual road distance parameters for delivery times rather than straight-line calculations, with traffic-adjusted city grids fallbacks.
+5. **Real-time Order Simulation**: Background job scheduler (`BackgroundScheduler` utilizing async/await event loops) that regularly syncs OSM competitor launches and generates live synthetic orders to feed real-time maps via Socket.IO.
+6. **Polymorphic Strategy Recommendation Engine**: Dynamic pricing recommendations using sigmoid-based decay optimization, inventory strategies (ROP and safety stock buffers based on ABC analysis), and ambient vs cold zone layout strategies.
+7. **Clean Database Repository Architecture**: Complete isolation of SQL querying from endpoints via Neighborhood, Order, and Recommendation repository classes.
+8. **Robust Connection Pooling**: Configured SQLAlchemy connection pooling (`pool_size`, `max_overflow`, etc.) to securely handle high-concurrency connections.
+9. **Simulated Features**:
+   - **OCR Expiry Scanner**: Simulated via heuristic-based random prediction algorithms to demonstrate UI workflows.
+   - **WhatsApp Messaging**: Outputs to logger mock APIs unless Meta Cloud API credentials are provided.
+
+---
+
 ## 📋 Table of Contents
 1. [🎯 Project Aim & Why It Matters](#1-project-aim--why-it-matters)
 2. [💻 Technology Stack](#2-technology-stack)
@@ -25,7 +43,7 @@ Quick commerce platforms (delivering groceries and household goods in under 10 m
 * **Optimize Placement:** Find the best location to open a new dark store where customer demand is high but competitor coverage is weak.
 * **Prescriptive Recommendations:** Allocate space zones (ambient vs cold storage) dynamically using the **Interactive Layout Optimizer** which calculates fulfillment bottleneck ratings on the fly.
 * **OSRM Serviceability Constraints:** Penalize sales projection models based on actual driving road-network distances, instead of straight-line coordinates.
-* **MLOps Background Job Scheduler & Simulator:** Periodically update demand predictions, competitor scraping, and drift models in the background. Now features a **Real-Time Live Order Simulator** generating realistic sales records to feed frontend feeds.
+* **MLOps Background Job Scheduler & Simulator:** Periodically update demand predictions, competitor OSM syncing, and drift models in the background. Now features a **Real-Time Live Order Simulator** generating realistic sales records to feed frontend feeds.
 * **Governance Audit Ledger:** Run multi-role workflows (Propose → Review → Approve) and log the model version and capex parameters snapshot for absolute provenance.
 * **Prevent Stockouts:** Dynamically adjust safety stock levels per neighborhood, incorporating localized delivery SLA constraints.
 * **Forecast Orders:** Predict tomorrow's load to ensure staff are scheduled efficiently.
@@ -93,9 +111,9 @@ Before signing a warehouse lease, the manager wants to predict the impact of the
 
 ### Step 3: Zero-Waste Perishables Markdown (Sigmoid Pricing)
 At a local store, a picker notices that a batch of tomatoes has a freshness score of 50%.
-* **The Action:** The picker logs into the **Resilience Cockpit** and uploads a quality photo or inputs the freshness score. They can also use the **OCR Expiry Scanner** to capture printed packaging dates from a photo.
+* **The Action:** The picker logs into the **Resilience Cockpit** and uploads a photo or inputs the freshness score. They can also use the **simulated OCR Expiry Scanner** to capture printed packaging dates from a photo.
 * **The Insight:** Instead of throwing the tomatoes away or selling them at full price (where nobody will buy them), the system simulates decay and runs a revenue-maximization curve.
-* **The Recommendation:** It automatically schedules a markdown schedule (e.g., reduce price by 40% immediately) to clear the stock before expiration.
+* **The Recommendation:** It automatically schedules a markdown schedule (e.g., reduce price by 40% immediately) to clear the stock before expiration. (Note: The OCR date detection is mock-simulated with heuristics for frontend demonstration).
 
 ### Step 4: Hyperlocal Demand Forecasting
 A store manager needs to schedule delivery riders for next Monday.
