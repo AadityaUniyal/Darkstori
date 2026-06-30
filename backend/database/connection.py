@@ -40,13 +40,26 @@ else:
 # SSL required for Neon PostgreSQL
 connect_args = {"ssl": True} if "neon.tech" in settings.DATABASE_URL else {}
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_pre_ping=False,
-    poolclass=NullPool,
-    connect_args=connect_args,
-)
+# Configure connection pool arguments dynamically based on the database dialect
+is_sqlite = DATABASE_URL.startswith("sqlite")
+
+if is_sqlite:
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=settings.DEBUG,
+        connect_args=connect_args,
+    )
+else:
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=settings.DEBUG,
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_recycle=settings.DB_POOL_RECYCLE,
+        pool_timeout=settings.DB_POOL_TIMEOUT,
+        pool_pre_ping=True,
+        connect_args=connect_args,
+    )
 
 # Session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -63,6 +76,10 @@ async def init_db():
             
             # Setup real-time PostgreSQL triggers and migrations if using Postgres
             if engine.dialect.name == "postgresql":
+                # Ensure PostGIS extension is enabled
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+                logger.info("PostGIS extension ensured/created")
+                
                 # Auto-migrate store_simulations table with status and comments columns
                 await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'proposed';"))
                 await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS comments TEXT;"))

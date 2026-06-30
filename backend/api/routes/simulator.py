@@ -6,11 +6,12 @@ the workflow from proposal to approval.
 """
 
 import math
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
@@ -133,9 +134,9 @@ async def run_simulation(
     """Run a what-if simulation for a new dark store (predict ROI)."""
     # Fetch neighborhood data
     result = await db.execute(
-        select(Neighborhood).where(
-            Neighborhood.neighborhood_id == req.neighborhood_id
-        )
+        select(Neighborhood)
+        .options(selectinload(Neighborhood.city))
+        .where(Neighborhood.neighborhood_id == req.neighborhood_id)
     )
     nbhd = result.scalar_one_or_none()
     
@@ -153,17 +154,17 @@ async def run_simulation(
         else:
             raise HTTPException(status_code=404, detail="Neighborhood not found")
     else:
-        name = nbhd.neighborhood_name or "Unknown"
-        pop = nbhd.population or 50_000
-        dens = nbhd.population_density or 5_000
-        inc = nbhd.avg_household_income or 600_000
+        name = cast(str, nbhd.neighborhood_name) or "Unknown"
+        pop = cast(int, nbhd.population or 50_000)
+        dens = cast(float, nbhd.population_density or 5_000)
+        inc = cast(float, nbhd.avg_household_income or 600_000)
         comp_result = await db.execute(
             select(DarkStore)
             .where(DarkStore.neighborhood_id == req.neighborhood_id)
             .where(DarkStore.is_active.is_(True))
         )
         comp = len(comp_result.scalars().all())
-        city = nbhd.city.city_name if nbhd.city else "Bangalore"
+        city = cast(str, nbhd.city.city_name) if nbhd.city else "Bangalore"
         
         # Coordinates or fallback
         nb_lat = 12.9716
@@ -174,7 +175,7 @@ async def run_simulation(
         )
         s = store_q.scalar_one_or_none()
         if s:
-            nb_lat, nb_lng = s.latitude, s.longitude
+            nb_lat, nb_lng = cast(float, s.latitude), cast(float, s.longitude)
 
     # Route based delivery time check (Serviceability constraint)
     # We measure route from neighborhood centroid to a simulated perimeter delivery node (approx 2.5 km away)
@@ -223,7 +224,7 @@ async def run_simulation(
         db.add(sim)
         await db.commit()
         await db.refresh(sim)
-        sim_id = sim.simulation_id
+        sim_id = cast(int, sim.simulation_id)
 
     return SimulationResponse(
         simulation_id=sim_id,
@@ -318,7 +319,11 @@ async def get_proposals(
     # Enhance outputs with neighborhood details
     enhanced = []
     for sim in sims:
-        nb_res = await db.execute(select(Neighborhood).where(Neighborhood.neighborhood_id == sim.neighborhood_id))
+        nb_res = await db.execute(
+            select(Neighborhood)
+            .options(selectinload(Neighborhood.city))
+            .where(Neighborhood.neighborhood_id == sim.neighborhood_id)
+        )
         nb = nb_res.scalar_one_or_none()
         enhanced.append({
             "simulation_id": sim.simulation_id,
@@ -349,7 +354,7 @@ async def propose_location(
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
         
-    sim.status = "proposed"
+    sim.status = "proposed"  # type: ignore
     await db.commit()
     return {"status": "success", "message": f"Simulation #{sim_id} proposed successfully."}
 
@@ -367,8 +372,8 @@ async def review_location(
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
         
-    sim.status = "reviewed"
-    sim.comments = req.comments
+    sim.status = "reviewed"  # type: ignore
+    sim.comments = req.comments  # type: ignore
     
     # Audit log entry
     audit = AuditLog(
@@ -395,10 +400,14 @@ async def approve_location(
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
         
-    sim.status = "approved"
+    sim.status = "approved"  # type: ignore
     
     # Automatically seed/create dark store from approved simulation
-    nb_res = await db.execute(select(Neighborhood).where(Neighborhood.neighborhood_id == sim.neighborhood_id))
+    nb_res = await db.execute(
+        select(Neighborhood)
+        .options(selectinload(Neighborhood.city))
+        .where(Neighborhood.neighborhood_id == sim.neighborhood_id)
+    )
     nb = nb_res.scalar_one_or_none()
     
     # Find lat/lng
