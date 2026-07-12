@@ -13,7 +13,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database.connection import AsyncSessionLocal
-from backend.database.models.models import StoreOrder, OrderForecast
+from backend.database.models.models import OrderSynthetic, MLPrediction
 from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class DriftMonitor:
         
     async def calculate_drift(self, db: AsyncSession, days_back: int = 7) -> Dict[str, Any]:
         """Calculate drift over a rolling window."""
-        start_date = datetime.now().date() - timedelta(days=days_back)
+        start_date = datetime.now() - timedelta(days=days_back)
         
         # Get actual orders and forecasts joined by date and neighborhood
         # In a real system, you might join by store_id and date.
@@ -35,7 +35,7 @@ class DriftMonitor:
         
         # NOTE: For this simulated environment, we will fetch the last N forecasts
         # and compare them with simulated actual orders.
-        query = select(OrderForecast).where(OrderForecast.target_date >= start_date)
+        query = select(MLPrediction).where(MLPrediction.created_at >= start_date)
         result = await db.execute(query)
         forecasts = result.scalars().all()
         
@@ -44,21 +44,21 @@ class DriftMonitor:
             
         actual_vs_pred = []
         for forecast in forecasts:
-            # We would normally query StoreOrder here, but since the database 
+            # We would normally query OrderSynthetic here, but since the database 
             # structure stores aggregate predictions, we simulate actuals by
             # injecting a synthetic drift (this is just for demonstration).
             # If we had actual counts, it would be: actual = await db.query(count)...
             
             # Simulated actual: forecast + some random noise
             import random
-            random.seed(hash(f"{forecast.neighborhood_id}_{forecast.target_date}"))
+            random.seed(hash(f"{forecast.prediction_id}_{forecast.created_at}"))
             
             # Simulate a 12% baseline drift to trigger alerts occasionally
             noise_factor = random.uniform(-0.05, 0.20)
-            actual_orders = int(forecast.predicted_orders * (1 + noise_factor))
+            actual_orders = int(forecast.prediction * (1 + noise_factor))
             
             actual_vs_pred.append({
-                "predicted": forecast.predicted_orders,
+                "predicted": forecast.prediction,
                 "actual": actual_orders
             })
             
