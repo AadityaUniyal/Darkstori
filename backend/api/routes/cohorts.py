@@ -201,7 +201,7 @@ async def compute_cohorts_from_orders(
         )).scalar_one_or_none()
 
         if existing:
-            existing.user_count = user_count
+            existing.user_count = user_count  # type: ignore
             for k, v in retentions.items():
                 setattr(existing, f"{k}_retention", v)
         else:
