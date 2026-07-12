@@ -35,7 +35,7 @@ from sqlalchemy import text
 
 from backend.core.config import settings  # noqa: E402
 from backend.core.logger import logger  # noqa: E402
-from backend.core.metrics import get_metrics  # noqa: E402
+from backend.core.metrics import get_metrics, MetricsMiddleware  # noqa: E402
 from backend.core.cache import cache as redis_cache  # noqa: E402
 from backend.core.rate_limiter import rate_limit_dependency  # noqa: E402
 
@@ -102,7 +102,7 @@ async def lifespan(app: FastAPI):
     logger.info("[OK] Background scheduler task spawned")
 
     # Start MLflow server if enabled
-    if mlflow_config.enable_tracking:
+    if mlflow_config.enable_tracking and get_server_manager is not None:
         if settings.MLFLOW_START_SERVER_SUBPROCESS:
             try:
                 mlflow_manager = get_server_manager()
@@ -152,7 +152,7 @@ async def lifespan(app: FastAPI):
             logger.info("Database listener task cancelled cleanly")
 
     # Stop MLflow server if started as subprocess
-    if mlflow_config.enable_tracking and settings.MLFLOW_START_SERVER_SUBPROCESS:
+    if mlflow_config.enable_tracking and settings.MLFLOW_START_SERVER_SUBPROCESS and get_server_manager is not None:
         try:
             mlflow_manager = get_server_manager()
             mlflow_manager.stop_server()
@@ -181,6 +181,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Metrics middleware (add early to time the whole request)
+app.add_middleware(MetricsMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -200,11 +203,16 @@ app.mount("/socket.io", socketio.ASGIApp(sio))
 # Health check endpoint
 
 
-@app.get("/health", tags=["System"])
-async def health_check():
-    """Enhanced health check endpoint with component status."""
+@app.get("/health/live", tags=["System"])
+async def liveness_check():
+    """Kubernetes-style liveness check."""
+    return {"status": "alive"}
+
+@app.get("/health/ready", tags=["System"])
+async def readiness_check():
+    """Enhanced readiness check endpoint with component status."""
     health_status = {
-        "status": "healthy",
+        "status": "ready",
         "version": "3.0.0",
         "platform": "Darkstori — Hyperlocal Delivery Intelligence",
         "focus_cities": settings.FOCUS_CITIES,
@@ -234,9 +242,10 @@ async def health_check():
             health_status["components"]["mlflow"] = f"unhealthy: {str(e)}"
     else:
         health_status["components"]["mlflow"] = "disabled"
+        mlflow_healthy = True # Assume healthy if disabled
 
-    # Check model availability (only if MLflow is reachable)
-    if mlflow_healthy:
+    # Check model availability (only if MLflow is reachable and enabled)
+    if mlflow_healthy and MLFLOW_AVAILABLE and mlflow_config.enable_tracking:
         try:
             from backend.ml.model_registry import ModelRegistry
             registry = ModelRegistry()
@@ -250,7 +259,18 @@ async def health_check():
         except Exception as e:
             health_status["components"]["model"] = f"unavailable: {str(e)}"
     else:
-        health_status["components"]["model"] = "unavailable: MLflow offline"
+        health_status["components"]["model"] = "skipped"
+
+    # Check Redis Cache
+    try:
+        # Simple ping check for redis
+        redis_is_ready = getattr(redis_cache, "redis", None) is not None
+        health_status["components"]["redis"] = "healthy" if redis_is_ready else "unhealthy"
+        if not redis_is_ready:
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["components"]["redis"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
 
     return health_status
 
@@ -271,33 +291,34 @@ async def root():
         "version": "3.0.0",
         "focus_cities": settings.FOCUS_CITIES,
         "docs": "/api/docs",
-        "health": "/health",
+        "health_live": "/health/live",
+        "health_ready": "/health/ready",
     }
 
 
 # ── Core Routes ────────────────────────────────────────────────────────────────────
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(stores.router, prefix="/api/stores", tags=["Stores"])
-app.include_router(resilience.router, prefix="/api/resilience", tags=["Zero-Waste Perishables"])
-app.include_router(predictions.router, prefix="/api/predictions", tags=["AI Demand Forecasting"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(stores.router, prefix="/api/v1/stores", tags=["Stores"])
+app.include_router(resilience.router, prefix="/api/v1/resilience", tags=["Zero-Waste Perishables"])
+app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["AI Demand Forecasting"])
 app.include_router(ml_models.router, prefix="/api/v1/ml", tags=["Machine Learning"])
 
 # ── Neighborhood Intelligence ──────────────────────────────────────────────────────
-app.include_router(neighborhoods.router, prefix="/api/neighborhoods", tags=["Neighborhoods"])
-app.include_router(simulator.router, prefix="/api/simulator", tags=["Store Simulator"])
-app.include_router(placement.router, prefix="/api/placement", tags=["Placement Scoring"])
-app.include_router(recommendations.router, prefix="/api/recommendations", tags=["Recommendations"])
+app.include_router(neighborhoods.router, prefix="/api/v1/neighborhoods", tags=["Neighborhoods"])
+app.include_router(simulator.router, prefix="/api/v1/simulator", tags=["Store Simulator"])
+app.include_router(placement.router, prefix="/api/v1/placement", tags=["Placement Scoring"])
+app.include_router(recommendations.router, prefix="/api/v1/recommendations", tags=["Recommendations"])
 
 # ── Analytics & Intelligence ───────────────────────────────────────────────────────
-app.include_router(analytics_advanced.router, prefix="/api/analytics/advanced", tags=["Advanced Analytics"])
-app.include_router(analytics_heatmap.router, prefix="/api/analytics", tags=["Heatmap Analytics"])
-app.include_router(sla.router, prefix="/api/sla", tags=["Delivery SLA"])
-app.include_router(cohorts.router, prefix="/api/cohorts", tags=["Customer Cohorts"])
-app.include_router(economics.router, prefix="/api/economics", tags=["Unit Economics"])
-app.include_router(events.router, prefix="/api/events", tags=["Local Events"])
+app.include_router(analytics_advanced.router, prefix="/api/v1/analytics/advanced", tags=["Advanced Analytics"])
+app.include_router(analytics_heatmap.router, prefix="/api/v1/analytics", tags=["Heatmap Analytics"])
+app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
+app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
+app.include_router(economics.router, prefix="/api/v1/economics", tags=["Unit Economics"])
+app.include_router(events.router, prefix="/api/v1/events", tags=["Local Events"])
 
 # ── Seed Data ────────────────────────────────────────────────────────────────────
-app.include_router(seed_data.router, prefix="/api", tags=["Seed Data"])
+app.include_router(seed_data.router, prefix="/api/v1", tags=["Seed Data"])
 
 
 # Rate limiting middleware — applies to all /api routes

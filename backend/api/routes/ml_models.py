@@ -4,13 +4,17 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, BackgroundTasks, status
+from fastapi import APIRouter, Depends, BackgroundTasks, status, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from backend.core.security import verify_token
 from backend.ml.model_registry import ModelRegistry
 from backend.pipelines.training_pipeline import TrainingPipeline
 from backend.utils.scheduler import global_scheduler
+from backend.database.connection import get_db
+from backend.ml.drift_monitor import DriftMonitor
+from backend.core.audit import log_audit_action
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -127,10 +131,14 @@ async def get_model_info(
 @router.post("/train", status_code=status.HTTP_202_ACCEPTED)
 async def trigger_training(
     background_tasks: BackgroundTasks,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(verify_token)
 ):
     """Trigger the end-to-end ML model training pipeline in a background task."""
     background_tasks.add_task(run_training_job)
+    user_id = token_payload.get("user_id")
+    await log_audit_action(db, "ML_TRAINING_TRIGGERED", request=request, user_id=int(user_id) if user_id else None)
     return {"message": "Model training task started successfully in background."}
 
 
@@ -161,32 +169,40 @@ async def get_ml_settings(
 @router.post("/settings")
 async def update_ml_settings(
     req: MLSettingsRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(verify_token)
 ):
     """Update active ML settings."""
     global ml_settings
     ml_settings["auto_retrain_enabled"] = req.auto_retrain_enabled
+    user_id = token_payload.get("user_id")
+    await log_audit_action(db, "ML_SETTINGS_UPDATED", request=request, user_id=int(user_id) if user_id else None, new_state={"auto_retrain": req.auto_retrain_enabled})
     return ml_settings
 
 
 @router.post("/check-drift")
 async def check_drift_and_retrain(
     background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
     token_payload: dict = Depends(verify_token)
 ):
     """Scan drift parameters and auto-trigger retrain if conditions breached."""
-    # Simulate finding drift breach in temp_celsius feature (KS=0.178 > 0.150 threshold)
-    drift_detected = True
+    monitor = DriftMonitor()
+    result = await monitor.calculate_drift(db)
+    
+    drift_detected = result.get("is_drifting", False)
     triggered = False
     
     if drift_detected and ml_settings["auto_retrain_enabled"]:
         background_tasks.add_task(run_training_job)
         triggered = True
-        logger.warning("[MLOps] Automated retraining triggered due to temperature feature drift breach.")
+        logger.warning(f"[MLOps] Automated retraining triggered. MAPE: {result.get('mape')}%")
         
     return {
         "status": "success",
         "drift_detected": drift_detected,
+        "mape": result.get("mape", 0.0),
         "retraining_triggered": triggered,
         "timestamp": datetime.now().isoformat()
     }

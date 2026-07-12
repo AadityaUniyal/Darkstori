@@ -11,11 +11,11 @@ from datetime import date, datetime, timedelta
 from typing import Dict, Optional, Union
 
 import httpx
+import json
+from backend.core.circuit_breaker import circuit_breaker
+from backend.core.cache import cache
 
 logger = logging.getLogger(__name__)
-
-# Cache weather data in-memory for the session to avoid repeat API calls
-_weather_cache: Dict[str, dict] = {}
 
 # City centroids for weather lookups (matches our 5 focus cities)
 CITY_COORDS = {
@@ -70,9 +70,14 @@ async def fetch_weather_for_date(
 
     city = _pincode_to_city(pincode)
     key = _cache_key(city, target_date)
+    cache_key = f"weather:{key}"
 
-    if key in _weather_cache:
-        return _weather_cache[key]
+    cached = await cache.get(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
 
     coords = CITY_COORDS.get(city, CITY_COORDS["Bangalore"])
 
@@ -80,20 +85,21 @@ async def fetch_weather_for_date(
     today = date.today()
     if target_date >= today:
         result = _seasonal_heuristic(city, target_date)
-        _weather_cache[key] = result
+        await cache.set(cache_key, json.dumps(result), ttl=86400) # Cache future forecasts for a day
         return result
 
     try:
         result = await _fetch_from_api(coords, target_date)
-        _weather_cache[key] = result
+        await cache.set(cache_key, json.dumps(result), ttl=30 * 86400) # Cache historical weather for 30 days
         return result
     except Exception as e:
         logger.warning(f"Weather API failed for {city}/{target_date}: {e}, using heuristic")
         result = _seasonal_heuristic(city, target_date)
-        _weather_cache[key] = result
+        await cache.set(cache_key, json.dumps(result), ttl=86400)
         return result
 
 
+@circuit_breaker(failure_threshold=2, recovery_timeout=30)
 async def _fetch_from_api(coords: dict, target_date: date) -> dict:
     """Call Open-Meteo Historical Weather API."""
     url = "https://archive-api.open-meteo.com/v1/archive"
@@ -195,6 +201,13 @@ def get_weather_sync(pincode: str, target_date: Union[date, datetime, str]) -> d
     return _seasonal_heuristic(city, target_date)
 
 
+@circuit_breaker(failure_threshold=2, recovery_timeout=30)
+async def _fetch_forecast_api(url: str, params: dict) -> dict:
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        return resp.json()
+
 async def fetch_weather_forecast(pincode: str) -> Optional[dict]:
     """
     Fetch hourly forecast from Open-Meteo API for the next 24 hours.
@@ -212,10 +225,7 @@ async def fetch_weather_forecast(pincode: str) -> Optional[dict]:
         "forecast_days": 1,
     }
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
+        data = await _fetch_forecast_api(url, params)
 
         hourly = data.get("hourly", {})
         times = hourly.get("time", [])

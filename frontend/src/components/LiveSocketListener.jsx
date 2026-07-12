@@ -1,6 +1,11 @@
+/* eslint-disable no-console */
 import { useEffect } from 'react';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function LiveSocketListener() {
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     let ws = null;
     let pingIntervalId = null;
@@ -47,9 +52,17 @@ export default function LiveSocketListener() {
               }
               
               if (eventDetail.message) {
+                if (eventDetail.type === 'success') {
+                  toast.success(eventDetail.message);
+                  queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+                  queryClient.invalidateQueries({ queryKey: ['active-cohorts'] });
+                } else {
+                  toast(eventDetail.message);
+                }
                 window.dispatchEvent(new CustomEvent('darkstori:notification', { detail: eventDetail }));
               }
             } else if (eventName === 'sla_breach_warning') {
+              toast.warning(eventData.message);
               window.dispatchEvent(new CustomEvent('darkstori:notification', {
                 detail: {
                   type: 'warning',
@@ -57,6 +70,7 @@ export default function LiveSocketListener() {
                 }
               }));
             } else if (eventName === 'competitor_alert') {
+              toast.error(eventData.message);
               window.dispatchEvent(new CustomEvent('darkstori:notification', {
                 detail: {
                   type: 'danger',

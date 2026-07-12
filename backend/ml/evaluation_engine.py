@@ -40,7 +40,8 @@ class EvaluationEngine:
         logger.info("EvaluationEngine initialized")
 
     def evaluate_regression(
-        self, y_true: np.ndarray, y_pred: np.ndarray, dataset_name: str = "test"
+        self, y_true: Any, y_pred: Any, dataset_name: str = "test",
+        y_pred_baseline: Any = None
     ) -> Dict[str, float]:
         """Calculate regression metrics.
 
@@ -48,6 +49,7 @@ class EvaluationEngine:
             y_true: True values
             y_pred: Predicted values
             dataset_name: Name of the dataset (for logging)
+            y_pred_baseline: Optional baseline predictions for comparison
 
         Returns:
             Dictionary of metrics
@@ -61,6 +63,14 @@ class EvaluationEngine:
                 f"{dataset_name}_mape": mean_absolute_percentage_error(y_true, y_pred)
                 * 100,
             }
+            
+            if y_pred_baseline is not None:
+                # Calculate baseline metrics
+                metrics.update({
+                    f"{dataset_name}_baseline_mae": mean_absolute_error(y_true, y_pred_baseline),
+                    f"{dataset_name}_baseline_rmse": np.sqrt(mean_squared_error(y_true, y_pred_baseline)),
+                    f"{dataset_name}_baseline_mape": mean_absolute_percentage_error(y_true, y_pred_baseline) * 100,
+                })
 
             logger.info(f"Calculated {len(metrics)} metrics for {dataset_name} set")
 
@@ -75,7 +85,7 @@ class EvaluationEngine:
             raise
 
     def cross_validate(
-        self, model: Any, X: np.ndarray, y: np.ndarray, cv: int = 5, scoring: str = "r2"
+        self, model: Any, X: Any, y: Any, cv: int = 5, scoring: str = "r2"
     ) -> Dict[str, float]:
         """Perform k-fold cross-validation.
 
@@ -157,7 +167,7 @@ class EvaluationEngine:
             raise
 
     def calculate_residuals(
-        self, y_true: np.ndarray, y_pred: np.ndarray
+        self, y_true: Any, y_pred: Any
     ) -> Dict[str, float]:
         """Calculate residual statistics.
 
@@ -195,8 +205,8 @@ class EvaluationEngine:
 
     def generate_plots(
         self,
-        y_true: np.ndarray,
-        y_pred: np.ndarray,
+        y_true: Any,
+        y_pred: Any,
         feature_importance: Optional[pd.DataFrame] = None,
     ) -> None:
         """Generate and log evaluation plots.
@@ -223,7 +233,7 @@ class EvaluationEngine:
             logger.error(f"Failed to generate plots: {e}")
             raise
 
-    def _plot_residuals(self, y_true: np.ndarray, y_pred: np.ndarray) -> None:
+    def _plot_residuals(self, y_true: Any, y_pred: Any) -> None:
         """Generate residual plot."""
         residuals = y_true - y_pred
 
@@ -252,7 +262,7 @@ class EvaluationEngine:
 
         plt.close(fig)
 
-    def _plot_predictions(self, y_true: np.ndarray, y_pred: np.ndarray) -> None:
+    def _plot_predictions(self, y_true: Any, y_pred: Any) -> None:
         """Generate predicted vs actual scatter plot."""
         fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -304,9 +314,9 @@ class EvaluationEngine:
 
         fig, ax = plt.subplots(figsize=(10, 8))
 
-        ax.barh(range(len(fi_sorted)), fi_sorted["importance"])
+        ax.barh(range(len(fi_sorted)), fi_sorted["importance"].tolist())
         ax.set_yticks(range(len(fi_sorted)))
-        ax.set_yticklabels(fi_sorted["feature"])
+        ax.set_yticklabels(fi_sorted["feature"].tolist())
         ax.set_xlabel("Importance")
         ax.set_title(f"Top {top_n} Feature Importance")
         ax.invert_yaxis()
@@ -345,7 +355,7 @@ class EvaluationEngine:
             metrics = self.evaluate_regression(y_test, y_pred, "validation")
 
             # Check thresholds
-            validation_results = {
+            validation_results: Dict[str, Any] = {
                 "metrics": metrics,
                 "thresholds": thresholds,
                 "checks": {},
@@ -408,7 +418,7 @@ class EvaluationEngine:
             raise
 
     def compare_models(
-        self, models: Dict[str, Any], X_test: np.ndarray, y_test: np.ndarray
+        self, models: Dict[str, Any], X_test: Any, y_test: Any
     ) -> pd.DataFrame:
         """Compare multiple models on the same test set.
 

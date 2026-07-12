@@ -25,12 +25,15 @@
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.303.0",
+    "maplibre-gl": "^3.6.2",
+    "react-map-gl": "^7.1.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.15.1",
     "react-leaflet": "^4.2.1",
     "react-tilt": "^1.0.2",
     "recharts": "^2.10.3",
+    "sonner": "^1.4.0",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
@@ -49,7 +52,14 @@
     "prettier": "^3.1.1",
     "vite": "^5.0.8",
     "vitest": "^4.1.6",
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16",
+    "tailwind-merge": "^2.2.0",
+    "clsx": "^2.1.0",
+    "class-variance-authority": "^0.7.0",
+    "next-themes": "^0.2.1"
   },
   "overrides": {
     "form-data": "4.0.6"

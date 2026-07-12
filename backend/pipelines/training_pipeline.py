@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 import joblib
 import numpy as np
@@ -14,8 +14,12 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
-
+import mlflow
+import mlflow.sklearn
+import mlflow.xgboost
 from backend.pipelines.data_pipeline import DataPipeline
+from backend.ml.model_registry import ModelRegistry
+from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +64,7 @@ class ModelTrainer:
         X = df.drop(columns=[target_col])
 
         # Remove non-numeric columns
-        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        numeric_cols = X.select_dtypes(include="number").columns
         X = X[numeric_cols]
 
         # Handle missing values
@@ -110,7 +114,7 @@ class ModelTrainer:
 
         self.scalers[scaler_type] = scaler
 
-        return X_train_scaled, X_test_scaled
+        return X_train_scaled, X_test_scaled  # type: ignore
 
     def train_random_forest(
         self, X_train: np.ndarray, y_train: pd.Series, **kwargs
@@ -126,7 +130,7 @@ class ModelTrainer:
             n_jobs=-1,
         )
 
-        model.fit(X_train, y_train)
+        model.fit(X_train, y_train)  # type: ignore
         self.models["random_forest"] = model
 
         return model
@@ -163,7 +167,7 @@ class ModelTrainer:
             random_state=42,
         )
 
-        model.fit(X_train, y_train)
+        model.fit(X_train, y_train)  # type: ignore
         self.models["gradient_boosting"] = model
 
         return model
@@ -251,7 +255,7 @@ class ModelTrainer:
 
         return all_metrics
 
-    def get_feature_importance(self, top_n: int = 20) -> pd.DataFrame:
+    def get_feature_importance(self, top_n: int = 20) -> Optional[pd.DataFrame]:
         """Get feature importance from best model."""
         if self.best_model is None:
             raise ValueError("No model trained yet")
@@ -272,7 +276,7 @@ class ModelTrainer:
         else:
             return None
 
-    def save_models(self, version: str = None):
+    def save_models(self, version: Optional[str] = None):
         """Save all trained models."""
         if version is None:
             version = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -342,6 +346,7 @@ class TrainingPipeline:
     def __init__(self):
         self.data_pipeline = DataPipeline()
         self.model_trainer = ModelTrainer()
+        self.model_registry = ModelRegistry()
 
     def run(
         self,
@@ -383,8 +388,59 @@ class TrainingPipeline:
         # Step 5: Get feature importance
         feature_importance = self.model_trainer.get_feature_importance()
 
-        # Step 6: Save models
+        # Step 6: Save models locally
         self.model_trainer.save_models()
+
+        # Step 7: Log to MLflow
+        if settings.MLFLOW_ENABLE_TRACKING:
+            logger.info("Logging to MLflow...")
+            mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
+            mlflow.set_experiment("demand_forecasting")
+            
+            with mlflow.start_run(run_name=f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}") as run:
+                best_model_name = str(self.model_trainer.best_model_name)
+                # Log metrics for best model
+                best_metrics = metrics[best_model_name]
+                mlflow.log_metrics({
+                    "r2": best_metrics["r2"],
+                    "rmse": best_metrics["rmse"],
+                    "mae": best_metrics["mae"],
+                    "mape": best_metrics["mape"]
+                })
+                
+                # Log model parameters
+                mlflow.log_param("best_model", self.model_trainer.best_model_name)
+                mlflow.log_param("features_count", len(self.model_trainer.feature_names))
+                
+                # Log model and register
+                model_name = settings.DEFAULT_MODEL_NAME
+                
+                if self.model_trainer.best_model_name == "xgboost":
+                    mlflow.xgboost.log_model(
+                        self.model_trainer.best_model, 
+                        "model",
+                        registered_model_name=model_name
+                    )
+                else:
+                    mlflow.sklearn.log_model(
+                        self.model_trainer.best_model, 
+                        "model",
+                        registered_model_name=model_name
+                    )
+                
+                # Retrieve the latest registered version
+                try:
+                    latest_version = self.model_registry.get_latest_model(model_name)
+                    if latest_version:
+                        self.model_registry.transition_model_stage(
+                            name=model_name,
+                            version=int(latest_version.version),
+                            stage="Production",
+                            archive_existing=True
+                        )
+                        logger.info(f"Registered and promoted model {model_name} v{latest_version.version} to Production")
+                except Exception as e:
+                    logger.error(f"Failed to promote model to production in MLflow: {e}")
 
         logger.info("Training pipeline completed!")
 

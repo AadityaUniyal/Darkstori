@@ -1,8 +1,8 @@
 """Authentication routes — real DB-backed login/register with refresh token rotation."""
 
 import bcrypt
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +23,9 @@ from backend.core.security import (
 from backend.database.connection import get_db
 from backend.database.models.models import ApiKey, RefreshToken, User
 from backend.utils.email import send_welcome_email
+from backend.core.audit import log_audit_action
+
+from backend.core.cache import cache
 
 router = APIRouter()
 
@@ -87,8 +90,13 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
     access_token = create_access_token(token_data, expires_delta=access_expire)
     refresh_token_str, jti = create_refresh_token(token_data, expires_delta=refresh_expire)
     # Persist refresh token JTI to DB
-    expires_at = datetime.utcnow() + refresh_expire
-    await store_refresh_token(db, user.id, jti, expires_at)
+    expires_at = datetime.now(timezone.utc) + refresh_expire
+    # the internal naive datetime storage might complain if we give it tz-aware, 
+    # but sqlalchemy usually handles it. If it doesn't, we might need .replace(tzinfo=None)
+    # Actually, the python 3.11 warning suggests we just use .now(timezone.utc). 
+    # Let's strip tzinfo for SQLAlchemy's default DateTime column.
+    expires_at = expires_at.replace(tzinfo=None)
+    await store_refresh_token(db, int(user.id), jti, expires_at)  # type: ignore
     return {
         "access_token": access_token,
         "refresh_token": refresh_token_str,
@@ -104,6 +112,7 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def register(
     user: UserRegister,
+    request: Request,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
@@ -127,16 +136,17 @@ async def register(
     await db.commit()
     await db.refresh(new_user)
     logger.info(f"New user registered: {user.email}")
+    await log_audit_action(db, "USER_REGISTER", request=request, user_id=int(new_user.id), target_table="users", target_id=int(new_user.id))  # type: ignore
     background_tasks.add_task(send_welcome_email, user.email, user.full_name)
     return await _make_token(new_user, db)
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(credentials: UserLogin, request: Request, db: AsyncSession = Depends(get_db)):
     """Login with email + password → JWT pair."""
     result = await db.execute(select(User).where(User.email == credentials.email))
     user = result.scalar_one_or_none()
-    if not user or not _verify_pw(credentials.password, user.hashed_password):
+    if not user or not _verify_pw(credentials.password, str(user.hashed_password)):  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -145,6 +155,7 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
     logger.info(f"User logged in: {credentials.email}")
+    await log_audit_action(db, "USER_LOGIN", request=request, user_id=int(user.id))  # type: ignore
     return await _make_token(user, db)
 
 
@@ -169,6 +180,7 @@ async def refresh_access_token(
 @router.post("/logout")
 async def logout(
     body: LogoutRequest,
+    request: Request,
     payload: dict = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
@@ -181,6 +193,8 @@ async def logout(
                 await revoke_refresh_token(db, rjti)
         except Exception:
             pass
+    user_id = payload.get("user_id")
+    await log_audit_action(db, "USER_LOGOUT", request=request, user_id=int(user_id) if user_id else None)
     return {"message": "Logged out successfully"}
 
 
@@ -200,7 +214,9 @@ async def logout_all(
         )
         tokens = result.scalars().all()
         for rt in tokens:
-            rt.revoked = True
+            rt.revoked = True  # type: ignore
+            if rt.token_jti:
+                await cache.set(f"revoked_jti:{rt.token_jti}", "1", ttl=7 * 24 * 60 * 60)
         await db.commit()
     return {"message": "All sessions invalidated"}
 
@@ -216,11 +232,11 @@ async def get_me(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return UserOut(
-        id=user.id,
-        email=user.email,
-        username=user.username,
-        role=user.role,
-        is_active=user.is_active,
+        id=int(user.id),  # type: ignore
+        email=str(user.email),  # type: ignore
+        username=str(user.username),  # type: ignore
+        role=str(user.role),  # type: ignore
+        is_active=bool(user.is_active),  # type: ignore
     )
 
 
@@ -274,6 +290,6 @@ async def revoke_api_key(
     ak = result.scalar_one_or_none()
     if not ak:
         raise HTTPException(status_code=404, detail="API key not found")
-    ak.is_active = False
+    ak.is_active = False  # type: ignore
     await db.commit()
     return {"message": "API key revoked"}

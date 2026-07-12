@@ -23,6 +23,8 @@ import RangoliLoader from './components/RangoliLoader';
 import LiveSocketListener from './components/LiveSocketListener';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
+import { ThemeProvider } from './components/theme-provider';
+import { Toaster } from 'sonner';
 
 import './App.css';
 
@@ -107,18 +109,21 @@ function AppContent() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <CityProvider>
-          <AuthProvider>
-            <LiveSocketListener />
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AppContent />
-            </Router>
-          </AuthProvider>
-        </CityProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="darkstori-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <CityProvider>
+            <AuthProvider>
+              <LiveSocketListener />
+              <Toaster position="top-right" richColors />
+              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <AppContent />
+              </Router>
+            </AuthProvider>
+          </CityProvider>
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

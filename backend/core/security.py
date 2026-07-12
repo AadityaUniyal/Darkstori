@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
 from backend.core.logger import logger
+from backend.core.cache import cache
 from backend.database.connection import get_db
 from backend.database.models.models import ApiKey, RefreshToken, User
 
@@ -95,7 +96,10 @@ async def store_refresh_token(db: AsyncSession, user_id: int, jti: str, expires_
 
 
 async def revoke_refresh_token(db: AsyncSession, jti: str) -> None:
-    """Mark a refresh token as revoked in the database."""
+    """Mark a refresh token as revoked in the database and Redis blocklist."""
+    # Add to Redis blocklist (TTL 7 days to match refresh token max lifespan)
+    await cache.set(f"revoked_jti:{jti}", "1", ttl=7 * 24 * 60 * 60)
+    
     result = await db.execute(select(RefreshToken).where(RefreshToken.token_jti == jti))
     rt = result.scalar_one_or_none()
     if rt:
@@ -104,9 +108,15 @@ async def revoke_refresh_token(db: AsyncSession, jti: str) -> None:
 
 
 async def is_token_revoked(db: AsyncSession, jti: str) -> bool:
-    """Check if a refresh token JTI has been revoked."""
+    """Check if a refresh token JTI has been revoked via Redis or DB fallback."""
     if not jti:
         return False
+        
+    # Check Redis blocklist first (fast path)
+    if await cache.get(f"revoked_jti:{jti}"):
+        return True
+        
+    # Fallback to DB check
     result = await db.execute(
         select(RefreshToken).where(
             RefreshToken.token_jti == jti,

@@ -50,7 +50,7 @@ apiClient.interceptors.response.use(
 // ── Auth ───────────────────────────────────────────────────────────────────────
 
 const login = async (credentials) => {
-  const response = await apiClient.post('/api/auth/login', credentials);
+  const response = await apiClient.post('/api/v1/auth/login', credentials);
   if (response.data.access_token) {
     localStorage.setItem('auth_token', response.data.access_token);
   }
@@ -58,7 +58,7 @@ const login = async (credentials) => {
 };
 
 const register = async (userData) => {
-  const response = await apiClient.post('/api/auth/register', userData);
+  const response = await apiClient.post('/api/v1/auth/register', userData);
   if (response.data.access_token) {
     localStorage.setItem('auth_token', response.data.access_token);
   }
@@ -70,71 +70,71 @@ const logout = () => {
 };
 
 const getMe = async () => {
-  const response = await apiClient.get('/api/auth/me');
+  const response = await apiClient.get('/api/v1/auth/me');
   return response.data;
 };
 
 // ── Stores ─────────────────────────────────────────────────────────────────────
 
 const getStores = async (params = {}) => {
-  const response = await apiClient.get('/api/stores/', { params });
+  const response = await apiClient.get('/api/v1/stores/', { params });
   return response.data;
 };
 
 const getStoreWeatherAlert = async (storeId) => {
-  const response = await apiClient.get(`/api/stores/${storeId}/weather-alert`);
+  const response = await apiClient.get(`/api/v1/stores/${storeId}/weather-alert`);
   return response.data;
 };
 
 const getStoreStats = async () => {
-  const response = await apiClient.get('/api/stores/stats');
+  const response = await apiClient.get('/api/v1/stores/stats');
   return response.data;
 };
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 const getCoverageGaps = async (params = {}) => {
-  const response = await apiClient.get('/api/analytics/coverage-gaps', { params });
+  const response = await apiClient.get('/api/v1/analytics/coverage-gaps', { params });
   return response.data;
 };
 
 const getOrderTrends = async (params = {}) => {
-  const response = await apiClient.get('/api/analytics/order-trends', { params });
+  const response = await apiClient.get('/api/v1/analytics/order-trends', { params });
   return response.data;
 };
 
 const getPlatformComparison = async () => {
-  const response = await apiClient.get('/api/analytics/platform-comparison');
+  const response = await apiClient.get('/api/v1/analytics/platform-comparison');
   return response.data;
 };
 
 // ── Advanced Analytics ────────────────────────────────────────────────────────
 
 const getDashboardMetrics = async () => {
-  const response = await apiClient.get('/api/analytics/advanced/dashboard/metrics');
+  const response = await apiClient.get('/api/v1/analytics/advanced/dashboard/metrics');
   return response.data;
 };
 
 const getCityOverview = async () => {
-  const response = await apiClient.get('/api/analytics/advanced/city-overview');
+  const response = await apiClient.get('/api/v1/analytics/advanced/city-overview');
   return response.data;
 };
 
 const getSentimentOverview = async (city = null) => {
   const params = city ? { city } : {};
-  const response = await apiClient.get('/api/analytics/advanced/sentiment-overview', { params });
+  const response = await apiClient.get('/api/v1/analytics/advanced/sentiment-overview', { params });
   return response.data;
 };
 
 const getCompetitiveMoves = async (city = null, days = 30) => {
   const params = { days, ...(city ? { city } : {}) };
-  const response = await apiClient.get('/api/analytics/advanced/competitive-moves', { params });
+  const response = await apiClient.get('/api/v1/analytics/advanced/competitive-moves', { params });
   return response.data;
 };
 
 const exportNeighborhoodsCSV = async (city = null) => {
   const params = city ? { city } : {};
-  const response = await apiClient.post('/api/analytics/advanced/export/csv', null, {
+  const response = await apiClient.post('/api/v1/analytics/advanced/export/csv', null, {
     params,
     responseType: 'blob',
   });
@@ -149,29 +149,29 @@ const exportNeighborhoodsCSV = async (city = null) => {
 // ── Neighborhoods ─────────────────────────────────────────────────────────────
 
 const getFocusCities = async () => {
-  const response = await apiClient.get('/api/neighborhoods/cities');
+  const response = await apiClient.get('/api/v1/neighborhoods/cities');
   return response.data;
 };
 
 const getNeighborhoods = async (cityId = null, limit = 50) => {
   const params = { limit, ...(cityId ? { city_id: cityId } : {}) };
-  const response = await apiClient.get('/api/neighborhoods/', { params });
+  const response = await apiClient.get('/api/v1/neighborhoods/', { params });
   return response.data;
 };
 
 const getNeighborhoodById = async (neighborhoodId) => {
-  const response = await apiClient.get(`/api/neighborhoods/${neighborhoodId}`);
+  const response = await apiClient.get(`/api/v1/neighborhoods/${neighborhoodId}`);
   return response.data;
 };
 
 const getNeighborhoodDNA = async (neighborhoodId) => {
-  const response = await apiClient.get(`/api/neighborhoods/${neighborhoodId}/dna`);
+  const response = await apiClient.get(`/api/v1/neighborhoods/${neighborhoodId}/dna`);
   return response.data;
 };
 
 const getTopOpportunities = async (limit = 10, city = null) => {
   const params = { limit, ...(city ? { city } : {}) };
-  const response = await apiClient.get('/api/analytics/advanced/top-opportunities', { params });
+  const response = await apiClient.get('/api/v1/analytics/advanced/top-opportunities', { params });
   return response.data;
 };
 
@@ -179,19 +179,19 @@ const getTopOpportunities = async (limit = 10, city = null) => {
 
 const predictROI = async (payload) => {
   // payload: { neighborhood_id, investment_amount, store_size_sqft, operating_hours }
-  const response = await apiClient.post('/api/simulator/predict', payload);
+  const response = await apiClient.post('/api/v1/simulator/predict', payload);
   return response.data;
 };
 
 const quickEstimate = async (neighborhoodId, investment) => {
-  const response = await apiClient.get('/api/simulator/quick-estimate', {
+  const response = await apiClient.get('/api/v1/simulator/quick-estimate', {
     params: { neighborhood_id: neighborhoodId, investment_amount: investment },
   });
   return response.data;
 };
 
 const compareNeighborhoods = async (neighborhoodIds, investment) => {
-  const response = await apiClient.get('/api/simulator/compare', {
+  const response = await apiClient.get('/api/v1/simulator/compare', {
     params: {
       neighborhood_ids: neighborhoodIds.join(','),
       investment_amount: investment,
@@ -201,50 +201,50 @@ const compareNeighborhoods = async (neighborhoodIds, investment) => {
 };
 
 const proposeLocation = async (simId) => {
-  const response = await apiClient.post(`/api/simulator/propose/${simId}`);
+  const response = await apiClient.post(`/api/v1/simulator/propose/${simId}`);
   return response.data;
 };
 
 const reviewLocation = async (simId, comments) => {
-  const response = await apiClient.post(`/api/simulator/review/${simId}`, { comments });
+  const response = await apiClient.post(`/api/v1/simulator/review/${simId}`, { comments });
   return response.data;
 };
 
 const approveLocation = async (simId) => {
-  const response = await apiClient.post(`/api/simulator/approve/${simId}`);
+  const response = await apiClient.post(`/api/v1/simulator/approve/${simId}`);
   return response.data;
 };
 
 const getProposals = async () => {
-  const response = await apiClient.get('/api/simulator/proposals');
+  const response = await apiClient.get('/api/v1/simulator/proposals');
   return response.data;
 };
 
 // ── Recommendations ───────────────────────────────────────────────────────────
 
 const getCompleteRecommendation = async (neighborhoodId) => {
-  const response = await apiClient.get('/api/recommendations/complete', {
+  const response = await apiClient.get('/api/v1/recommendations/complete', {
     params: { neighborhood_id: neighborhoodId },
   });
   return response.data;
 };
 
 const getInventoryRecommendation = async (neighborhoodId, budget = 1600000) => {
-  const response = await apiClient.get('/api/recommendations/inventory', {
+  const response = await apiClient.get('/api/v1/recommendations/inventory', {
     params: { neighborhood_id: neighborhoodId, budget },
   });
   return response.data;
 };
 
 const getPricingStrategy = async (neighborhoodId) => {
-  const response = await apiClient.get('/api/recommendations/pricing', {
+  const response = await apiClient.get('/api/v1/recommendations/pricing', {
     params: { neighborhood_id: neighborhoodId },
   });
   return response.data;
 };
 
 const getStoreLayout = async (neighborhoodId, storeSizeSqft = 1500) => {
-  const response = await apiClient.get('/api/recommendations/layout', {
+  const response = await apiClient.get('/api/v1/recommendations/layout', {
     params: { neighborhood_id: neighborhoodId, store_size: storeSizeSqft },
   });
   return response.data;
@@ -254,29 +254,29 @@ const getStoreLayout = async (neighborhoodId, storeSizeSqft = 1500) => {
 
 const getOpportunityZones = async (city = null, limit = 20) => {
   const params = { limit, ...(city ? { city } : {}) };
-  const response = await apiClient.get('/api/placement/opportunity-zones', { params });
+  const response = await apiClient.get('/api/v1/placement/opportunity-zones', { params });
   return response.data;
 };
 
 const predictNeighborhoodDemand = async (neighborhoodId) => {
-  const response = await apiClient.post('/api/predictions/predict-demand', null, {
+  const response = await apiClient.post('/api/v1/predictions/predict-demand', null, {
     params: { neighborhood_id: neighborhoodId },
   });
   return response.data;
 };
 
 const getCityForecast = async (city) => {
-  const response = await apiClient.get('/api/predictions/forecast', { params: { city } });
+  const response = await apiClient.get('/api/v1/predictions/forecast', { params: { city } });
   return response.data;
 };
 
 const getForecastNeighborhoods = async () => {
-  const response = await apiClient.get('/api/predictions/neighborhoods');
+  const response = await apiClient.get('/api/v1/predictions/neighborhoods');
   return response.data;
 };
 
 const getDemandForecast = async (payload) => {
-  const response = await apiClient.post('/api/predictions/predict', payload);
+  const response = await apiClient.post('/api/v1/predictions/predict', payload);
   return response.data;
 };
 
@@ -285,7 +285,7 @@ const getDemandForecast = async (payload) => {
 const getOrderHeatmap = async (city = null, days = 90) => {
   const params = { days, limit: 5000 };
   if (city) params.city = city;
-  const response = await apiClient.get('/api/analytics/order-heatmap', { params });
+  const response = await apiClient.get('/api/v1/analytics/order-heatmap', { params });
   return response.data;
 };
 
@@ -324,43 +324,43 @@ const checkDriftAndRetrain = async () => {
 };
 
 const getAuditLogs = async () => {
-  const response = await apiClient.get('/api/simulator/audit-logs');
+  const response = await apiClient.get('/api/v1/simulator/audit-logs');
   return response.data;
 };
 
 // ── Placement AI ────────────────────────────────────────────────────────────────
 
 const getPlacementScores = async (city) => {
-  const response = await apiClient.get(`/api/placement/score/${city}`);
+  const response = await apiClient.get(`/api/v1/placement/score/${city}`);
   return response.data;
 };
 
 const getPlacementSummary = async (city = null) => {
   const params = city ? { city } : {};
-  const response = await apiClient.get('/api/placement/summary', { params });
+  const response = await apiClient.get('/api/v1/placement/summary', { params });
   return response.data;
 };
 
 const getTopPlacementOpps = async (limit = 10) => {
-  const response = await apiClient.get('/api/placement/top', { params: { limit } });
+  const response = await apiClient.get('/api/v1/placement/top', { params: { limit } });
   return response.data;
 };
 
 // ── Unit Economics ──────────────────────────────────────────────────────────────
 
 const projectEconomics = async (params) => {
-  const response = await apiClient.post('/api/economics/project', params);
+  const response = await apiClient.post('/api/v1/economics/project', params);
   return response.data;
 };
 
 const getEconomicsBenchmarks = async (city = null) => {
   const params = city ? { city } : {};
-  const response = await apiClient.get('/api/economics/benchmarks', { params });
+  const response = await apiClient.get('/api/v1/economics/benchmarks', { params });
   return response.data;
 };
 
 const listEconomicsProjections = async () => {
-  const response = await apiClient.get('/api/economics/projections');
+  const response = await apiClient.get('/api/v1/economics/projections');
   return response.data;
 };
 
@@ -368,14 +368,14 @@ const listEconomicsProjections = async () => {
 
 const getSLAMetrics = async (city = null) => {
   const params = city ? { city } : {};
-  const response = await apiClient.get('/api/sla/metrics', { params });
+  const response = await apiClient.get('/api/v1/sla/metrics', { params });
   return response.data;
 };
 
 // ── Cohorts ─────────────────────────────────────────────────────────────────────
 
 const getCohorts = async () => {
-  const response = await apiClient.get('/api/cohorts');
+  const response = await apiClient.get('/api/v1/cohorts');
   return response.data;
 };
 
@@ -385,61 +385,66 @@ const getResilienceBatches = async (city = null, category = null) => {
   const params = {};
   if (city) params.city = city;
   if (category) params.category = category;
-  const response = await apiClient.get('/api/resilience/batches', { params });
+  const response = await apiClient.get('/api/v1/resilience/batches', { params });
   return response.data;
 };
 
 const simulateDecay = async (hours, city = null, tempFailure = false) => {
   const payload = { hours, city, temp_failure: tempFailure };
-  const response = await apiClient.post('/api/resilience/batches/decay', payload);
+  const response = await apiClient.post('/api/v1/resilience/batches/decay', payload);
   return response.data;
 };
 
 const scanQRCrate = async (qrCodeHash, storeId = null) => {
   const payload = { qr_code_hash: qrCodeHash };
   if (storeId) payload.store_id = storeId;
-  const response = await apiClient.post('/api/resilience/batches/scan-qr', payload);
+  const response = await apiClient.post('/api/v1/resilience/batches/scan-qr', payload);
   return response.data;
 };
 
 const verifyPhoto = async (payload) => {
   // payload: { batch_id, photo_url, bruising_percent, color_state, freshness_score }
-  const response = await apiClient.post('/api/resilience/batches/verify-photo', payload);
+  const response = await apiClient.post('/api/v1/resilience/batches/verify-photo', payload);
   return response.data;
 };
 
 const ocrExpiry = async (imageUrl) => {
   const payload = { image_url: imageUrl };
-  const response = await apiClient.post('/api/resilience/batches/ocr-expiry', payload);
+  const response = await apiClient.post('/api/v1/resilience/batches/ocr-expiry', payload);
   return response.data;
 };
 
 // ── Health ─────────────────────────────────────────────────────────────────────
 
 const getHealth = async () => {
-  const response = await apiClient.get('/health');
+  const response = await apiClient.get('/health/live');
+  return response.data;
+};
+
+const getHealthReady = async () => {
+  const response = await apiClient.get('/health/ready');
   return response.data;
 };
 
 // ── Local Events ──────────────────────────────────────────────────────────────
 
 const getEvents = async (params) => {
-  const response = await apiClient.get('/api/events/', { params });
+  const response = await apiClient.get('/api/v1/events/', { params });
   return response.data;
 };
 
 const createEvent = async (payload) => {
-  const response = await apiClient.post('/api/events/', payload);
+  const response = await apiClient.post('/api/v1/events/', payload);
   return response.data;
 };
 
 const updateEvent = async (eventId, payload) => {
-  const response = await apiClient.put(`/api/events/${eventId}`, payload);
+  const response = await apiClient.put(`/api/v1/events/${eventId}`, payload);
   return response.data;
 };
 
 const deleteEvent = async (eventId) => {
-  const response = await apiClient.delete(`/api/events/${eventId}`);
+  const response = await apiClient.delete(`/api/v1/events/${eventId}`);
   return response.data;
 };
 
@@ -539,7 +544,7 @@ export const api = {
 
   // System
   getHealth,
+  getHealthReady,
 };
 
 export default apiClient;
-

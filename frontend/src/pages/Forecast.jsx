@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import {
-  TrendingUp, MapPin, Calendar, Zap, Clock, Settings2, AlertCircle
+  TrendingUp, Clock, Settings2
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid
@@ -10,6 +9,8 @@ import {
 import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
 import AnimatedCard from '../components/AnimatedCard';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
 
 export default function Forecast() {
   const [selectedPincode, setSelectedPincode] = useState('560001');
@@ -202,7 +203,14 @@ export default function Forecast() {
 
         {/* Right Panel: Results Area */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          {hasPrediction ? (
+          {forecastMutation.isPending ? (
+            <Skeleton className="w-full h-[300px]" />
+          ) : !hasPrediction ? (
+            <EmptyState 
+              title="Awaiting Input" 
+              description="Select a neighborhood and date, then run the forecast." 
+            />
+          ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--space-4)' }}>
               
               {/* Forecast Yield Card */}
@@ -267,21 +275,6 @@ export default function Forecast() {
                 </div>
               </div>
 
-            </div>
-          ) : (
-            <div className="glass-card" style={{
-              height: '140px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-text-muted)',
-              borderStyle: 'dashed'
-            }}>
-              <AlertCircle size={32} />
-              <span style={{ fontSize: '0.9rem', fontWeight: 600, marginTop: '12px', fontFamily: 'var(--font-body)' }}>
-                Enter a PIN code to see a demand forecast.
-              </span>
             </div>
           )}
 
