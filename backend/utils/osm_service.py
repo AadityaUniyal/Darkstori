@@ -80,7 +80,7 @@ async def fetch_osm_competitor_stores(lat: float, lng: float, radius_m: int = 50
                 "latitude": el_lat,
                 "longitude": el_lng,
             })
-        logger.info(f"OSM fetch returned {len(competitors)} competitors near ({lat}, {lng})")
+        logger.info(f"OSM fetch returned {len(competitors)} competitors")
         
         # Cache for 24 hours
         await cache.set(cache_key, json.dumps(competitors), ttl=86400)

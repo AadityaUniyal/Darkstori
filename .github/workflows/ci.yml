@@ -35,6 +35,8 @@ jobs:
         flake8 backend --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
         
     - name: Test with pytest
+      env:
+        DATABASE_URL: "postgresql+asyncpg://dummy:dummy@localhost:5432/dummy"
       run: |
         # We would run tests here if we had them. 
         # For now, we just verify the application can be imported.

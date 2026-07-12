@@ -268,8 +268,8 @@ async def readiness_check():
         health_status["components"]["redis"] = "healthy" if redis_is_ready else "unhealthy"
         if not redis_is_ready:
             health_status["status"] = "degraded"
-    except Exception as e:
-        health_status["components"]["redis"] = f"unhealthy: {str(e)}"
+    except Exception:
+        health_status["components"]["redis"] = "unhealthy: connection error"
         health_status["status"] = "degraded"
 
     return health_status
