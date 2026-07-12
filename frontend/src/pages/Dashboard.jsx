@@ -98,7 +98,7 @@ export default function Dashboard() {
   const { data: metrics, isError } = useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: api.getDashboardMetrics,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: Infinity, // Now driven purely by WebSockets
     retry: 1,
   });
 

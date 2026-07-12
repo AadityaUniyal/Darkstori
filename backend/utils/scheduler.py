@@ -13,6 +13,7 @@ class BackgroundScheduler:
             {"job_name": "REALTIME_ORDER_SIMULATION", "interval_mins": 0.25, "last_run": None, "status": "PENDING"},
             {"job_name": "OSM_COMPETITOR_SYNC", "interval_mins": 1440, "last_run": None, "status": "PENDING"},
             {"job_name": "DAILY_STAFFING_BRIEF", "interval_mins": 1440, "last_run": None, "status": "PENDING"},
+            {"job_name": "WEEKLY_SCRAPE_JOB", "interval_mins": 10080, "last_run": None, "status": "PENDING"},
         ]
         self._running = False
 
@@ -311,7 +312,16 @@ class BackgroundScheduler:
             except Exception as e:
                 logger.error(f"[Scheduler] Anomaly check failed: {e}")
 
-    async def _send_daily_staffing_brief(self):
+    async def _run_weekly_scraper(self):
+        """Simulate a weekly scheduled scraper run for market intelligence data."""
+        logger.info("Executing WEEKLY_SCRAPE_JOB: Fetching live pricing and availability...")
+        await asyncio.sleep(2)
+        # 1. Sync competitor stores using OSM (simulated)
+        await self._sync_competitor_stores()
+        # 2. Add scraping logic here in the future
+        logger.info("WEEKLY_SCRAPE_JOB complete.")
+
+    async def _run_job_continuously(self, job_name: str, interval_mins: float):
         """Generates and sends a restock & staffing brief to the owner via WhatsApp."""
         from backend.database.connection import get_async_session
         from backend.database.models.models import DarkStore, LocalEvent
@@ -388,7 +398,10 @@ class BackgroundScheduler:
                     # For demo / simulation purposes, we speed up cycles slightly:
                     # Treat minutes as seconds so the UI shows active updates!
                     if counter % int(job["interval_mins"] * 5) == 0:
-                        job["last_run"] = datetime.now().isoformat()
+                        if job["job_name"] == "WEEKLY_SCRAPE_JOB":
+                            await self._run_weekly_scraper()
+                        
+                        job["last_run"] = datetime.utcnow().isoformat()
                         job["status"] = "SUCCESS"
                         logger.info(f"[Scheduler] Executed periodic background task: {job['job_name']}")
                         

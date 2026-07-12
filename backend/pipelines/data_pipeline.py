@@ -221,13 +221,14 @@ class DataPipeline:
 
         # Time-based features
         if "order_date" in features.columns:
-            features["year"] = features["order_date"].dt.year
-            features["month"] = features["order_date"].dt.month
-            features["day"] = features["order_date"].dt.day
-            features["day_of_week"] = features["order_date"].dt.dayofweek
-            features["day_of_year"] = features["order_date"].dt.dayofyear
-            features["week_of_year"] = features["order_date"].dt.isocalendar().week
-            features["quarter"] = features["order_date"].dt.quarter
+            order_dates = pd.to_datetime(features["order_date"])
+            features["year"] = order_dates.dt.year
+            features["month"] = order_dates.dt.month
+            features["day"] = order_dates.dt.day
+            features["day_of_week"] = order_dates.dt.dayofweek
+            features["day_of_year"] = order_dates.dt.dayofyear
+            features["week_of_year"] = order_dates.dt.isocalendar().week  # type: ignore
+            features["quarter"] = order_dates.dt.quarter
 
             # Is weekend
             features["is_weekend"] = features["day_of_week"].isin([5, 6]).astype(int)
@@ -236,8 +237,8 @@ class DataPipeline:
             features["is_month_end"] = (features["day"] >= 25).astype(int)
 
             # Hour of day (if timestamp available)
-            if features["order_date"].dt.hour.notna().any():
-                features["hour"] = features["order_date"].dt.hour
+            if order_dates.dt.hour.notna().any():
+                features["hour"] = order_dates.dt.hour
                 features["is_peak_hour"] = (
                     features["hour"].isin([12, 13, 19, 20, 21]).astype(int)
                 )
@@ -307,6 +308,46 @@ class DataPipeline:
         df.to_csv(filepath, index=False)
         logger.info(f"Saved processed data to {filepath}")
 
+    def validate_data(self, df: pd.DataFrame) -> bool:
+        """
+        Validate the final dataset before training.
+        Fulfills GAP 1.4: Data validation between pipeline stages.
+        """
+        from pydantic import BaseModel, Field, ValidationError
+        
+        class RowSchema(BaseModel):
+            pincode: str = Field(..., pattern=r"^\d{6}$")
+            order_count: float = Field(..., ge=0)
+            population: float = Field(..., ge=0)
+            nearest_store_km: float = Field(..., ge=0)
+            
+        logger.info("Validating data schema and constraints...")
+        
+        # Check for missing critical columns
+        required_cols = ["pincode", "order_count", "population", "nearest_store_km"]
+        missing = [col for col in required_cols if col not in df.columns]
+        if missing:
+            logger.error(f"Validation failed: missing columns {missing}")
+            return False
+            
+        # Check for nulls in critical columns
+        nulls = df[required_cols].isnull().sum()
+        if nulls.any():
+            logger.error(f"Validation failed: null values found\n{nulls[nulls > 0]}")
+            return False
+            
+        # Sample check using Pydantic for schema validation
+        sample_records = df[required_cols].sample(min(100, len(df))).to_dict("records")
+        try:
+            for record in sample_records:
+                record_dict = {str(k): v for k, v in record.items()}
+                RowSchema(**record_dict)
+            logger.info("Data validation passed successfully.")
+            return True
+        except ValidationError as e:
+            logger.error(f"Data validation failed on schema check: {e}")
+            return False
+
     def run_pipeline(self) -> pd.DataFrame:
         """
         Run complete data pipeline.
@@ -331,6 +372,10 @@ class DataPipeline:
 
         # Engineer features
         final_df = self.engineer_features(merged_df)
+
+        # Validate data
+        if not self.validate_data(final_df):
+            raise ValueError("Data validation failed. Halting pipeline to prevent model corruption.")
 
         # Save processed data
         self.save_processed_data(final_df, "training_data.csv")

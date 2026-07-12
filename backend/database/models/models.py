@@ -20,6 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
+from backend.core.encryption import EncryptedString
 
 Base = declarative_base()
 
@@ -262,7 +263,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     username = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(200))
+    full_name = Column(EncryptedString(200))
     role = Column(String(50), default="user")
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)

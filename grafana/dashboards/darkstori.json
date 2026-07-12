@@ -1,0 +1,56 @@
+{
+  "title": "Darkstori Observability",
+  "uid": "darkstori-dash",
+  "refresh": "5s",
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "title": "HTTP Request Rate (req/sec)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "{{method}} {{handler}}"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Error Rate (4xx/5xx)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{status=~\"[45].*\"}[1m])",
+          "legendFormat": "{{method}} {{handler}} ({{status}})"
+        }
+      ]
+    },
+    {
+      "title": "P95 Request Latency (seconds)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, handler))",
+          "legendFormat": "P95 {{handler}}"
+        }
+      ]
+    },
+    {
+      "title": "ML Model Prediction Volume (req/sec)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{handler=~\"/api/predictions.*\"}[1m])",
+          "legendFormat": "Predictions"
+        }
+      ]
+    }
+  ]
+}

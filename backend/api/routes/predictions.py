@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.connection import get_db
 from backend.database.models.models import Neighborhood
 from backend.core.security import verify_token
+from backend.core.idempotency import idempotent
 from backend.ml.prediction_service import PredictionService
 from backend.ml.model_loader import ModelLoader
 from backend.ml.schemas import PredictionRequest, PredictionResponse
@@ -87,12 +88,12 @@ async def list_forecast_neighborhoods(
 
         return [
             NeighborhoodOption(
-                pincode=n.pincode or "560001",
-                neighborhood_name=n.neighborhood_name or "Unknown Zone",
+                pincode=str(n.pincode) if n.pincode else "560001", # type: ignore
+                neighborhood_name=str(n.neighborhood_name) if n.neighborhood_name else "Unknown Zone", # type: ignore
                 city="Bangalore",  # fallback
-                population=n.population or 50000,
-                population_density=n.population_density or 5000.0,
-                avg_household_income=n.avg_household_income or 500000.0
+                population=int(n.population) if getattr(n, "population", None) else 50000, # type: ignore
+                population_density=float(n.population_density) if getattr(n, "population_density", None) else 5000.0, # type: ignore
+                avg_household_income=float(n.avg_household_income) if getattr(n, "avg_household_income", None) else 500000.0 # type: ignore
             ) for n in rows if n.pincode
         ]
     except Exception as e:
@@ -143,6 +144,7 @@ async def list_forecast_neighborhoods(
 
 
 @router.post("/predict", response_model=PredictionResponse)
+@idempotent(timeout=3600)
 async def predict_demand(
     request: PredictionRequest,
     db: AsyncSession = Depends(get_db),

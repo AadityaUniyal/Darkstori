@@ -18,6 +18,20 @@ from prometheus_client import (
 
 logger = logging.getLogger(__name__)
 
+# HTTP Metrics
+http_requests_total = Counter(
+    "http_requests_total",
+    "Total number of HTTP requests",
+    ["method", "handler", "status"]
+)
+
+http_request_duration_seconds = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "handler"],
+    buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0]
+)
+
 
 # Prediction Metrics
 prediction_counter = Counter(
@@ -280,18 +294,25 @@ class MetricsMiddleware:
             return
 
         start_time = time.time()
+        method = scope.get("method", "")
+        path = scope.get("path", "")
+        # Basic handler extraction for prometheus cardinality
+        handler = path if path.startswith("/api/predictions") else path.split("/")[1] if len(path.split("/")) > 1 else path
+        
+        status_code = 500
 
         async def send_wrapper(message):
+            nonlocal status_code
             if message["type"] == "http.response.start":
-                # Record request metrics here if needed
-                pass
+                status_code = message.get("status", 500)
             await send(message)
 
-        await self.app(scope, receive, send_wrapper)
-
-        # Record latency
-        time.time() - start_time
-        # Additional metrics can be recorded here
+        try:
+            await self.app(scope, receive, send_wrapper)
+        finally:
+            duration = time.time() - start_time
+            http_requests_total.labels(method=method, handler=handler, status=status_code).inc()
+            http_request_duration_seconds.labels(method=method, handler=handler).observe(duration)
 
 
 # Initialize metrics collector
