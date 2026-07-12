@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.database.connection import SessionLocal
+from backend.database.connection import AsyncSessionLocal
 from backend.database.models.models import StoreOrder, OrderForecast
 from backend.core.config import settings
 
@@ -109,7 +109,7 @@ async def run_drift_check():
     logger.info("Starting model drift check...")
     monitor = DriftMonitor()
     
-    async with SessionLocal() as db:
+    async with AsyncSessionLocal() as db:
         await monitor.calculate_drift(db, days_back=settings.DRIFT_CHECK_FREQUENCY_DAYS)
 
 
