@@ -4,6 +4,7 @@ Cohort-based retention analysis — tracks how many users from each
 signup-month cohort are still ordering in subsequent months.
 """
 
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -195,8 +196,6 @@ async def compute_cohorts_from_orders(
             retentions[f"m{offset}"] = round(retained / user_count * 100, 1)
 
         # Upsert cohort row
-        from datetime import timedelta
-
         existing = (await db.execute(
             select(CustomerCohort).where(CustomerCohort.cohort_month == cohort_month)
         )).scalar_one_or_none()

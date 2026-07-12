@@ -88,6 +88,7 @@ graph TD
         UI[Shadcn UI / Tailwind Components]
         Map[MapLibre + deck.gl WebGL]
         State[React Query Cache & Zustand]
+        Listener[LiveSocketListener]
     end
 
     subgraph Backend [FastAPI Application]
@@ -106,19 +107,21 @@ graph TD
     end
 
     %% Flow connections
-    UI <-->|HTTP/REST| API
-    Map <-->|WebSockets (Live Orders/Alerts)| WS
-    State -.-> UI
+    State <--> |HTTP/REST| API
+    Listener <--> |WebSockets| WS
+    Listener --> |Invalidates Cache| State
+    State -.-> |Updates State| UI
+    State -.-> |Updates State| Map
     
     API <--> Repo
-    API <-->|Rate limits & Idempotency| Redis
+    API <--> |Rate limits & Idempotency| Redis
     API <--> ML
-    WS <-->|asyncpg Listen/Notify triggers| PG
+    WS <--- |asyncpg LISTEN/NOTIFY| PG
     
     Repo <--> PG
     ML <--> MLF
-    Jobs -->|Simulates Competitors & Orders| PG
-    API -->|Exposes /metrics| Prom
+    Jobs ---> |Simulates Competitors & Orders| PG
+    API ---> |Exposes /metrics| Prom
 ```
 
 ---
