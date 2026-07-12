@@ -174,7 +174,6 @@ async def update_ml_settings(
     token_payload: dict = Depends(verify_token)
 ):
     """Update active ML settings."""
-    global ml_settings
     ml_settings["auto_retrain_enabled"] = req.auto_retrain_enabled
     user_id = token_payload.get("user_id")
     await log_audit_action(db, "ML_SETTINGS_UPDATED", request=request, user_id=int(user_id) if user_id else None, new_state={"auto_retrain": req.auto_retrain_enabled})
