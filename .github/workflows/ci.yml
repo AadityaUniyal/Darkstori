@@ -26,6 +26,7 @@ jobs:
         pip install flake8 pytest
         # Install project requirements
         pip install -r backend/requirements/base.txt
+        pip install -r backend/requirements/ml.txt
         
     - name: Lint with flake8
       run: |
