@@ -75,5 +75,47 @@ class FeatureCache:
             "expire_at": expire_at
         }
 
+    async def delete(self, key: str) -> None:
+        """Delete key from cache."""
+        if self._is_connected and self.redis_client:
+            try:
+                await self.redis_client.delete(key)
+            except Exception as e:
+                logger.error(f"Redis delete error: {e}")
+        self._local_cache.pop(key, None)
+
 # Global cache instance
 cache = FeatureCache()
+
+
+def cached_json(key_prefix: str, ttl: int = 30):
+    """Decorator to cache async function results as JSON with given TTL in seconds."""
+    import json
+    from functools import wraps
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Build cache key from prefix and stringified kwargs
+            sorted_kwargs = sorted([(k, str(v)) for k, v in kwargs.items() if k not in ("db", "payload", "request")])
+            args_repr = "_".join(str(a) for a in args if not hasattr(a, "execute"))
+            cache_key = f"api_cache:{key_prefix}:{args_repr}:{sorted_kwargs}"
+            
+            try:
+                cached_data = await cache.get(cache_key)
+                if cached_data:
+                    return json.loads(cached_data)
+            except Exception as e:
+                logger.debug(f"Cache get error for {cache_key}: {e}")
+
+            result = await func(*args, **kwargs)
+
+            try:
+                if result is not None:
+                    await cache.set(cache_key, json.dumps(result, default=str), ttl=ttl)
+            except Exception as e:
+                logger.debug(f"Cache set error for {cache_key}: {e}")
+
+            return result
+        return wrapper
+    return decorator

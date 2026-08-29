@@ -1,41 +1,86 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, RefreshCw, Clock, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShieldAlert, RefreshCw, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
 import AmbientBackground from '../components/AmbientBackground';
-import AnimatedCard from '../components/AnimatedCard';
+import api from '../services/api';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_RESILIENCE_ALERTS } from '../constants/fallbacks';
 
 export default function ResilienceCockpit() {
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
-  const [alerts, setAlerts] = useState([
-    { id: 'ALT-101', title: 'Feature Drift Detected: temp_celsius', description: 'Kolmogorov-Smirnov statistics (KS=0.178) exceeded threshold of 0.150 in Bangalore.', severity: 'MEDIUM', timestamp: '10:42:15', category: 'drift' },
-    { id: 'ALT-102', title: 'SLA Breach Threshold Violated', description: 'Fulfillment times in PIN 560001 (Koramangala) spiked to 18.2 min (threshold 15 min).', severity: 'HIGH', timestamp: '10:38:00', category: 'sla' },
-    { id: 'ALT-103', title: 'Model Drift Warning: demand_forecasting_model', description: 'Validation MAPE drifted to 18.2% (threshold 15.0%) on staging run.', severity: 'HIGH', timestamp: '10:35:12', category: 'drift' },
-    { id: 'ALT-104', title: 'Minor Latency Spike: prediction_api', description: 'P95 response latency crossed 120ms (currently 132ms) in Hyderabad.', severity: 'LOW', timestamp: '10:15:44', category: 'system' }
-  ]);
-
-  // Simulate refresh updates
+  const [alerts, setAlerts] = useState(FALLBACK_RESILIENCE_ALERTS);
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
 
+  // Fetch competitive moves & SLA metrics via React Query
+  const { data: compMoves, isLoading: compLoading, refetch: refetchCompMoves } = useQuery({
+    queryKey: ['resilience-competitive-moves'],
+    queryFn: () => api.getCompetitiveMoves(),
+    staleTime: 30000,
+    refetchInterval: refreshInterval * 1000,
+  });
+
+  const { data: slaMetrics, isLoading: slaLoading, refetch: refetchSlaMetrics } = useQuery({
+    queryKey: ['resilience-sla-metrics'],
+    queryFn: () => api.getSLAMetrics(),
+    staleTime: 30000,
+    refetchInterval: refreshInterval * 1000,
+  });
+
+  const isLoading = compLoading || slaLoading;
+
+  // Populate alerts when real API data arrives
   useEffect(() => {
-    const timer = setInterval(() => {
-      setLastRefreshed(new Date().toLocaleTimeString());
-      // Randomly inject/remove minor alerts to show activity
-      if (Math.random() > 0.6) {
-        const id = `ALT-${Math.floor(100 + Math.random() * 900)}`;
-        const newAlert = {
-          id,
-          title: 'System telemetry log sync complete',
-          description: `Telemetry batch successfully resolved in ${Math.round(40 + Math.random() * 100)}ms.`,
-          severity: 'LOW',
+    const fetchedAlerts = [];
+    if (compMoves?.moves && Array.isArray(compMoves.moves)) {
+      compMoves.moves.forEach((move, idx) => {
+        fetchedAlerts.push({
+          id: `ALT-COMP-${move.move_id || idx + 1}`,
+          title: `Competitor Move: ${move.platform} (${move.move_type})`,
+          description: `${move.description} (City: ${move.city})`,
+          severity: move.impact_level || 'MEDIUM',
           timestamp: new Date().toLocaleTimeString(),
-          category: 'system'
+          category: 'competitive',
+        });
+      });
+    }
+    if (slaMetrics?.breaches && Array.isArray(slaMetrics.breaches)) {
+      slaMetrics.breaches.forEach((b, idx) => {
+        fetchedAlerts.push({
+          id: `ALT-SLA-${idx + 1}`,
+          title: `SLA Breach Threshold Violated`,
+          description: `Fulfillment time in ${b.pincode || b.neighborhood_name} reached ${b.fulfillment_time_min} min.`,
+          severity: 'HIGH',
+          timestamp: new Date().toLocaleTimeString(),
+          category: 'sla',
+        });
+      });
+    }
+    if (fetchedAlerts.length > 0) {
+      setAlerts(fetchedAlerts);
+    }
+  }, [compMoves, slaMetrics]);
+
+  // Listen to darkstori:notification window events
+  useEffect(() => {
+    const handleNotification = (e) => {
+      const detail = e.detail;
+      if (detail) {
+        const newAlert = {
+          id: `ALT-${Date.now().toString().slice(-4)}`,
+          title: detail.message || 'Live WebSocket Alert',
+          description: `Event type: ${detail.type || 'info'}. Real-time telemetry notification.`,
+          severity: detail.type === 'danger' ? 'HIGH' : detail.type === 'warning' ? 'MEDIUM' : 'LOW',
+          timestamp: new Date().toLocaleTimeString(),
+          category: 'system',
         };
-        setAlerts(prev => [newAlert, ...prev.slice(0, 5)]);
+        setAlerts((prev) => [newAlert, ...prev.slice(0, 9)]);
       }
-    }, refreshInterval * 1000);
-    return () => clearInterval(timer);
-  }, [refreshInterval]);
+    };
+    window.addEventListener('darkstori:notification', handleNotification);
+    return () => window.removeEventListener('darkstori:notification', handleNotification);
+  }, []);
 
   const getSeverityBorderColor = (sev) => {
     if (sev === 'HIGH') return 'var(--spice-500)';
@@ -44,8 +89,8 @@ export default function ResilienceCockpit() {
   };
 
   const getSystemStatus = () => {
-    const hasHigh = alerts.some(a => a.severity === 'HIGH');
-    const hasMedium = alerts.some(a => a.severity === 'MEDIUM');
+    const hasHigh = alerts.some((a) => a.severity === 'HIGH');
+    const hasMedium = alerts.some((a) => a.severity === 'MEDIUM');
     if (hasHigh) return { text: 'DEGRADED', color: 'var(--spice-500)', icon: <AlertCircle size={32} /> };
     if (hasMedium) return { text: 'WARNING', color: 'var(--marigold-500)', icon: <AlertTriangle size={32} /> };
     return { text: 'OPERATIONAL', color: 'var(--monsoon-500)', icon: <CheckCircle size={32} /> };
@@ -70,10 +115,14 @@ export default function ResilienceCockpit() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-            Refreshes every {refreshInterval}s · Last: {lastRefreshed}
+            Refreshes every {refreshInterval}s - Last: {lastRefreshed}
           </span>
           <button
-            onClick={() => setLastRefreshed(new Date().toLocaleTimeString())}
+            onClick={() => {
+              refetchCompMoves();
+              refetchSlaMetrics();
+              setLastRefreshed(new Date().toLocaleTimeString());
+            }}
             className="btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}
           >
@@ -104,46 +153,57 @@ export default function ResilienceCockpit() {
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
             Active Operations Alerts
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <AnimatePresence>
-              {alerts.map((alt) => (
-                <motion.div
-                  key={alt.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="glass-card"
-                  style={{
-                    borderLeft: `4px solid ${getSeverityBorderColor(alt.severity)}`,
-                    padding: 'var(--space-4)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.94rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                      {alt.title}
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
-                      {alt.timestamp}
-                    </span>
-                  </div>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-                    {alt.description}
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                    <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: 'none' }}>
-                      ID: {alt.id}
-                    </span>
-                    <a href="#view" style={{ fontSize: '0.8rem', color: 'var(--peacock-500)', fontWeight: 600 }}>
-                      View affected node →
-                    </a>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-[110px] w-full rounded-xl" />)}
+            </div>
+          ) : alerts.length === 0 ? (
+            <EmptyState
+              title="No active operations alerts"
+              description="All dark store operations and SLA metrics are operating within normal parameters."
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <AnimatePresence>
+                {alerts.map((alt) => (
+                  <motion.div
+                    key={alt.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="glass-card"
+                    style={{
+                      borderLeft: `4px solid ${getSeverityBorderColor(alt.severity)}`,
+                      padding: 'var(--space-4)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.94rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                        {alt.title}
+                      </span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+                        {alt.timestamp}
+                      </span>
+                    </div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                      {alt.description}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                      <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: 'none' }}>
+                        ID: {alt.id}
+                      </span>
+                      <a href="#view" style={{ fontSize: '0.8rem', color: 'var(--peacock-500)', fontWeight: 600 }}>
+                        View affected node {'->'}
+                      </a>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Model Drift Detection Panel */}
@@ -215,10 +275,12 @@ export default function ResilienceCockpit() {
             
             <div style={{ background: '#090a0f', border: '1px solid rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }}>
               <div style={{ color: 'var(--saffron-500)', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span>●</span> WHATSAPP SIMULATOR STREAM
+                <span>-</span> WHATSAPP SIMULATOR STREAM
               </div>
               <div style={{ color: 'var(--color-text-secondary)' }}>
-                [System] Outbound to +91 98765 43210: &quot;ALERT [HIGH] SLA Breach PIN 560001 (Koramangala) Spiked to 18.2 min.&quot;
+                {alerts[0] 
+                  ? `[System] Outbound to +91 98765 43210: "ALERT [${alerts[0].severity}] ${alerts[0].title} - ${alerts[0].description.slice(0, 50)}..."`
+                  : '[System] Outbound channel active: No active alerts.'}
               </div>
             </div>
           </div>

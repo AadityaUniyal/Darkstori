@@ -18,7 +18,12 @@ def _get_fernet_key() -> bytes:
             return base64.urlsafe_b64encode(padded)
     
     # Fallback for dev if not provided (NOT for production)
-    logger.warning("No ENCRYPTION_KEY found in settings. Using a deterministic fallback key. DO NOT USE IN PRODUCTION.")
+    if getattr(settings, 'ENVIRONMENT', 'development') == 'production':
+        raise RuntimeError(
+            "CRITICAL: ENCRYPTION_KEY must be set in production! "
+            "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        )
+    logger.warning("No ENCRYPTION_KEY found in settings. Using a deterministic dev fallback key. DO NOT USE IN PRODUCTION.")
     fallback = b"darkstore_fallback_secret_key___"
     return base64.urlsafe_b64encode(fallback)
 

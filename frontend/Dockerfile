@@ -2,7 +2,7 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 
-COPY frontend/ package*.json ./
+COPY frontend/package*.json ./
 RUN npm ci
 
 COPY frontend/ ./

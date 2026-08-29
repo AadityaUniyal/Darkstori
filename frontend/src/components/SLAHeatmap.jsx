@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useCity } from '../context/CityContext';
 import { Clock, ShieldAlert, CheckCircle, BarChart3 } from 'lucide-react';
 import { api } from '../services/api';
+import { Skeleton } from './ui/skeleton';
+import { EmptyState } from './ui/empty-state';
 
 export default function SLAHeatmap() {
   const { selectedCity } = useCity();
@@ -71,7 +73,14 @@ export default function SLAHeatmap() {
           Pincode SLA Performance Grid ({selectedCity})
         </div>
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', color: '#94a3b8' }}>Loading...</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-[96px] w-full rounded-lg" />)}
+          </div>
+        ) : metrics.length === 0 ? (
+          <EmptyState
+            title="No SLA performance data"
+            description="No delivery SLA metrics recorded for the selected city."
+          />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {metrics.map((m) => {

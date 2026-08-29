@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   TrendingUp, Clock, Settings2
@@ -11,9 +11,10 @@ import AmbientBackground from '../components/AmbientBackground';
 import AnimatedCard from '../components/AnimatedCard';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_FORECAST_ZONES } from '../constants/fallbacks';
 
 export default function Forecast() {
-  const [selectedPincode, setSelectedPincode] = useState('560001');
+  const [selectedPincode, setSelectedPincode] = useState('000001');
   const [daysAhead, setDaysAhead] = useState('7'); // 7, 30, 90 days selector
   const [orderDate, setOrderDate] = useState(() => {
     const today = new Date();
@@ -27,19 +28,23 @@ export default function Forecast() {
     staleTime: 60000,
   });
 
-  const zones = forecastZones || [
-    { pincode: '560001', neighborhood_name: 'Indiranagar', city: 'Bangalore', population: 75000, population_density: 6200.0, avg_household_income: 950000.0 },
-    { pincode: '110001', neighborhood_name: 'Connaught Place', city: 'Delhi', population: 45000, population_density: 8000.0, avg_household_income: 800000.0 },
-    { pincode: '400001', neighborhood_name: 'Colaba', city: 'Mumbai', population: 90000, population_density: 12000.0, avg_household_income: 1100000.0 },
-    { pincode: '500001', neighborhood_name: 'Banjara Hills', city: 'Hyderabad', population: 65000, population_density: 5400.0, avg_household_income: 850000.0 },
-    { pincode: '411001', neighborhood_name: 'Koregaon Park', city: 'Pune', population: 55000, population_density: 5800.0, avg_household_income: 720000.0 },
-  ];
+  const zones = forecastZones || FALLBACK_FORECAST_ZONES;
 
   const activeZone = zones.find((z) => z.pincode === selectedPincode) || zones[0];
 
   const forecastMutation = useMutation({
     mutationFn: (payload) => api.getDemandForecast(payload),
   });
+
+  // Automatically trigger forecast when zones, pincode, date, or days change
+  useEffect(() => {
+    const pCode = activeZone?.pincode || '000001';
+    forecastMutation.mutate({
+      pincode: pCode,
+      order_date: orderDate,
+      days: Number(daysAhead)
+    });
+  }, [activeZone?.pincode, orderDate, daysAhead]);
 
   const handleRunForecast = (e) => {
     e.preventDefault();
@@ -191,11 +196,11 @@ export default function Forecast() {
             <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', fontFamily: 'var(--font-body)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--color-text-secondary)' }}>Density:</span>
-                <strong style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-mono)' }}>{activeZone.population_density.toLocaleString()}/km²</strong>
+                <strong style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-mono)' }}>{activeZone.population_density.toLocaleString()}/km2</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--color-text-secondary)' }}>Avg Income:</span>
-                <strong style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-mono)' }}>₹{activeZone.avg_household_income.toLocaleString()}</strong>
+                <strong style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-mono)' }}>Rs {activeZone.avg_household_income.toLocaleString()}</strong>
               </div>
             </div>
           </div>
@@ -216,7 +221,7 @@ export default function Forecast() {
               {/* Forecast Yield Card */}
               <div className="glass-card" style={{ border: '1px solid rgba(255, 122, 26, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <span style={{ fontSize: '0.74rem', color: 'var(--saffron-500)', fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-mono)' }}>
-                  ⚡ Neural Prediction
+                  Lightning Neural Prediction
                 </span>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '2.8rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: '12px 0 6px 0' }}>
                   {Math.round(predictionResult.prediction)}
@@ -318,9 +323,7 @@ export default function Forecast() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-                  Awaiting prediction data to plot...
-                </div>
+                <EmptyState title="Awaiting Prediction Data" description="Select a neighborhood and date to plot dynamic demand forecast predictions." />
               )}
             </div>
 

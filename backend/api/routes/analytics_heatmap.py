@@ -26,7 +26,7 @@ async def get_order_heatmap(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Get geolocated order distribution for rendering Leaflet heatmaps."""
+    """Get geolocated order distribution for rendering heatmaps."""
     since = date.today() - timedelta(days=days)
     query = (
         select(
@@ -52,24 +52,23 @@ async def get_order_heatmap(
     rows = result.all()
 
     if not rows:
-        # Fallback to realistic demo heatmap coords around focus cities
-        # If city is requested, center it there; otherwise Bangalore default
-        centers = {
-            "Bangalore": (12.9716, 77.5946),
-            "Delhi": (28.6139, 77.2090),
-            "Mumbai": (19.0760, 72.8777),
-            "Hyderabad": (17.3850, 78.4867),
-            "Pune": (18.5204, 73.8567),
+        CITY_CENTROIDS = {
+            "bangalore": (12.9716, 77.5946),
+            "delhi": (28.6139, 77.2090),
+            "mumbai": (19.0760, 72.8777),
+            "hyderabad": (17.3850, 78.4867),
+            "pune": (18.5204, 73.8567),
         }
-        lat, lng = centers.get(city, (12.9716, 77.5946))
+        city_key = city.lower() if city else "bangalore"
+        lat, lng = CITY_CENTROIDS.get(city_key, (12.9716, 77.5946))
         import random
         demo_rows = []
-        platforms = ["Blinkit", "Zepto", "Instamart"]
-        for i in range(100):
+        platforms = ["Blinkit", "Zepto", "Instamart", "BB Now"]
+        for i in range(120):
             demo_rows.append({
-                "lat": lat + random.uniform(-0.08, 0.08),
-                "lng": lng + random.uniform(-0.08, 0.08),
-                "value": round(random.uniform(100, 800), 2),
+                "lat": lat + random.uniform(-0.06, 0.06),
+                "lng": lng + random.uniform(-0.06, 0.06),
+                "value": round(random.uniform(120, 850), 2),
                 "platform": random.choice(platforms),
             })
         return demo_rows
@@ -88,75 +87,92 @@ async def get_order_heatmap(
 @router.get("/coverage-gaps")
 async def get_coverage_gaps(
     city: Optional[str] = None,
-    limit: int = Query(50, le=200),
+    threshold: float = Query(50.0, ge=0, le=100),
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Identify PIN codes with high population/market potential but low dark store coverage."""
+    """Find under-served pincodes (coverage score below threshold)."""
     query = (
         select(PincodeCoverage)
-        .where(PincodeCoverage.coverage_score < 40)
-        .order_by(PincodeCoverage.market_potential_score.desc())
+        .where(PincodeCoverage.coverage_score < threshold)
+        .order_by(PincodeCoverage.coverage_score.asc())
     )
-
     if city:
         query = query.where(PincodeCoverage.city == city)
 
-    query = query.limit(limit)
     result = await db.execute(query)
     gaps = result.scalars().all()
 
-    if not gaps:
-        # Return fallback gaps
-        c = city or "Bangalore"
-        return [
-            {
-                "pincode": f"5600{i:02d}" if c == "Bangalore" else f"1100{i:02d}" if c == "Delhi" else f"4000{i:02d}",
-                "city": c,
-                "population": 45000 + i * 2500,
-                "coverage_score": round(15.5 + i * 2, 1),
-                "market_potential_score": round(9.2 - i * 0.4, 1),
-                "unserved_platforms": ["Blinkit", "Zepto"] if i % 2 == 0 else ["Swiggy Instamart"],
-            }
-            for i in range(1, 11)
-        ]
+    return [
+        {
+            "id": g.id,
+            "pincode": g.pincode,
+            "city": g.city,
+            "coverage_score": g.coverage_score,
+            "unserved_population": g.unserved_population,
+            "nearest_store_distance_km": g.nearest_store_distance_km,
+            "competitor_count": g.competitor_count,
+        }
+        for g in gaps
+    ]
+
+
+@router.get("/platform-comparison")
+async def get_platform_comparison(
+    city: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
+):
+    """Compare order volume, avg delivery time, and revenue by platform."""
+    query = select(
+        OrderSynthetic.platform,
+        func.count(OrderSynthetic.id).label("total_orders"),
+        func.avg(OrderSynthetic.delivery_mins).label("avg_delivery_mins"),
+        func.avg(OrderSynthetic.order_value).label("avg_order_value"),
+        func.sum(OrderSynthetic.order_value).label("total_revenue"),
+    ).group_by(OrderSynthetic.platform)
+
+    if city:
+        query = query.where(
+            OrderSynthetic.store_id.in_(
+                select(DarkStore.id).where(DarkStore.city == city)
+            )
+        )
+
+    result = await db.execute(query)
+    rows = result.all()
 
     return [
         {
-            "pincode": g.pincode,
-            "city": g.city,
-            "population": g.population,
-            "coverage_score": g.coverage_score,
-            "market_potential_score": g.market_potential_score,
-            "unserved_platforms": [
-                p for p, served in [
-                    ("Blinkit", g.blinkit),
-                    ("Zepto", g.zepto),
-                    ("Swiggy Instamart", g.instamart),
-                    ("Flipkart Minutes", g.flipkart_min),
-                ] if not served
-            ]
+            "platform": r.platform,
+            "total_orders": r.total_orders,
+            "avg_delivery_mins": round(r.avg_delivery_mins, 1) if r.avg_delivery_mins else 0,
+            "avg_order_value": round(r.avg_order_value, 2) if r.avg_order_value else 0,
+            "total_revenue": round(r.total_revenue, 2) if r.total_revenue else 0,
         }
-        for g in gaps
+        for r in rows
     ]
 
 
 @router.get("/order-trends")
 async def get_order_trends(
     city: Optional[str] = None,
-    days: int = Query(30, ge=7, le=365),
+    days: int = Query(30, ge=0, le=365),
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Get daily order trends for analytics charts."""
+    """Retrieve daily order trends, revenue, and delivery performance over a given timeframe."""
     since = date.today() - timedelta(days=days)
     query = (
         select(
-            OrderSynthetic.order_date,
-            func.count(OrderSynthetic.id).label("order_count"),
+            OrderSynthetic.order_date.label("date"),
+            func.count(OrderSynthetic.id).label("total_orders"),
             func.sum(OrderSynthetic.order_value).label("total_revenue"),
+            func.avg(OrderSynthetic.delivery_mins).label("avg_delivery_mins"),
         )
         .where(OrderSynthetic.order_date >= since)
+        .group_by(OrderSynthetic.order_date)
+        .order_by(OrderSynthetic.order_date.asc())
     )
 
     if city:
@@ -166,71 +182,29 @@ async def get_order_trends(
             )
         )
 
-    query = query.group_by(OrderSynthetic.order_date).order_by(OrderSynthetic.order_date.asc())
     result = await db.execute(query)
     rows = result.all()
 
     if not rows:
-        # Generate dummy daily trend data
-        import random
-        base_date = date.today() - timedelta(days=days)
-        return [
-            {
-                "date": str(base_date + timedelta(days=i)),
-                "orders": int(300 + random.uniform(-50, 80) + (i * 2.5)),
-                "revenue": round(105000 + random.uniform(-15000, 25000) + (i * 900), 2),
-            }
-            for i in range(days)
-        ]
+        trends = []
+        for i in range(days):
+            d = since + timedelta(days=i)
+            trends.append({
+                "date": d.isoformat(),
+                "total_orders": 120 + (i * 3) % 40,
+                "total_revenue": round((120 + (i * 3) % 40) * 380.0, 2),
+                "avg_delivery_mins": 9.8,
+            })
+        return {"trends": trends, "days": days, "city": city}
 
-    return [
+    trends = [
         {
-            "date": str(r[0]),
-            "orders": r[1],
-            "revenue": round(float(r[2] or 0), 2),
+            "date": str(r.date),
+            "total_orders": r.total_orders,
+            "total_revenue": round(r.total_revenue, 2) if r.total_revenue else 0.0,
+            "avg_delivery_mins": round(r.avg_delivery_mins, 1) if r.avg_delivery_mins else 0.0,
         }
         for r in rows
     ]
+    return {"trends": trends, "days": days, "city": city}
 
-
-@router.get("/platform-comparison")
-async def get_platform_comparison(
-    db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
-):
-    """Compare order share and revenue across quick-commerce platforms."""
-    since = date.today() - timedelta(days=30)
-    query = (
-        select(
-            OrderSynthetic.platform,
-            func.count(OrderSynthetic.id).label("orders"),
-            func.sum(OrderSynthetic.order_value).label("revenue"),
-            func.avg(OrderSynthetic.customer_rating).label("avg_rating"),
-        )
-        .where(OrderSynthetic.order_date >= since)
-        .group_by(OrderSynthetic.platform)
-    )
-
-    result = await db.execute(query)
-    rows = result.all()
-
-    if not rows:
-        # Fallback to realistic platform comparison
-        return [
-            {"platform": "Swiggy Instamart", "orders": 28400, "share": 34, "revenue": 9940000, "avg_rating": 4.1},
-            {"platform": "Zepto", "orders": 22100, "share": 26, "revenue": 7735000, "avg_rating": 4.3},
-            {"platform": "Blinkit", "orders": 19800, "share": 23, "revenue": 6930000, "avg_rating": 3.9},
-            {"platform": "Flipkart Minutes", "orders": 14200, "share": 17, "revenue": 4970000, "avg_rating": 3.8},
-        ]
-
-    total_orders = sum(r[1] for r in rows) or 1
-    return [
-        {
-            "platform": r[0] or "Unknown",
-            "orders": r[1],
-            "share": round((r[1] / total_orders) * 100, 1),
-            "revenue": round(float(r[2] or 0), 2),
-            "avg_rating": round(float(r[3] or 0.0), 2) if r[3] else 4.0,
-        }
-        for r in rows
-    ]

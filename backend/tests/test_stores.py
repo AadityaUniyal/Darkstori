@@ -24,7 +24,7 @@ def test_get_stores_empty(test_client):
     from backend.app import app
     app.dependency_overrides[get_db] = override_db
 
-    response = test_client.get("/api/stores/")
+    response = test_client.get("/api/v1/stores/")
     app.dependency_overrides.pop(get_db, None)
 
     assert response.status_code == 200

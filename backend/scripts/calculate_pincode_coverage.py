@@ -27,6 +27,7 @@ def haversine(lat1, lon1, lat2, lon2):
     dlon = lon2 - lon1 
     dlat = lat2 - lat1 
     a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    a = min(1.0, max(0.0, a))
     c = 2 * math.asin(math.sqrt(a)) 
     r = 6371.0  # Radius of earth in kilometers.
     return c * r

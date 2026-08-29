@@ -5,13 +5,13 @@ from backend.database.connection import get_db
 
 def test_coverage_gaps_returns_200(test_client):
     """Coverage gaps endpoint should return HTTP 200 with valid structure."""
-    response = test_client.get("/api/analytics/coverage-gaps")
+    response = test_client.get("/api/v1/analytics/coverage-gaps")
     assert response.status_code == 200
 
 
 def test_opportunity_zones_returns_200(test_client):
     """Opportunity zones endpoint should return HTTP 200 with valid structure."""
-    response = test_client.get("/api/placement/opportunity-zones")
+    response = test_client.get("/api/v1/placement/opportunity-zones")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -19,13 +19,13 @@ def test_opportunity_zones_returns_200(test_client):
 
 def test_placement_summary_returns_200(test_client):
     """Placement summary endpoint should return HTTP 200."""
-    response = test_client.get("/api/placement/summary")
+    response = test_client.get("/api/v1/placement/summary")
     assert response.status_code == 200
 
 
 def test_health_endpoint(test_client):
     """Health endpoint should return 200 with status info."""
-    response = test_client.get("/health")
+    response = test_client.get("/health/live")
     assert response.status_code == 200
     data = response.json()
     assert "status" in data
@@ -68,7 +68,7 @@ def test_predict_response_structure(test_client):
     app.dependency_overrides[get_db] = override_db
 
     response = test_client.post(
-        "/api/predictions/predict",
+        "/api/v1/predictions/predict",
         json={
             "pincode": "560001",
             "order_date": "2026-06-15"
@@ -101,5 +101,5 @@ def test_predict_response_structure(test_client):
 
 def test_neighborhoods_endpoint(test_client):
     """Neighborhoods endpoint should return HTTP 200."""
-    response = test_client.get("/api/neighborhoods/")
+    response = test_client.get("/api/v1/neighborhoods/")
     assert response.status_code == 200

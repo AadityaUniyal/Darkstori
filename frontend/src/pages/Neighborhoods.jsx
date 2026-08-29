@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Users, DollarSign, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
+import { useCity } from '../context/CityContext';
 import AmbientBackground from '../components/AmbientBackground';
 import RangoliGauge from '../components/RangoliGauge';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_FOCUS_CITIES, FALLBACK_NEIGHBORHOODS } from '../constants/fallbacks';
 
 export default function Neighborhoods() {
-  const [activeCityName, setActiveCityName] = useState('Bangalore');
+  const { selectedCity } = useCity();
+  const [activeCityName, setActiveCityName] = useState(selectedCity || 'Bangalore');
   const [sortBy, setSortBy] = useState('score'); // 'score' | 'population' | 'intensity'
   const [expandedCards, setExpandedCards] = useState({}); // mapping ID -> boolean
+
+  useEffect(() => {
+    if (selectedCity && selectedCity !== 'Demo City') {
+      setActiveCityName(selectedCity);
+    }
+  }, [selectedCity]);
 
   // Fetch Focus Cities
   const { data: cities } = useQuery({
@@ -18,13 +29,7 @@ export default function Neighborhoods() {
     staleTime: 60000,
   });
 
-  const cityList = cities || [
-    { city_id: 1, city_name: 'Bangalore', state: 'Karnataka', num_pincodes: 150, total_dark_stores: 12, market_maturity: 'Mature' },
-    { city_id: 2, city_name: 'Delhi', state: 'Delhi', num_pincodes: 220, total_dark_stores: 8, market_maturity: 'Mature' },
-    { city_id: 3, city_name: 'Mumbai', state: 'Maharashtra', num_pincodes: 180, total_dark_stores: 10, market_maturity: 'Mature' },
-    { city_id: 4, city_name: 'Hyderabad', state: 'Telangana', num_pincodes: 110, total_dark_stores: 7, market_maturity: 'Growth' },
-    { city_id: 5, city_name: 'Pune', state: 'Maharashtra', num_pincodes: 85, total_dark_stores: 5, market_maturity: 'Growth' },
-  ];
+  const cityList = cities || FALLBACK_FOCUS_CITIES;
 
   // Fetch All Neighborhoods (or get for active city)
   const { data: neighborhoods, isLoading } = useQuery({
@@ -33,23 +38,17 @@ export default function Neighborhoods() {
     staleTime: 60000,
   });
 
-  const fallbackNeighborhoods = [
-    { neighborhood_id: 1, city: 'Bangalore', neighborhood_name: 'Koramangala', pincode: '560034', population: 150000, avg_household_income: 950000.0, working_professionals_pct: 72.0, price_sensitivity: 'High', competition_intensity: 'High', market_potential_score: 9.2 },
-    { neighborhood_id: 2, city: 'Bangalore', neighborhood_name: 'Indiranagar', pincode: '560038', population: 120000, avg_household_income: 1100000.0, working_professionals_pct: 68.0, price_sensitivity: 'High', competition_intensity: 'High', market_potential_score: 8.9 },
-    { neighborhood_id: 3, city: 'Bangalore', neighborhood_name: 'HSR Layout', pincode: '560102', population: 180000, avg_household_income: 850000.0, working_professionals_pct: 75.0, price_sensitivity: 'Medium', competition_intensity: 'Medium', market_potential_score: 8.2 },
-    { neighborhood_id: 4, city: 'Delhi', neighborhood_name: 'Saket', pincode: '110017', population: 95000, avg_household_income: 890000.0, working_professionals_pct: 65.0, price_sensitivity: 'Medium', competition_intensity: 'Medium', market_potential_score: 9.0 },
-    { neighborhood_id: 5, city: 'Hyderabad', neighborhood_name: 'Gachibowli', pincode: '500032', population: 110000, avg_household_income: 1050000.0, working_professionals_pct: 78.0, price_sensitivity: 'Low', competition_intensity: 'Low', market_potential_score: 8.8 },
-  ];
+  const fallbackNeighborhoods = FALLBACK_NEIGHBORHOODS;
 
   const neighborhoodList = neighborhoods && neighborhoods.length > 0 ? neighborhoods : fallbackNeighborhoods;
 
   // Filter by active city
   const filtered = neighborhoodList.filter(n => {
     if (n.city) {
-      return n.city.toLowerCase() === activeCityName.toLowerCase();
+      return (n.city || '').toLowerCase() === (activeCityName || '').toLowerCase();
     }
     const cityObj = cityList.find(c => c.city_id === n.city_id);
-    return cityObj ? cityObj.city_name.toLowerCase() === activeCityName.toLowerCase() : false;
+    return cityObj ? (cityObj.city_name || '').toLowerCase() === (activeCityName || '').toLowerCase() : false;
   });
 
   // Sort
@@ -139,7 +138,16 @@ export default function Neighborhoods() {
 
       {/* Grid of Neighborhood Cards */}
       {isLoading ? (
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 'var(--space-8)' }}>Loading neighborhood insights...</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
+          ))}
+        </div>
+      ) : sorted.length === 0 ? (
+        <EmptyState
+          title="No neighborhoods found"
+          description="No neighborhood intelligence data matches the selected city or filter criteria."
+        />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
           {sorted.map((n) => {

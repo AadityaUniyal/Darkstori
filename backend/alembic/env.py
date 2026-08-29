@@ -30,7 +30,7 @@ if config.config_file_name is not None:
 
 # Set sqlalchemy.url from environment variable if available
 if settings.DATABASE_URL:
-    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+    config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 # add your model's MetaData object here
 # for 'autogenerate' support

@@ -34,14 +34,14 @@ def test_register_success(test_client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
     
     # Mock password hashing and welcome email
-    monkeypatch.setattr("backend.api.routes.auth._hash_pw", lambda x: "hashed_pwd")
+    monkeypatch.setattr("backend.api.routes.auth.hash_password", lambda x: "hashed_pwd")
     monkeypatch.setattr("backend.utils.email.send_welcome_email", lambda *args, **kwargs: None)
 
     response = test_client.post(
-        "/api/auth/register",
+        "/api/v1/auth/register",
         json={
             "email": "test@example.com",
-            "password": "secure_password_123",
+            "password": "SecurePassword123!",
             "full_name": "Test User",
             "username": "testuser"
         }

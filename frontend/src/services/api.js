@@ -32,12 +32,63 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally
+// Handle 401 globally with token refresh
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 apiClient.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
+  async (err) => {
+    const originalRequest = err.config;
+    if (err.response?.status === 401 && !originalRequest._retry) {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken && !originalRequest.url?.includes('/auth/')) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          }).then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          });
+        }
+        originalRequest._retry = true;
+        isRefreshing = true;
+        try {
+          const { data } = await apiClient.post('/api/v1/auth/refresh', { refresh_token: refreshToken });
+          localStorage.setItem('auth_token', data.access_token);
+          if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+          }
+          processQueue(null, data.access_token);
+          originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+          return apiClient(originalRequest);
+        } catch (refreshErr) {
+          processQueue(refreshErr, null);
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+          if (!window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshErr);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+      // No refresh token available — force logout
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
       window.dispatchEvent(new CustomEvent('auth:logout'));
       if (!window.location.pathname.startsWith('/login')) {
         window.location.href = '/login';
@@ -53,6 +104,9 @@ const login = async (credentials) => {
   const response = await apiClient.post('/api/v1/auth/login', credentials);
   if (response.data.access_token) {
     localStorage.setItem('auth_token', response.data.access_token);
+    if (response.data.refresh_token) {
+      localStorage.setItem('refresh_token', response.data.refresh_token);
+    }
   }
   return response.data;
 };
@@ -61,12 +115,22 @@ const register = async (userData) => {
   const response = await apiClient.post('/api/v1/auth/register', userData);
   if (response.data.access_token) {
     localStorage.setItem('auth_token', response.data.access_token);
+    if (response.data.refresh_token) {
+      localStorage.setItem('refresh_token', response.data.refresh_token);
+    }
   }
   return response.data;
 };
 
-const logout = () => {
+const logout = async () => {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    await apiClient.post('/api/v1/auth/logout', { refresh_token: refreshToken || '' });
+  } catch (e) {
+    // Best-effort server-side logout — continue with local cleanup
+  }
   localStorage.removeItem('auth_token');
+  localStorage.removeItem('refresh_token');
 };
 
 const getMe = async () => {
@@ -323,6 +387,11 @@ const checkDriftAndRetrain = async () => {
   return response.data;
 };
 
+const trainModel = async () => {
+  const response = await apiClient.post('/api/v1/ml/train');
+  return response.data;
+};
+
 const getAuditLogs = async () => {
   const response = await apiClient.get('/api/v1/simulator/audit-logs');
   return response.data;
@@ -369,6 +438,11 @@ const listEconomicsProjections = async () => {
 const getSLAMetrics = async (city = null) => {
   const params = city ? { city } : {};
   const response = await apiClient.get('/api/v1/sla/metrics', { params });
+  return response.data;
+};
+
+const getBatchDispatch = async (payload = {}) => {
+  const response = await apiClient.post('/api/v1/sla/batch-dispatch', payload);
   return response.data;
 };
 
@@ -426,6 +500,45 @@ const getHealthReady = async () => {
   return response.data;
 };
 
+const resolveLocation = async (q) => {
+  const response = await apiClient.get('/api/v1/geo/resolve', { params: { q } });
+  return response.data;
+};
+
+const analyzeLocation = async (params) => {
+  const response = await apiClient.get('/api/v1/geo/analyze', { params });
+  return response.data;
+};
+
+// â”€â”€ Expansion Intelligence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const getExpansionOpportunities = async (city = null, limit = 8) => {
+  const params = { limit, ...(city ? { city } : {}) };
+  const response = await apiClient.get('/api/v1/expansion/opportunities', { params });
+  return response.data;
+};
+
+const simulateExpansion = async (neighborhoodId, payload = {}) => {
+  const response = await apiClient.post(`/api/v1/expansion/simulate/${neighborhoodId}`, null, {
+    params: payload,
+  });
+  return response.data;
+};
+
+const getExpansionLedger = async (params = {}) => {
+  const response = await apiClient.get('/api/v1/expansion/ledger', { params });
+  return response.data;
+};
+
+const reviewExpansionDecision = async (simulationId, review_notes) => {
+  const response = await apiClient.post(`/api/v1/expansion/decisions/${simulationId}/review`, { review_notes });
+  return response.data;
+};
+
+const approveExpansionDecision = async (simulationId) => {
+  const response = await apiClient.post(`/api/v1/expansion/decisions/${simulationId}/approve`);
+  return response.data;
+};
+
 // ── Local Events ──────────────────────────────────────────────────────────────
 
 const getEvents = async (params) => {
@@ -445,6 +558,87 @@ const updateEvent = async (eventId, payload) => {
 
 const deleteEvent = async (eventId) => {
   const response = await apiClient.delete(`/api/v1/events/${eventId}`);
+  return response.data;
+};
+
+// ── Playbook Automation ──────────────────────────────────────────────────────
+
+const getPlaybooks = async (params) => {
+  const response = await apiClient.get('/api/v1/playbooks/', { params });
+  return response.data;
+};
+
+const createPlaybook = async (payload) => {
+  const response = await apiClient.post('/api/v1/playbooks/', payload);
+  return response.data;
+};
+
+const updatePlaybook = async (id, payload) => {
+  const response = await apiClient.put(`/api/v1/playbooks/${id}`, payload);
+  return response.data;
+};
+
+const deletePlaybook = async (id) => {
+  const response = await apiClient.delete(`/api/v1/playbooks/${id}`);
+  return response.data;
+};
+
+const togglePlaybook = async (id) => {
+  const response = await apiClient.post(`/api/v1/playbooks/${id}/toggle`);
+  return response.data;
+};
+
+const testPlaybook = async (id, eventData) => {
+  const response = await apiClient.post(`/api/v1/playbooks/${id}/test`, { event_data: eventData });
+  return response.data;
+};
+
+const getPlaybookExecutions = async (params) => {
+  const response = await apiClient.get('/api/v1/playbooks/executions', { params });
+  return response.data;
+};
+
+const getPlaybookStats = async () => {
+  const response = await apiClient.get('/api/v1/playbooks/stats');
+  return response.data;
+};
+
+const getPlaybookTriggers = async () => {
+  const response = await apiClient.get('/api/v1/playbooks/triggers');
+  return response.data;
+};
+
+const getPlaybookActions = async () => {
+  const response = await apiClient.get('/api/v1/playbooks/actions');
+  return response.data;
+};
+
+// ── Cannibalization Simulator ─────────────────────────────────────────────────
+
+const analyzeCannibalization = async (payload) => {
+  const response = await apiClient.post('/api/v1/cannibalization/analyze', payload);
+  return response.data;
+};
+
+const getCannibalizationHistory = async (params) => {
+  const response = await apiClient.get('/api/v1/cannibalization/history', { params });
+  return response.data;
+};
+
+// ── Neighborhood Mood Score ──────────────────────────────────────────────────
+
+const getNeighborhoodMood = async (neighborhoodId) => {
+  const response = await apiClient.get(`/api/v1/mood/neighborhood/${neighborhoodId}`);
+  return response.data;
+};
+
+const getCityMood = async (city) => {
+  const response = await apiClient.get(`/api/v1/mood/city/${city}`);
+  return response.data;
+};
+
+const getMoodSummary = async () => {
+  const response = await apiClient.get('/api/v1/mood/summary');
   return response.data;
 };
 
@@ -522,6 +716,7 @@ export const api = {
 
   // Delivery SLA
   getSLAMetrics,
+  getBatchDispatch,
 
   // Cohorts
   getCohorts,
@@ -533,6 +728,7 @@ export const api = {
   getMLSettings,
   updateMLSettings,
   checkDriftAndRetrain,
+  trainModel,
   getAuditLogs,
 
   // Resilience
@@ -545,6 +741,38 @@ export const api = {
   // System
   getHealth,
   getHealthReady,
+
+  // Expansion Intelligence
+  getExpansionOpportunities,
+  simulateExpansion,
+  getExpansionLedger,
+  reviewExpansionDecision,
+  approveExpansionDecision,
+
+  // Geo Intelligence
+  resolveLocation,
+  analyzeLocation,
+
+  // Playbook Automation
+  getPlaybooks,
+  createPlaybook,
+  updatePlaybook,
+  deletePlaybook,
+  togglePlaybook,
+  testPlaybook,
+  getPlaybookExecutions,
+  getPlaybookStats,
+  getPlaybookTriggers,
+  getPlaybookActions,
+
+  // Cannibalization
+  analyzeCannibalization,
+  getCannibalizationHistory,
+
+  // Mood Score
+  getNeighborhoodMood,
+  getCityMood,
+  getMoodSummary,
 };
 
 export default apiClient;

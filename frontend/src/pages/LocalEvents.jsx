@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Plus, Trash2, Edit, MapPin, AlertCircle, Save, X } from 'lucide-react';
 import { useCity } from '../context/CityContext';
 import { api } from '../services/api';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
 
 export default function LocalEvents() {
   const { selectedCity } = useCity();
@@ -240,13 +242,14 @@ export default function LocalEvents() {
       {/* Events Table / List */}
       <div className="glass-card" style={{ padding: '0px', overflow: 'hidden' }}>
         {isLoading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading events...</div>
-        ) : events.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <Calendar size={36} color="var(--color-text-muted)" style={{ opacity: 0.5 }} />
-            <span style={{ fontSize: '0.94rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>No events registered yet</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Add neighborhood level local events to adjust dynamic safety stocks.</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px' }}>
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[48px] w-full rounded-md" />)}
           </div>
+        ) : events.length === 0 ? (
+          <EmptyState
+            title="No events registered yet"
+            description="Add neighborhood level local events to adjust dynamic safety stocks."
+          />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>

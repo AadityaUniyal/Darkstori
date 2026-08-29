@@ -11,7 +11,7 @@ print('Database initialized.')
 "
 
 echo "Stamping database schema with Alembic..."
-alembic stamp 001_ml_tracking
+alembic upgrade head || echo 'Alembic upgrade failed or no migrations pending — continuing...'
 
 if [ "$SEED_DEMO_DATA" = "true" ]; then
   echo "Seeding demo data..."

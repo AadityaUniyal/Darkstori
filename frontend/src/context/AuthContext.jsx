@@ -56,16 +56,8 @@ export function AuthProvider({ children }) {
         return data;
       }
     } catch (e) {
-      // Fallback for demo mode
-      const loggedInUser = {
-        id: 'demo-user-123',
-        email: credentials.email,
-        role: 'admin',
-      };
-      setUser(loggedInUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('auth_token', 'mock_token.eyJ1c2VyX2lkIjoiZGVtby11c2VyLTEyMyIsInN1YiI6ImRlbW9AdXNlci5jb20iLCJyb2xlIjoiYWRtaW4iLCJleHAiOjI1MjQ2MDgwMDB9.mock_sig');
-      return { access_token: 'mock', user_id: 'demo-user-123', role: 'admin', email: credentials.email };
+      const message = e?.response?.data?.detail || e?.message || 'Login failed. Please check your credentials and try again.';
+      throw new Error(message);
     }
   }, []);
 
@@ -84,16 +76,8 @@ export function AuthProvider({ children }) {
         return data;
       }
     } catch (e) {
-      // Fallback for demo mode
-      const registeredUser = {
-        id: 'demo-user-123',
-        email: userData.email,
-        role: 'admin',
-      };
-      setUser(registeredUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('auth_token', 'mock_token.eyJ1c2VyX2lkIjoiZGVtby11c2VyLTEyMyIsInN1YiI6ImRlbW9AdXNlci5jb20iLCJyb2xlIjoiYWRtaW4iLCJleHAiOjI1MjQ2MDgwMDB9.mock_sig');
-      return { access_token: 'mock', user_id: 'demo-user-123', role: 'admin', email: userData.email };
+      const message = e?.response?.data?.detail || e?.message || 'Registration failed. Please try again.';
+      throw new Error(message);
     }
   }, []);
 

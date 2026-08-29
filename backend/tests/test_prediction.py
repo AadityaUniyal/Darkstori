@@ -39,7 +39,7 @@ def test_predict_success(test_client):
     app.dependency_overrides[get_db] = override_db
 
     response = test_client.post(
-        "/api/predictions/predict",
+        "/api/v1/predictions/predict",
         json={
             "pincode": "560001",
             "order_date": "2026-06-15"

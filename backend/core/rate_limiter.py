@@ -109,7 +109,7 @@ class RedisRateLimiter:
 
         client_id = self._get_client_id(request)
         key = f"rate_limit:{client_id}:{key_prefix}"
-        now = datetime.utcnow().timestamp()
+        now = datetime.now().timestamp()
         cutoff = now - 60
 
         async with self.client.pipeline(transaction=True) as pipe:

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useCity } from '../context/CityContext';
-import MapView from '../components/MapView';
+import LazyMapView from '../components/LazyMapView';
 import LiveTracker from '../components/LiveTracker';
 import CityPulse from '../components/CityPulse';
 import TimeMachine from '../components/TimeMachine';
@@ -19,6 +19,12 @@ import AnimatedCounter from '../components/AnimatedCounter';
 import AnimatedCard from '../components/AnimatedCard';
 import StaggerChildren from '../components/StaggerChildren';
 import RangoliGauge from '../components/RangoliGauge';
+import MoodGauge from '../components/MoodGauge';
+import WeatherRadarCard from '../components/WeatherRadarCard';
+import VrpDispatchCard from '../components/VrpDispatchCard';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -35,42 +41,7 @@ const PLATFORM_COLORS = {
   'Swiggy Genie': 'var(--peacock-500)',
 };
 
-const FALLBACK_METRICS = {
-  summary: {
-    total_stores: 42,
-    total_neighborhoods: 85,
-    total_orders_30d: 118420,
-    total_competitive_moves: 24,
-  },
-  city_overview: [
-    { city: 'Bangalore', store_count: 12, neighborhood_count: 24, avg_opportunity_score: 8.2 },
-    { city: 'Delhi', store_count: 8, neighborhood_count: 16, avg_opportunity_score: 7.1 },
-    { city: 'Mumbai', store_count: 10, neighborhood_count: 20, avg_opportunity_score: 7.8 },
-    { city: 'Hyderabad', store_count: 7, neighborhood_count: 15, avg_opportunity_score: 8.0 },
-    { city: 'Pune', store_count: 5, neighborhood_count: 10, avg_opportunity_score: 7.4 },
-  ],
-  top_opportunities: [
-    { neighborhood_id: 1, neighborhood_name: 'Koramangala', city: 'Bangalore', opportunity_score: 9.2 },
-    { neighborhood_id: 2, neighborhood_name: 'Indiranagar', city: 'Bangalore', opportunity_score: 8.9 },
-    { neighborhood_id: 3, neighborhood_name: 'HSR Layout', city: 'Bangalore', opportunity_score: 8.2 },
-    { neighborhood_id: 4, neighborhood_name: 'Saket', city: 'Delhi', opportunity_score: 9.0 },
-    { neighborhood_id: 5, neighborhood_name: 'Hitech City', city: 'Hyderabad', opportunity_score: 8.8 },
-    { neighborhood_id: 6, neighborhood_name: 'Andheri West', city: 'Mumbai', opportunity_score: 8.5 },
-  ],
-  sentiment: [
-    { platform: 'Instamart', positive_pct: 68, negative_pct: 12, avg_sentiment: 0.56 },
-    { platform: 'Zepto', positive_pct: 72, negative_pct: 10, avg_sentiment: 0.62 },
-    { platform: 'Blinkit', positive_pct: 61, negative_pct: 18, avg_sentiment: 0.43 },
-    { platform: 'Swiggy Genie', positive_pct: 54, negative_pct: 22, avg_sentiment: 0.32 },
-  ],
-  recent_competitive_moves: {
-    moves: [
-      { move_id: 1, platform: 'Zepto', move_type: 'payout_increase', description: 'Increased rider payout structure by 12% in Koramangala.', city: 'Bangalore', impact_level: 'HIGH' },
-      { move_id: 2, platform: 'Blinkit', move_type: 'dark_store_launch', description: 'Opened a new large-format dark store in Rohini.', city: 'Delhi', impact_level: 'MEDIUM' },
-      { move_id: 3, platform: 'Instamart', move_type: 'free_delivery_promo', description: 'Launched a free delivery promo for orders above ₹99 in Powai.', city: 'Mumbai', impact_level: 'LOW' },
-    ]
-  }
-};
+const FALLBACK_METRICS = FALLBACK_DASHBOARD_METRICS;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -95,7 +66,7 @@ export default function Dashboard() {
     refetchInterval: 15 * 60 * 1000,
   });
 
-  const { data: metrics, isError } = useQuery({
+  const { data: metrics, isError, isLoading } = useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: api.getDashboardMetrics,
     staleTime: Infinity, // Now driven purely by WebSockets
@@ -187,32 +158,40 @@ export default function Dashboard() {
       </motion.div>
 
       {/* ROW 1: Summary Strip (4 KPI cards) */}
-      <StaggerChildren className="dash-kpi-row">
-        <AnimatedCounter
-          value={summary?.total_stores || 42}
-          label="Active Dark Stores"
-          icon={Building2}
-          color="var(--peacock-500)"
-        />
-        <AnimatedCounter
-          value={summary?.total_neighborhoods || 85}
-          label="Neighborhoods Mapped"
-          icon={MapPin}
-          color="var(--saffron-500)"
-        />
-        <AnimatedCounter
-          value={summary?.total_orders_30d || 118420}
-          label="Orders (30 days)"
-          icon={Zap}
-          color="var(--monsoon-500)"
-        />
-        <AnimatedCounter
-          value={summary?.total_competitive_moves || 24}
-          label="Competitor Moves"
-          icon={TrendingUp}
-          color="var(--spice-500)"
-        />
-      </StaggerChildren>
+      {isLoading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[100px] w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <StaggerChildren className="dash-kpi-row">
+          <AnimatedCounter
+            value={summary?.total_stores || 42}
+            label="Active Dark Stores"
+            icon={Building2}
+            color="var(--peacock-500)"
+          />
+          <AnimatedCounter
+            value={summary?.total_neighborhoods || 85}
+            label="Neighborhoods Mapped"
+            icon={MapPin}
+            color="var(--saffron-500)"
+          />
+          <AnimatedCounter
+            value={summary?.total_orders_30d || 118420}
+            label="Orders (30 days)"
+            icon={Zap}
+            color="var(--monsoon-500)"
+          />
+          <AnimatedCounter
+            value={summary?.total_competitive_moves || 24}
+            label="Competitor Moves"
+            icon={TrendingUp}
+            color="var(--spice-500)"
+          />
+        </StaggerChildren>
+      )}
 
       {/* ROW 2: Map + City Pulse (60/40 Split) */}
       <div className="dash-map-row">
@@ -229,14 +208,14 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-          <MapView
-            neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Bangalore' }))}
+          <LazyMapView
+            neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Sample Market' }))}
             center={[20.0, 77.0]}
             zoom={5}
             height="400px"
             liveOrders={liveOrders}
             showHeatmap={showHeatmap}
-            onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Bangalore'}`)}
+            onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Sample Market'}`)}
           />
         </AnimatedCard>
 
@@ -250,31 +229,44 @@ export default function Dashboard() {
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
           Top Opportunities
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-          {topOpps.slice(0, 3).map((opp, idx) => (
-            <div
-              key={opp.neighborhood_id || idx}
-              onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
-              className="glass-card interactive"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                  {opp.neighborhood_name}
-                </span>
-                <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'var(--peacock-100)', color: 'var(--peacock-500)', border: 'none' }}>
-                  {opp.city}
-                </span>
+        {isLoading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
+            ))}
+          </div>
+        ) : topOpps.length === 0 ? (
+          <EmptyState title="No opportunities found" description="No top market opportunities available for the selected city." />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+            {topOpps.slice(0, 3).map((opp, idx) => (
+              <div key={opp.neighborhood_id || idx} className="space-y-4">
+                <div
+                  onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
+                  className="glass-card interactive"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    margin: 0,
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                      {opp.neighborhood_name}
+                    </span>
+                    <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'var(--peacock-100)', color: 'var(--peacock-500)', border: 'none' }}>
+                      {opp.city}
+                    </span>
+                  </div>
+                  <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
+                </div>
+                <MoodGauge neighborhoodId={opp.neighborhood_id} />
               </div>
-              <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ROW 4: Platform Sentiment & Recent Competitor Moves */}
@@ -285,26 +277,36 @@ export default function Dashboard() {
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Platform Sentiment</h2>
             <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 30 days</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {sentiment.map((s) => (
-              <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                  <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                    {s.platform}
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? 'var(--monsoon-500)' : 'var(--spice-500)', fontWeight: 600 }}>
-                    {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
-                  </span>
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-[48px] w-full rounded-md" />
+              ))}
+            </div>
+          ) : sentiment.length === 0 ? (
+            <EmptyState title="No sentiment data" description="No customer platform sentiment recorded for the last 30 days." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {sentiment.map((s) => (
+                <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                    <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                      {s.platform}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? 'var(--monsoon-500)' : 'var(--spice-500)', fontWeight: 600 }}>
+                      {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
+                    </span>
+                  </div>
+                  {/* Stacked bar */}
+                  <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden', display: 'flex' }}>
+                    <div style={{ width: `${s.positive_pct}%`, background: 'var(--monsoon-500)' }} />
+                    <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'var(--color-text-muted)', opacity: 0.2 }} />
+                    <div style={{ width: `${s.negative_pct}%`, background: 'var(--spice-500)' }} />
+                  </div>
                 </div>
-                {/* Stacked bar */}
-                <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden', display: 'flex' }}>
-                  <div style={{ width: `${s.positive_pct}%`, background: 'var(--monsoon-500)' }} />
-                  <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'var(--color-text-muted)', opacity: 0.2 }} />
-                  <div style={{ width: `${s.negative_pct}%`, background: 'var(--spice-500)' }} />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </AnimatedCard>
 
         {/* Competitor Alerts */}
@@ -318,41 +320,51 @@ export default function Dashboard() {
             </h2>
             <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 7 days</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {competitiveMoves.slice(0, 3).map((move) => {
-              const badgeColor = IMPACT_COLORS[move.impact_level] || 'var(--color-text-muted)';
-              const platformColor = PLATFORM_COLORS[move.platform] || 'var(--color-text-muted)';
-              return (
-                <div
-                  key={move.move_id}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    padding: '12px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="badge" style={{ background: `${platformColor}15`, color: platformColor, border: `1px solid ${platformColor}30` }}>
-                      {move.platform}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
-                        {move.impact_level} IMPACT
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-[64px] w-full rounded-md" />
+              ))}
+            </div>
+          ) : competitiveMoves.length === 0 ? (
+            <EmptyState title="No competitor alerts" description="No recent competitor moves detected." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {competitiveMoves.slice(0, 3).map((move) => {
+                const badgeColor = IMPACT_COLORS[move.impact_level] || 'var(--color-text-muted)';
+                const platformColor = PLATFORM_COLORS[move.platform] || 'var(--color-text-muted)';
+                return (
+                  <div
+                    key={move.move_id}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      padding: '12px',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span className="badge" style={{ background: `${platformColor}15`, color: platformColor, border: `1px solid ${platformColor}30` }}>
+                        {move.platform}
                       </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
+                          {move.impact_level} IMPACT
+                        </span>
+                      </div>
                     </div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                      {move.description}
+                    </p>
                   </div>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-                    {move.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </AnimatedCard>
       </div>
 
@@ -371,6 +383,12 @@ export default function Dashboard() {
         </div>
         <TimeMachine height={360} />
       </AnimatedCard>
+
+      {/* ROW 5.5: Hyperlocal Weather Radar & VRP Dispatch Command */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
+        <WeatherRadarCard storeId={activeStoreId} />
+        <VrpDispatchCard storeId={activeStoreId} />
+      </div>
 
       {/* ROW 6: SLA Monitor */}
       <AnimatedCard as="section" className="dash-pulse-section" delay={0.35}>

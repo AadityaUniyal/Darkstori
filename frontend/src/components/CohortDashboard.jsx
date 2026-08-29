@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { Users, TrendingUp, Award, Calendar } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 export default function CohortDashboard() {
   const { data: cohorts, isLoading } = useQuery({
@@ -58,7 +59,7 @@ export default function CohortDashboard() {
       {/* Cohort Heatmap Table */}
       <div style={{ overflowX: 'auto', background: 'rgba(30, 41, 59, 0.35)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '16px' }}>
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', color: '#94a3b8' }}>Loading cohorts...</div>
+          <Skeleton className="h-[120px] w-full rounded-xl" />
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
             <thead>
