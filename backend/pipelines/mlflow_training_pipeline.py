@@ -203,12 +203,11 @@ class MLflowTrainingPipeline:
                 },
             )
 
-            # Get hyperparameters
-            if hyperparams is None:
-                hyperparams = self._get_default_hyperparams(model_type)
+            from sklearn.model_selection import RandomizedSearchCV
 
-            # Log hyperparameters
-            self.tracker.log_params(hyperparams)
+            # Get hyperparameters configuration grid
+            model_config = self.config.training.models.get(model_type, {})
+            has_grid = any(isinstance(val, list) and len(val) > 1 for val in model_config.values())
 
             # Log dataset metadata
             self.tracker.log_params(
@@ -228,12 +227,43 @@ class MLflowTrainingPipeline:
                 }
             )
 
-            # Create and train model
+            # Create and train model (with hyperparameter search if grid is provided)
             start_time = time.time()
-            model = self._create_model(model_type, hyperparams)
-            model.fit(X_train, y_train)
+            if has_grid and hyperparams is None:
+                logger.info(f"Running hyperparameter search for {model_type}...")
+                # Construct search grid from config
+                param_distributions = {}
+                for key, val in model_config.items():
+                    if isinstance(val, list):
+                        param_distributions[key] = val
+                    else:
+                        param_distributions[key] = [val]
+                
+                # Add random_state to candidate params if applicable
+                base_estimator = self._create_model(model_type, self._get_default_hyperparams(model_type))
+                
+                search = RandomizedSearchCV(
+                    estimator=base_estimator,
+                    param_distributions=param_distributions,
+                    n_iter=min(10, np.prod([len(v) for v in param_distributions.values()])),
+                    cv=self.config.training.evaluation.cv_folds or 3,
+                    scoring="r2",
+                    random_state=self.config.training.data.random_seed,
+                    n_jobs=-1
+                )
+                search.fit(X_train, y_train)
+                model = search.best_estimator_
+                chosen_params = search.best_params_
+                self.tracker.log_params(chosen_params)
+                logger.info(f"Best parameters for {model_type}: {chosen_params}")
+            else:
+                if hyperparams is None:
+                    hyperparams = self._get_default_hyperparams(model_type)
+                self.tracker.log_params(hyperparams)
+                model = self._create_model(model_type, hyperparams)
+                model.fit(X_train, y_train)
+                
             training_time = time.time() - start_time
-
             self.tracker.log_metric("training_duration_seconds", training_time)
 
             # Make predictions

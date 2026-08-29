@@ -3,9 +3,14 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Plus, Trash2, Check, Clock, ShieldCheck, FileDown, Layers, Landmark, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import AmbientBackground from '../components/AmbientBackground';
-import MapView from '../components/MapView';
+import LazyMapView from '../components/LazyMapView';
+import CannibalizationMap from '../components/CannibalizationMap';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_SIMULATOR_NEIGHBORHOODS } from '../constants/fallbacks';
 
 export default function Simulator() {
   const { user } = useAuth();
@@ -22,7 +27,7 @@ export default function Simulator() {
   const [storeSize, setStoreSize] = useState(1500);
 
   // Workflow states
-  const [activeTab, setActiveTab] = useState('simulate'); // 'simulate' | 'proposals' | 'ledger'
+  const [activeTab, setActiveTab] = useState('simulate'); // 'simulate' | 'proposals' | 'ledger' | 'cannibalization'
   const [reviewText, setReviewText] = useState('');
 
   // Fetch all neighborhoods
@@ -33,23 +38,19 @@ export default function Simulator() {
   });
 
   // Fetch Proposals history
-  const { data: proposals, refetch: refetchProposals } = useQuery({
+  const { data: proposals, isLoading: proposalsLoading, refetch: refetchProposals } = useQuery({
     queryKey: ['proposals-list'],
     queryFn: () => api.getProposals(),
   });
 
   // Fetch Audit Logs (Provenance Ledger)
-  const { data: auditLogs, refetch: refetchAudits } = useQuery({
+  const { data: auditLogs, isLoading: auditsLoading, refetch: refetchAudits } = useQuery({
     queryKey: ['provenance-audit-logs'],
     queryFn: () => api.getAuditLogs(),
     refetchInterval: 5000
   });
 
-  const fallbackNeighborhoods = [
-    { neighborhood_id: 1, neighborhood_name: 'Koramangala', pincode: '560034', centroid_lat: 12.9716, centroid_lng: 77.5946, population: 150000, avg_household_income: 950000.0, working_professionals_pct: 72.0, competition_intensity: 'High' },
-    { neighborhood_id: 2, neighborhood_name: 'Indiranagar', pincode: '560038', centroid_lat: 12.9986, centroid_lng: 77.6386, population: 120000, avg_household_income: 1100000.0, working_professionals_pct: 68.0, competition_intensity: 'High' },
-    { neighborhood_id: 3, neighborhood_name: 'HSR Layout', pincode: '560102', centroid_lat: 12.9116, centroid_lng: 77.6446, population: 180000, avg_household_income: 850000.0, working_professionals_pct: 75.0, competition_intensity: 'Medium' },
-  ];
+  const fallbackNeighborhoods = FALLBACK_SIMULATOR_NEIGHBORHOODS;
 
   const neighborhoodList = nbhds && nbhds.length > 0 ? nbhds : fallbackNeighborhoods;
 
@@ -102,7 +103,7 @@ export default function Simulator() {
   const handleMapSelect = (nb) => {
     if (!placementMode) return;
     if (drafts.length >= 3) {
-      window.alert("Maximum of 3 simultaneous simulations allowed for comparison.");
+      toast.warning("Maximum of 3 simultaneous simulations allowed for comparison.");
       return;
     }
 
@@ -205,7 +206,7 @@ export default function Simulator() {
         {/* Left Side: Map + Cost Configuration Panels */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           <div className="glass-card" style={{ padding: 'var(--space-4)' }}>
-            <MapView
+            <LazyMapView
               showHeatmap={true}
               height="450px"
               liveOrders={drafts.map(d => ({ ...d, createdTime: Date.now() }))}
@@ -332,16 +333,27 @@ export default function Simulator() {
             >
               Ledger ({auditLogs?.length || 0})
             </button>
+            <button 
+              onClick={() => setActiveTab('cannibalization')}
+              style={{
+                flex: 1, padding: '6px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+                border: 'none', borderRadius: 'var(--radius-sm)',
+                background: activeTab === 'cannibalization' ? 'var(--peacock-500)' : 'transparent',
+                color: activeTab === 'cannibalization' ? '#0B0D14' : 'var(--color-text-secondary)'
+              }}
+            >
+              Cannibalization
+            </button>
           </div>
 
           <div className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '400px' }}>
             
             {activeTab === 'simulate' && (
               drafts.length === 0 ? (
-                <div style={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'var(--color-text-muted)', textAlign: 'center', padding: '20px' }}>
-                  <AlertCircle size={28} style={{ marginBottom: '8px', color: 'var(--color-text-muted)' }} />
-                  <span style={{ fontSize: '0.84rem' }}>Enable Placement Mode, click on the map grid to run localized projection.</span>
-                </div>
+                <EmptyState
+                  title="Simulation Mode Idle"
+                  description="Enable Placement Mode and click on the map grid to run localized projection."
+                />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
                   {drafts.length > 1 && (
@@ -430,8 +442,15 @@ export default function Simulator() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '350px' }}>
-                  {proposals?.length === 0 ? (
-                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '20px' }}>No proposals active.</span>
+                  {proposalsLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-[72px] w-full rounded-lg" />)}
+                    </div>
+                  ) : proposals?.length === 0 ? (
+                    <EmptyState
+                      title="No active proposals"
+                      description="Propose a location from a simulation draft to begin the financial review workflow."
+                    />
                   ) : (
                     proposals?.map(p => (
                       <div key={p.simulation_id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -502,28 +521,47 @@ export default function Simulator() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '350px' }}>
-                  {auditLogs?.map((log) => {
-                    const prov = log.new_state?.decision_provenance;
-                    return (
-                      <div key={log.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                          <span style={{ color: 'var(--color-text-primary)' }}>{log.new_state?.store_provisioned || "Darkstore Hub"}</span>
-                          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--peacock-500)' }}>v{prov?.model_version || "3.1.0"}</span>
+                  {auditsLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-[72px] w-full rounded-lg" />)}
+                    </div>
+                  ) : auditLogs?.length === 0 ? (
+                    <EmptyState
+                      title="Ledger is empty"
+                      description="No approved stores found in the provenance decision log."
+                    />
+                  ) : (
+                    auditLogs?.map((log) => {
+                      const prov = log.new_state?.decision_provenance;
+                      return (
+                        <div key={log.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                            <span style={{ color: 'var(--color-text-primary)' }}>{log.new_state?.store_provisioned || "Darkstore Hub"}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--peacock-500)' }}>v{prov?.model_version || "3.1.0"}</span>
+                          </div>
+                          <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.74rem' }}>
+                            Approver: {prov?.approver?.email || "regional_head@darkstori.com"}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '0.7rem', color: 'var(--color-text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px', marginTop: '4px' }}>
+                            <span>Capex: ₹{(prov?.parameters_snapshot?.investment || 1500000).toLocaleString('en-IN')}</span>
+                            <span>Orders Proj: {prov?.parameters_snapshot?.predicted_daily_orders || 240} daily</span>
+                          </div>
                         </div>
-                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.74rem' }}>
-                          Approver: {prov?.approver?.email || "regional_head@darkstori.com"}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '0.7rem', color: 'var(--color-text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px', marginTop: '4px' }}>
-                          <span>Capex: ₹{(prov?.parameters_snapshot?.investment || 1500000).toLocaleString('en-IN')}</span>
-                          <span>Orders Proj: {prov?.parameters_snapshot?.predicted_daily_orders || 240} daily</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {(!auditLogs || auditLogs.length === 0) && (
-                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '20px' }}>No decision ledger entries.</span>
+                      );
+                    })
                   )}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'cannibalization' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.94rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Cannibalization Simulator
+                  </span>
+                </div>
+                <CannibalizationMap />
               </div>
             )}
 

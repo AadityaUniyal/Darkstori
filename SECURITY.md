@@ -25,7 +25,7 @@ Instead, please report them via:
    - Fill out the form with details
 
 2. **Email**
-   - Send an email to: [your-email@domain.com]
+   - Send an email to: security@darkstori.dev
    - Include "SECURITY" in the subject line
    - Provide detailed information about the vulnerability
 

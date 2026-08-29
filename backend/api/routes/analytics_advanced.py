@@ -29,10 +29,13 @@ from backend.database.models.models import (
     PincodeCoverage,
 )
 
+from backend.core.cache import cached_json
+
 router = APIRouter()
 
 
 @router.get("/dashboard/metrics")
+@cached_json("dashboard_metrics", ttl=15)
 async def get_dashboard_metrics(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),

@@ -6,7 +6,7 @@ and model management endpoints.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Prediction Schemas
 
@@ -15,9 +15,19 @@ class PredictionRequest(BaseModel):
     """Request schema for single prediction."""
 
     pincode: str = Field(..., description="6-digit PIN code to look up neighborhood")
-    order_date: str = Field(..., description="Order date in YYYY-MM-DD format")
+    order_date: Optional[str] = Field(None, description="Order date in YYYY-MM-DD format")
+    target_date: Optional[str] = Field(None, description="Alternative field for order date")
+    days: Optional[int] = Field(None, description="Days ahead")
     population: Optional[int] = Field(None, ge=0, description="Override population")
     platform_count: Optional[int] = Field(None, ge=1, description="Override active platform count")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_dates(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("order_date"):
+                data["order_date"] = data.get("target_date") or data.get("date") or "2026-06-15"
+        return data
 
     @field_validator("pincode")
     @classmethod
@@ -40,6 +50,8 @@ class PredictionResponse(BaseModel):
     """Response schema for single prediction."""
 
     prediction: float = Field(..., description="Predicted order count")
+    predicted_demand: Optional[float] = Field(None, description="Alias for predicted order count")
+    forecast: Optional[float] = Field(None, description="Alias for predicted order count")
     lower_bound: float = Field(..., description="Lower confidence bound")
     upper_bound: float = Field(..., description="Upper confidence bound")
     model_name: str = Field(..., description="Model name used")
@@ -47,6 +59,18 @@ class PredictionResponse(BaseModel):
     latency_ms: float = Field(..., description="Prediction latency in milliseconds")
     prediction_id: str = Field(..., description="Unique prediction ID")
     timestamp: str = Field(..., description="Prediction timestamp")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            pred = data.get("prediction")
+            if pred is not None:
+                if "predicted_demand" not in data or data["predicted_demand"] is None:
+                    data["predicted_demand"] = pred
+                if "forecast" not in data or data["forecast"] is None:
+                    data["forecast"] = pred
+        return data
 
     class Config:
         json_schema_extra = {

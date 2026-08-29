@@ -1,8 +1,15 @@
 """Database connection management."""
 from urllib.parse import urlparse, urlunparse
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, StaticPool
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.compiler import compiles
+
+@compiles(JSONB, "sqlite")
+def _compile_jsonb_sqlite(type_, compiler, **kw):
+    """Compile PostgreSQL JSONB column type to JSON for SQLite dialect."""
+    return "JSON"
 
 from backend.core.config import settings
 from backend.core.logger import logger
@@ -17,9 +24,12 @@ def convert_to_async_url(url: str) -> str:
             return url
         return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     parsed = urlparse(url)
-    # Strip sslmode — asyncpg uses connect_args={"ssl": True} instead
+    # Strip DSN params that asyncpg doesn't accept directly.
     if parsed.query:
-        params = [p for p in parsed.query.split("&") if not p.startswith("sslmode=")]
+        params = [
+            p for p in parsed.query.split("&")
+            if not p.startswith("sslmode=") and not p.startswith("channel_binding=")
+        ]
         new_query = "&".join(params)
     else:
         new_query = ""
@@ -33,12 +43,12 @@ def convert_to_async_url(url: str) -> str:
     ))
 
 if settings.ENVIRONMENT == "testing":
-    DATABASE_URL = "postgresql+asyncpg://dummy_user:dummy_pass@localhost/dummy_db"
+    DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 else:
     DATABASE_URL = convert_to_async_url(settings.DATABASE_URL)
 
 # SSL required for Neon PostgreSQL
-connect_args = {"ssl": True} if "neon.tech" in settings.DATABASE_URL else {}
+connect_args = {"ssl": True} if "neon.tech" in (settings.DATABASE_URL or "") else {}
 
 # Configure connection pool arguments dynamically based on the database dialect
 is_sqlite = DATABASE_URL.startswith("sqlite")
@@ -47,7 +57,8 @@ if is_sqlite:
     engine = create_async_engine(
         DATABASE_URL,
         echo=settings.DEBUG,
-        connect_args=connect_args,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 else:
     engine = create_async_engine(
@@ -61,9 +72,37 @@ else:
         connect_args=connect_args,
     )
 
+class TenantScopedSession(AsyncSession):
+    """Intercepts select, update, and delete queries to automatically apply tenant filters."""
+    
+    async def execute(self, statement, params=None, execution_options=None, bind_arguments=None, **kwargs):
+        from backend.core.tenant import get_current_tenant_id
+        tenant_id = get_current_tenant_id()
+        
+        if tenant_id is not None:
+            # Safely rewrite statements to inject organization_id filters
+            try:
+                # Handle selects / general statements
+                if hasattr(statement, "froms"):
+                    for from_clause in statement.froms:
+                        entity = getattr(from_clause, "entity_namespace", None)
+                        if entity and hasattr(entity, "organization_id"):
+                            statement = statement.where(entity.organization_id == tenant_id)
+            except Exception as e:
+                logger.warning(f"Failed to auto-inject tenant scope: {e}")
+                
+        if params is not None:
+            kwargs["params"] = params
+        if execution_options is not None:
+            kwargs["execution_options"] = execution_options
+        if bind_arguments is not None:
+            kwargs["bind_arguments"] = bind_arguments
+        return await super().execute(statement, **kwargs)
+
+
 # Session factory
 AsyncSessionLocal = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    engine, class_=TenantScopedSession, expire_on_commit=False
 )
 
 async def init_db():
@@ -139,11 +178,13 @@ async def init_db():
                 logger.info("Real-time PostgreSQL triggers registered successfully")
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
+        raise
 
 
 async def close_db():
     """Close database connection."""
-    await engine.dispose()
+    if not (engine.dialect.name == "sqlite" and ":memory:" in str(engine.url)):
+        await engine.dispose()
     logger.info("Database connection closed")
 
 async def get_db():

@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-  /* Typography */
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Typography Hierarchy */
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   /* Spacing System */
   --space-1: 0.25rem;
@@ -17,68 +19,108 @@
   --space-12: 3rem;
 
   /* Borders & Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Transitions */
+  /* Smooth Easing */
   --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Nav */
+  --navbar-height: 64px;
+  --bottom-nav-height: 72px;
+
+  /* Default Dark Theme Backgrounds */
+  --color-bg: #0B0F17;
+  --color-bg-alt: #070A10;
+  --color-bg-card: rgba(17, 24, 39, 0.75);
+  --color-bg-card-hover: rgba(30, 41, 59, 0.85);
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-glow: rgba(16, 185, 129, 0.35);
+
+  /* High Contrast Text */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-on-dark: #FFFFFF;
+
+  /* Focus & Utility */
+  --color-focus-ring: rgba(16, 185, 129, 0.5);
+
+  /* Brand Accents (Emerald & Indigo) */
+  --emerald-400: #34D399;
+  --emerald-500: #10B981;
+  --emerald-600: #059669;
+  --emerald-glow: rgba(16, 185, 129, 0.2);
+
+  --indigo-400: #818CF8;
+  --indigo-500: #6366F1;
+  --indigo-600: #4F46E5;
+  --indigo-glow: rgba(99, 102, 241, 0.2);
+
+  --amber-400: #FBBF24;
+  --amber-500: #F59E0B;
+  --rose-500: #F43F5E;
+  --cyan-500: #06B6D4;
+
+  /* Standard Status Palette mapping */
+  --saffron-100: rgba(16, 185, 129, 0.12);
+  --saffron-200: #A7F3D0;
+  --saffron-500: #10B981;
+  --saffron-600: #059669;
+  --peacock-100: rgba(99, 102, 241, 0.12);
+  --peacock-500: #6366F1;
+  --monsoon-500: #10B981;
+  --spice-500: #F43F5E;
+  --marigold-500: #F59E0B;
+  --ink-950: #020617;
 
   /* Elevation (Shadows) */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow-purple: 0 0 20px rgba(255, 122, 26, 0.1);
-
-  /* Curated Color Palette (Dark Theme First) */
-  --color-bg: #0B0D14;
-  --color-bg-card: rgba(18, 16, 28, 0.55);
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-glow: rgba(255, 122, 26, 0.25);
-
-  /* Text Colors */
-  --color-text-primary: #F7F5F2;
-  --color-text-secondary: #C7C2D9;
-  --color-text-muted: #6E6A80;
-  --color-text-on-dark: #ffffff;
-
-  /* Theme Core Colors */
-  --saffron-100: rgba(255, 122, 26, 0.12);
-  --saffron-200: #ffd1b3;
-  --saffron-500: #FF7A1A;
-  --saffron-600: #E8650A;
-  --peacock-100: rgba(14, 124, 134, 0.14);
-  --peacock-500: #0E7C86;
-  --monsoon-500: #2E9E5B;
-  --spice-500: #C23B3B;
-  --marigold-500: #E8A33D;
-
-  /* Ink shades */
-  --ink-100: #121420;
-  --ink-300: #1e2238;
-  --ink-400: #2e3454;
-  --ink-900: #05060a;
-  --ink-950: #020305;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.6), 0 4px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.25);
+  --shadow-glow-indigo: 0 0 25px rgba(99, 102, 241, 0.25);
 }
 
-/* Base Scrollbar Styling */
+[data-theme="light"] {
+  --color-bg: #F8FAFC;
+  --color-bg-alt: #F1F5F9;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-hover: #F8FAFC;
+  --color-surface: rgba(0, 0, 0, 0.03);
+  --color-surface-hover: rgba(0, 0, 0, 0.08);
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-glow: rgba(16, 185, 129, 0.2);
+
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-text-on-dark: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.15), 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: var(--color-bg-alt);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-border);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--emerald-500);
 }

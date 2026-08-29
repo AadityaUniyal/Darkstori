@@ -18,7 +18,14 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.ext.compiler import compiles
+
+@compiles(JSONB, "sqlite")
+def _compile_jsonb_sqlite(type_, compiler, **kw):
+    """Compile PostgreSQL JSONB column type to JSON for SQLite dialect."""
+    return "JSON"
+
+from sqlalchemy.orm import declarative_base, relationship, synonym
 from sqlalchemy.sql import func
 from backend.core.encryption import EncryptedString
 
@@ -44,9 +51,21 @@ class DarkStore(Base):
     __tablename__ = "dark_stores"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    platform = Column(String(50), nullable=False)
+    platform = Column(String(50), nullable=False, default="Darkstori")
     store_name = Column(String(200))
+    name = synonym("store_name")
     store_code = Column(String(50))
+
+    def __init__(self, **kwargs):
+        if "name" in kwargs and "store_name" not in kwargs:
+            kwargs["store_name"] = kwargs.pop("name")
+        if "lat" in kwargs and "latitude" not in kwargs:
+            kwargs["latitude"] = kwargs.pop("lat")
+        if "lng" in kwargs and "longitude" not in kwargs:
+            kwargs["longitude"] = kwargs.pop("lng")
+        if "platform" not in kwargs:
+            kwargs["platform"] = "Darkstori"
+        super().__init__(**kwargs)
     city = Column(String(100), nullable=False)
     pincode = Column(String(10))
     address = Column(Text)
@@ -331,9 +350,24 @@ class FocusCity(Base):
 class Neighborhood(Base):
     __tablename__ = "neighborhoods"
 
-    neighborhood_id = Column(Integer, primary_key=True)
-    city_id = Column(Integer, ForeignKey("focus_cities.city_id"))
+    neighborhood_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = synonym("neighborhood_id")
+    city_id = Column(Integer, ForeignKey("focus_cities.city_id"), nullable=True)
     neighborhood_name = Column(String(200))
+    name = synonym("neighborhood_name")
+
+    def __init__(self, **kwargs):
+        if "name" in kwargs and "neighborhood_name" not in kwargs:
+            kwargs["neighborhood_name"] = kwargs.pop("name")
+        if "id" in kwargs and "neighborhood_id" not in kwargs:
+            kwargs["neighborhood_id"] = kwargs.pop("id")
+        if "density_score" in kwargs and "population_density" not in kwargs:
+            kwargs["population_density"] = kwargs.pop("density_score")
+        if "polygon_geojson" in kwargs:
+            kwargs.pop("polygon_geojson")
+        if "city" in kwargs and isinstance(kwargs["city"], str):
+            kwargs.pop("city")
+        super().__init__(**kwargs)
     pincode = Column(String(10))
     population = Column(Integer)
     avg_age = Column(Float)
@@ -378,19 +412,30 @@ class NeighborhoodDNA(Base):
 class StoreSimulation(Base):
     __tablename__ = "store_simulations"
 
-    simulation_id = Column(Integer, primary_key=True)
-    neighborhood_id = Column(Integer, ForeignKey("neighborhoods.neighborhood_id"))
-    investment_amount = Column(Float)
-    store_size_sqft = Column(Integer)
-    operating_hours = Column(String(100))
-    predicted_daily_orders = Column(Integer)
-    predicted_monthly_revenue = Column(Float)
-    break_even_month = Column(Integer)
-    roi_months = Column(Integer)
-    confidence_level = Column(Float)
+    simulation_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = synonym("simulation_id")
+    neighborhood_id = Column(Integer, ForeignKey("neighborhoods.neighborhood_id"), nullable=True)
+    name = Column(String(200), nullable=True)
+    target_city = Column(String(100), nullable=True)
+    proposed_lat = Column(Float, nullable=True)
+    proposed_lng = Column(Float, nullable=True)
+    parameters = Column(JSONB, nullable=True)
+    investment_amount = Column(Float, nullable=True)
+    store_size_sqft = Column(Integer, nullable=True)
+    operating_hours = Column(String(100), nullable=True)
+    predicted_daily_orders = Column(Integer, nullable=True)
+    predicted_monthly_revenue = Column(Float, nullable=True)
+    break_even_month = Column(Integer, nullable=True)
+    roi_months = Column(Integer, nullable=True)
+    confidence_level = Column(Float, nullable=True)
     status = Column(String(50), server_default="proposed")
     comments = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+    def __init__(self, **kwargs):
+        if "id" in kwargs and "simulation_id" not in kwargs:
+            kwargs["simulation_id"] = kwargs.pop("id")
+        super().__init__(**kwargs)
 
 
 class InventoryRecommendation(Base):
@@ -726,3 +771,122 @@ class LocalEvent(Base):
     expected_impact_pct = Column(Float, default=10.0)  # expected percentage change in orders
     created_at = Column(DateTime, server_default=func.now())
 
+
+# ── Competitive Moat Features ──────────────────────────────────────────────
+
+
+class Playbook(Base):
+    """Automated rule: trigger → condition → action.
+
+    Example: 'When a competitor opens a store within 2 km,
+    auto-run cannibalization simulation and alert the regional manager.'
+    """
+    __tablename__ = "playbooks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+
+    # Trigger: which event type fires this playbook
+    trigger_type = Column(String(50), nullable=False)
+    # e.g. "competitor_store_opened", "drift_detected", "sla_breach",
+    #      "temp_breach", "demand_spike", "price_war"
+
+    # Condition: JSON rules that must match the event payload
+    # e.g. {"field": "city", "op": "eq", "value": "Bangalore"}
+    conditions = Column(JSONB, default=list)
+
+    # Action: what to do when triggered
+    action_type = Column(String(50), nullable=False)
+    # e.g. "send_alert", "run_cannibalization", "accelerate_markdown",
+    #      "trigger_retraining", "adjust_safety_stock"
+    action_config = Column(JSONB, default=dict)
+    # e.g. {"channel": "email", "recipients": ["mgr@co.in"]}
+    #   or {"markdown_multiplier": 1.5}
+
+    cooldown_minutes = Column(Integer, default=60)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_playbook_trigger", "trigger_type", "is_active"),
+    )
+
+
+class PlaybookExecution(Base):
+    """Audit log of every time a playbook fires."""
+    __tablename__ = "playbook_executions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    playbook_id = Column(Integer, ForeignKey("playbooks.id"), nullable=False)
+    trigger_event = Column(JSONB, nullable=False)  # the raw event payload
+    conditions_matched = Column(Boolean, default=True)
+    action_result = Column(JSONB)  # outcome / response
+    status = Column(String(30), default="success")  # success, failed, skipped
+    executed_at = Column(DateTime, server_default=func.now())
+
+    playbook = relationship("Playbook")
+
+    __table_args__ = (
+        Index("idx_exec_playbook", "playbook_id", "executed_at"),
+        Index("idx_exec_status", "status", "executed_at"),
+    )
+
+
+class CannibalizationSimulation(Base):
+    """Records the impact of opening a new store on existing stores."""
+    __tablename__ = "cannibalization_simulations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    proposed_lat = Column(Float, nullable=False)
+    proposed_lng = Column(Float, nullable=False)
+    proposed_city = Column(String(100), nullable=False)
+    radius_km = Column(Float, default=3.0)
+
+    # Results
+    total_new_orders = Column(Integer)         # orders the new store would get
+    total_cannibalized_orders = Column(Integer)  # orders stolen from existing
+    net_incremental_orders = Column(Integer)    # true new demand
+    cannibalization_rate_pct = Column(Float)    # cannibalized / new × 100
+    affected_stores = Column(JSONB)            # [{store_id, name, lost_orders, lost_pct}]
+    portfolio_impact = Column(JSONB)           # {revenue_change, cost_change, net_pnl}
+
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index("idx_cannibal_city", "proposed_city", "created_at"),
+    )
+
+
+class ExpansionDecision(Base):
+    """Auditable decision record for the expansion workflow."""
+    __tablename__ = "expansion_decisions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    city = Column(String(100), nullable=False)
+    neighborhood_id = Column(Integer, ForeignKey("neighborhoods.neighborhood_id"), nullable=True)
+    neighborhood_name = Column(String(200), nullable=False)
+    status = Column(String(30), nullable=False, default="draft")
+    opportunity_score = Column(Float, nullable=False, default=0.0)
+    demand_estimate = Column(Integer, nullable=False, default=0)
+    coverage_gain_pct = Column(Float, nullable=False, default=0.0)
+    cannibalization_risk_pct = Column(Float, nullable=False, default=0.0)
+    roi_12_months_pct = Column(Float, nullable=False, default=0.0)
+    breakeven_months = Column(Integer, nullable=False, default=0)
+    capex = Column(Float, nullable=False, default=0.0)
+    store_size_sqft = Column(Integer, nullable=False, default=1500)
+    logistics_constraint_mins = Column(Float, nullable=False, default=15.0)
+    simulation_id = Column(Integer, ForeignKey("store_simulations.simulation_id"), nullable=True)
+    approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    review_notes = Column(Text)
+    decision_payload = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_expansion_decision_city_status", "city", "status"),
+        Index("idx_expansion_decision_created", "created_at"),
+    )

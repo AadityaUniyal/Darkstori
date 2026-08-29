@@ -1,9 +1,9 @@
 """Authentication routes — real DB-backed login/register with refresh token rotation."""
 
-import bcrypt
 from datetime import datetime, timedelta, timezone
+from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,8 @@ from backend.core.security import (
     verify_refresh_token,
     generate_api_key,
     verify_token,
+    hash_password,
+    verify_password,
 )
 
 from backend.database.connection import get_db
@@ -33,8 +35,17 @@ router = APIRouter()
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: Optional[str] = None
+    username: Optional[str] = None
     password: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_login(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("email"):
+                data["email"] = data.get("username") or ""
+        return data
 
 
 class UserRegister(BaseModel):
@@ -42,6 +53,17 @@ class UserRegister(BaseModel):
     password: str
     full_name: str = ""
     username: str = ""
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
 
 
 class Token(BaseModel):
@@ -71,22 +93,12 @@ class UserOut(BaseModel):
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
-def _hash_pw(plain: str) -> str:
-    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
-
-
-def _verify_pw(plain: str, hashed: str) -> bool:
-    try:
-        return bcrypt.checkpw(plain.encode(), hashed.encode())
-    except Exception:
-        return False
-
-
 async def _make_token(user: User, db: AsyncSession) -> dict:
     """Create token pair and persist refresh token to DB."""
     access_expire = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_expire = timedelta(days=7)
-    token_data = {"sub": user.email, "role": user.role, "user_id": str(user.id)}
+    uid = user.id if getattr(user, "id", None) is not None else 1
+    token_data = {"sub": user.email, "role": user.role, "user_id": str(uid)}
     access_token = create_access_token(token_data, expires_delta=access_expire)
     refresh_token_str, jti = create_refresh_token(token_data, expires_delta=refresh_expire)
     # Persist refresh token JTI to DB
@@ -96,12 +108,12 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
     # Actually, the python 3.11 warning suggests we just use .now(timezone.utc). 
     # Let's strip tzinfo for SQLAlchemy's default DateTime column.
     expires_at = expires_at.replace(tzinfo=None)
-    await store_refresh_token(db, int(user.id), jti, expires_at)  # type: ignore
+    await store_refresh_token(db, int(uid), jti, expires_at)  # type: ignore
     return {
         "access_token": access_token,
         "refresh_token": refresh_token_str,
         "token_type": "bearer",
-        "user_id": str(user.id),
+        "user_id": str(uid),
         "role": user.role,
         "email": user.email,
     }
@@ -128,7 +140,7 @@ async def register(
         email=user.email,
         username=username,
         full_name=user.full_name,
-        hashed_password=_hash_pw(user.password),
+        hashed_password=hash_password(user.password),
         role="user",
         is_active=True,
     )
@@ -144,9 +156,10 @@ async def register(
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin, request: Request, db: AsyncSession = Depends(get_db)):
     """Login with email + password → JWT pair."""
-    result = await db.execute(select(User).where(User.email == credentials.email))
+    login_id = credentials.email or credentials.username or ""
+    result = await db.execute(select(User).where((User.email == login_id) | (User.username == login_id)))
     user = result.scalar_one_or_none()
-    if not user or not _verify_pw(credentials.password, str(user.hashed_password)):  # type: ignore
+    if not user or not verify_password(credentials.password, str(user.hashed_password)):  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -293,3 +306,106 @@ async def revoke_api_key(
     ak.is_active = False  # type: ignore
     await db.commit()
     return {"message": "API key revoked"}
+
+
+# ── Password Reset & Email Verification Flows ─────────────────────────────────
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Initiate password reset. Generates a token and logs/emails reset instructions."""
+    result = await db.execute(select(User).where(User.email == body.email))
+    user = result.scalar_one_or_none()
+    if not user:
+        # Prevent user enumeration: return success even if email doesn't exist
+        return {"message": "If this email exists, instructions have been sent."}
+
+    import secrets
+    reset_token = secrets.token_urlsafe(32)
+    # Store token in Redis cache with 15-minute expiration
+    cache_key = f"reset_token:{reset_token}"
+    await cache.set(cache_key, str(user.email), ttl=15 * 60)
+
+    # Log reset instructions (in production, this would send an email via SMTP/Resend)
+    logger.info(f"[AUTH] Password reset requested for {body.email}. Token: {reset_token}")
+    return {"message": "If this email exists, instructions have been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Complete password reset using verification token."""
+    cache_key = f"reset_token:{body.token}"
+    email = await cache.get(cache_key)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    result = await db.execute(select(User).where(User.email == str(email)))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update password
+    user.hashed_password = hash_password(body.new_password)  # type: ignore
+    
+    # Revoke token
+    await cache.delete(cache_key)
+
+    # Invalidate all current sessions for security
+    session_result = await db.execute(
+        select(RefreshToken).where(
+            RefreshToken.user_id == int(user.id),
+            RefreshToken.revoked == False,  # noqa: E712
+        )
+    )
+    tokens = session_result.scalars().all()
+    for rt in tokens:
+        rt.revoked = True  # type: ignore
+        if rt.token_jti:
+            await cache.set(f"revoked_jti:{rt.token_jti}", "1", ttl=7 * 24 * 60 * 60)
+
+    await db.commit()
+    logger.info(f"Password reset successfully for user: {email}")
+    return {"message": "Password reset successfully. All active sessions revoked."}
+
+
+@router.post("/verify-email")
+async def verify_email(
+    body: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify user email address using verification token."""
+    cache_key = f"verify_token:{body.token}"
+    email = await cache.get(cache_key)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+    result = await db.execute(select(User).where(User.email == str(email)))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_active = True  # type: ignore
+    await cache.delete(cache_key)
+    await db.commit()
+
+    logger.info(f"Email verified successfully for: {email}")
+    return {"message": "Email verified successfully."}
+

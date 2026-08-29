@@ -1,114 +1,21 @@
-.sidebar {
-  width: 240px;
-  background: var(--color-bg);
-  height: calc(100vh - 64px);
-  position: sticky;
-  top: 64px;
-  z-index: 900;
-  overflow-y: auto;
-  border-right: 1px solid var(--color-border);
-  flex-shrink: 0;
+/* Sidebar.css */
+/* Tailwind classes handle most styling in Sidebar.jsx */
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.sidebar.collapsed {
-  width: 72px;
+/* Custom scrollbar for sidebar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
 }
-
-.sidebar-nav {
-  padding: var(--space-4) 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-  border-left: 3px solid transparent;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.sidebar-link:hover {
-  background: var(--color-surface);
-}
-
-.sidebar-link.active {
-  background: var(--saffron-100);
-  color: var(--color-text-primary);
-  border-left-color: var(--saffron-500);
-}
-
-.sidebar-link svg {
-  flex-shrink: 0;
-}
-
-.sidebar-toggle-btn {
+.scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
-  border: none;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  width: 100%;
-  padding: var(--space-4) 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
-
-.sidebar-toggle-btn:hover {
-  background: var(--color-surface);
-  color: var(--color-text-primary);
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
-
-/* Mobile Bottom Navigation Bar (below 640px) */
-.mobile-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(11, 13, 20, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 1000;
-  padding: 4px 0;
-}
-
-.mobile-nav-link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 0.65rem;
-  font-weight: 500;
-  flex: 1;
-  text-align: center;
-}
-
-.mobile-nav-link.active {
-  color: var(--saffron-500);
-}
-
-.mobile-nav-label {
-  font-family: var(--font-body);
-}
-
-@media (max-width: 640px) {
-  .sidebar {
-    display: none;
-  }
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
 }

@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 
+const ExpansionCockpit = lazy(() => import('./pages/ExpansionCockpit'));
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const ResilienceCockpit = lazy(() => import('./pages/ResilienceCockpit'));
 const Simulator        = lazy(() => import('./pages/Simulator'));
@@ -12,6 +13,7 @@ const Forecast         = lazy(() => import('./pages/Forecast'));
 const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
 const Recommendations  = lazy(() => import('./pages/Recommendations'));
 const LocalEvents      = lazy(() => import('./pages/LocalEvents'));
+const Playbooks        = lazy(() => import('./pages/Playbooks'));
 const Login            = lazy(() => import('./pages/Login'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
 
@@ -21,10 +23,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 import PrivateRoute from './components/PrivateRoute';
 import RangoliLoader from './components/RangoliLoader';
 import LiveSocketListener from './components/LiveSocketListener';
+import CommandPalette from './components/CommandPalette';
+import OperationsPulse from './components/OperationsPulse';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from 'sonner';
+
+import GradientMesh from './components/GradientMesh';
 
 import './App.css';
 
@@ -66,6 +72,24 @@ function AnimatedPage({ children }) {
 function AppContent() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    const handleCustomOpen = () => setCommandPaletteOpen(true);
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('darkstori:open-command-palette', handleCustomOpen);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('darkstori:open-command-palette', handleCustomOpen);
+    };
+  }, []);
 
   if (isLoginPage) {
     return (
@@ -81,13 +105,16 @@ function AppContent() {
   return (
     <div className="app">
       <Navbar />
+      <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <OperationsPulse />
       <div className="app-container">
         <Sidebar />
         <main className="main-content">
           <Suspense fallback={<RangoliLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/"              element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
+                <Route path="/"              element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/dashboard"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
                 <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><ResilienceCockpit /></AnimatedPage></PrivateRoute>} />
                 <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><Simulator /></AnimatedPage></PrivateRoute>} />
                 <Route path="/neighborhoods" element={<PrivateRoute><AnimatedPage><Neighborhoods /></AnimatedPage></PrivateRoute>} />
@@ -96,6 +123,7 @@ function AppContent() {
                 <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><AlgorithmLab /></AnimatedPage></PrivateRoute>} />
                 <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><Recommendations /></AnimatedPage></PrivateRoute>} />
                 <Route path="/events"        element={<PrivateRoute><AnimatedPage><LocalEvents /></AnimatedPage></PrivateRoute>} />
+                <Route path="/playbooks"     element={<PrivateRoute><AnimatedPage><Playbooks /></AnimatedPage></PrivateRoute>} />
                 <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
                 <Route path="*"              element={<Navigate to="/not-found" replace />} />
               </Routes>
@@ -110,6 +138,7 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="darkstori-ui-theme">
+      <GradientMesh />
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <CityProvider>

@@ -1,6 +1,6 @@
 """Security utilities — JWT with refresh rotation, API key auth, session management."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import secrets
 from typing import Dict, Optional, Tuple
@@ -18,16 +18,20 @@ from backend.core.cache import cache
 from backend.database.connection import get_db
 from backend.database.models.models import ApiKey, RefreshToken, User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
+
 security = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8")[:72], bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8")[:72], hashed_password.encode("utf-8"))
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -44,13 +48,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
 
-    to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
 
     encoded_jwt = jwt.encode(
         to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
@@ -64,12 +68,12 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
     to_encode = data.copy()
     jti = secrets.token_hex(16)
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=7)
+        expire = datetime.now(timezone.utc) + timedelta(days=7)
     to_encode.update({
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "type": "refresh",
         "jti": jti
     })
@@ -132,8 +136,11 @@ async def verify_token(
 ) -> Dict:
     """Verify access token and check revocation status."""
     payload = decode_token(credentials.credentials)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
     exp = payload.get("exp")
-    if exp and datetime.utcfromtimestamp(exp) < datetime.utcnow():
+    if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
 
     token_type = payload.get("type")
@@ -149,11 +156,14 @@ async def verify_token(
 async def verify_refresh_token(token_str: str, db: AsyncSession) -> Dict:
     """Verify a refresh token string. Used by /refresh endpoint."""
     payload = decode_token(token_str)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
     exp = payload.get("exp")
-    if exp and datetime.utcfromtimestamp(exp) < datetime.utcnow():
+    if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token has expired")
 
     jti = payload.get("jti")
@@ -195,7 +205,7 @@ async def verify_api_key(request: Request, db: AsyncSession = Depends(get_db)) -
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or inactive API key")
 
     # Update last used
-    ak.last_used_at = datetime.utcnow()
+    ak.last_used_at = datetime.now(timezone.utc)
     await db.commit()
 
     # Get user email

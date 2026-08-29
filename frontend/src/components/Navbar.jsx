@@ -1,8 +1,11 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Bell, LogOut, User, ChevronDown } from 'lucide-react';
+import { Store, Bell, LogOut, User, ChevronDown, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import CitySelector from './CitySelector';
+import ConnectionStatus from './ui/connection-status';
+import { ThemeToggle } from './ThemeToggle';
+import { useSocketStore } from '../stores/socketStore';
 import './Navbar.css';
 import './CitySelector.css';
 
@@ -12,46 +15,11 @@ const Navbar = memo(() => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Notifications State & Logic
+  // Notifications State & Logic from Store
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'info',
-      message: 'Zero-Waste Engine: Initialized. Demographics sync complete.',
-      timestamp: '5m ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'success',
-      message: 'Model loaded: demand_forecasting_model v2.4.1 in Production.',
-      timestamp: '15m ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'warning',
-      message: 'Model Drift: Pincode 560001 population drift KS-stat=0.142.',
-      timestamp: '1h ago',
-      read: true
-    }
-  ]);
   const notifRef = useRef(null);
-
+  const { notifications, markAllRead, markRead, clearNotifications } = useSocketStore();
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const markAsRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -66,26 +34,6 @@ const Navbar = memo(() => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  useEffect(() => {
-    const handleNewNotification = (e) => {
-      const { type, message } = e.detail || {};
-      if (message) {
-        setNotifications(prev => [
-          {
-            id: Date.now() + Math.random(),
-            type: type || 'info',
-            message,
-            timestamp: 'Just Now',
-            read: false
-          },
-          ...prev
-        ]);
-      }
-    };
-    window.addEventListener('darkstori:notification', handleNewNotification);
-    return () => window.removeEventListener('darkstori:notification', handleNewNotification);
-  }, []);
-
   const initials = user?.email ? user.email.charAt(0).toUpperCase() : 'A';
 
   return (
@@ -97,7 +45,21 @@ const Navbar = memo(() => {
       <div className="navbar-actions">
         {isAuthenticated && (
           <>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
+              className="flex md:w-52 items-center justify-center md:justify-between bg-transparent md:bg-card/50 hover:bg-accent/40 md:border border-transparent md:border-border rounded-lg md:px-3 py-1.5 md:mr-2 cursor-pointer transition-all text-left group"
+              title="Search"
+            >
+              <div className="flex items-center gap-2">
+                <Search className="text-muted-foreground group-hover:text-foreground transition-colors w-[18px] h-[18px] md:w-[14px] md:h-[14px]" />
+                <span className="hidden md:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">Search & actions...</span>
+              </div>
+              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary/80 text-muted-foreground border border-border/50">⌘K</kbd>
+            </button>
+            
             <CitySelector />
+            <ConnectionStatus />
+            <ThemeToggle />
             
             {/* Notification Drawer Container */}
             <div className="notification-container" ref={notifRef}>
@@ -116,7 +78,7 @@ const Navbar = memo(() => {
                     <h3>Telemetry Notifications</h3>
                     <div className="notification-header-actions">
                       {unreadCount > 0 && (
-                        <button className="mark-read-btn" onClick={markAllAsRead}>
+                        <button className="mark-read-btn" onClick={() => notifications.forEach(n => markRead(n.id))}>
                           Mark all
                         </button>
                       )}
@@ -136,7 +98,7 @@ const Navbar = memo(() => {
                         <div 
                           key={n.id} 
                           className={`notification-item ${n.read ? 'read' : 'unread'} ${n.type}`}
-                          onClick={() => markAsRead(n.id)}
+                          onClick={() => markRead(n.id)}
                         >
                           <div className="notification-icon-wrap">
                             <span className="notification-dot" />
@@ -156,7 +118,7 @@ const Navbar = memo(() => {
             <div className="user-menu" ref={menuRef}>
               <button className="user-button" onClick={() => setMenuOpen((v) => !v)}>
                 <span className="user-avatar">{initials}</span>
-                <span className="user-name">{user?.email?.split('@')[0] || 'User'}</span>
+                <span className="hidden sm:inline user-name">{user?.email?.split('@')[0] || 'User'}</span>
                 <ChevronDown size={14} className={`user-chevron ${menuOpen ? 'open' : ''}`} />
               </button>
               {menuOpen && (
@@ -166,14 +128,12 @@ const Navbar = memo(() => {
                     <span className="user-dropdown-role">Role: <strong>{user?.role}</strong></span>
                   </div>
                   <div className="user-dropdown-divider" />
-                  <div style={{ padding: '8px 16px' }}>
-                    <label style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Switch Role (Demo):</label>
+                  <div className="px-4 py-2">
+                    <label className="text-[0.75rem] text-muted-foreground block mb-1">Switch Role (Demo):</label>
                     <select
                       value={user?.role || 'admin'}
-                      onChange={(e) => {
-                        setRole(e.target.value);
-                      }}
-                      style={{ width: '100%', background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: '4px', padding: '4px', fontSize: '0.8rem', cursor: 'pointer' }}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="w-full bg-surface border border-border text-foreground rounded px-2 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="admin">Admin</option>
                       <option value="expansion_lead">Expansion Lead</option>

@@ -37,7 +37,8 @@ async def list_forecast_neighborhoods(
 ):
     """Fetch available pincodes/neighborhoods for forecasting."""
     try:
-        q = select(Neighborhood).order_by(Neighborhood.neighborhood_name.asc())
+        from sqlalchemy.orm import selectinload
+        q = select(Neighborhood).options(selectinload(Neighborhood.city)).order_by(Neighborhood.neighborhood_name.asc())
         res = await db.execute(q)
         rows = res.scalars().all()
 
@@ -90,7 +91,7 @@ async def list_forecast_neighborhoods(
             NeighborhoodOption(
                 pincode=str(n.pincode) if n.pincode else "560001", # type: ignore
                 neighborhood_name=str(n.neighborhood_name) if n.neighborhood_name else "Unknown Zone", # type: ignore
-                city="Bangalore",  # fallback
+                city=str(n.city.city_name) if getattr(n, "city", None) and n.city else "Unknown",
                 population=int(n.population) if getattr(n, "population", None) else 50000, # type: ignore
                 population_density=float(n.population_density) if getattr(n, "population_density", None) else 5000.0, # type: ignore
                 avg_household_income=float(n.avg_household_income) if getattr(n, "avg_household_income", None) else 500000.0 # type: ignore
@@ -144,7 +145,6 @@ async def list_forecast_neighborhoods(
 
 
 @router.post("/predict", response_model=PredictionResponse)
-@idempotent(timeout=3600)
 async def predict_demand(
     request: PredictionRequest,
     db: AsyncSession = Depends(get_db),

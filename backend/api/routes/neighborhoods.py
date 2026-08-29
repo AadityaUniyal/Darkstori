@@ -87,11 +87,11 @@ async def get_focus_cities(
     if not cities:
         # Fallback to realistic focus cities
         dummy = [
-            (1, "Bangalore", "Karnataka", "DEEP", 12, 24, "Mature", 12000000, 709.0, 150),
-            (2, "Delhi", "Delhi", "DEEP", 8, 16, "Mature", 16000000, 1484.0, 220),
-            (3, "Mumbai", "Maharashtra", "DEEP", 10, 20, "Mature", 18000000, 603.0, 180),
-            (4, "Hyderabad", "Telangana", "MEDIUM", 7, 15, "Growth", 10000000, 625.0, 110),
-            (5, "Pune", "Maharashtra", "MEDIUM", 5, 10, "Growth", 7000000, 331.0, 85),
+            (1, "Metro Central", "Demo State", "DEEP", 12, 24, "Mature", 12000000, 709.0, 150),
+            (2, "Business District", "Demo State", "DEEP", 8, 16, "Mature", 16000000, 1484.0, 220),
+            (3, "Residential Core", "Demo State", "DEEP", 10, 20, "Mature", 18000000, 603.0, 180),
+            (4, "Growth Corridor", "Demo State", "MEDIUM", 7, 15, "Growth", 10000000, 625.0, 110),
+            (5, "Transit Belt", "Demo State", "MEDIUM", 5, 10, "Growth", 7000000, 331.0, 85),
         ]
         return [
             CityResponse(
@@ -124,12 +124,12 @@ async def get_neighborhoods(
     if not neighborhoods:
         # Fallback to realistic neighborhoods
         dummy_nbhds = [
-            (1, 1, "Koramangala", "560034", 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
-            (2, 1, "Indiranagar", "560038", 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
-            (3, 1, "HSR Layout", "560102", 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
-            (4, 2, "Saket", "110017", 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
-            (5, 4, "Hitech City", "500081", 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
-            (6, 3, "Andheri West", "400053", 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
+            (1, 1, "Central Ward", "000001", 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
+            (2, 1, "North Market", "000002", 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
+            (3, 1, "Transit Hub", "000003", 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
+            (4, 2, "Residential Edge", "000004", 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
+            (5, 4, "Growth Corridor", "000005", 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
+            (6, 3, "Logistics Belt", "000006", 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
         ]
         res = [
             NeighborhoodResponse(
@@ -164,12 +164,12 @@ async def get_neighborhood_by_id(
     if not nbhd:
         # Check dummy list
         dummy_nbhds = {
-            1: (1, 1, "Koramangala", "560034", 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
-            2: (2, 1, "Indiranagar", "560038", 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
-            3: (3, 1, "HSR Layout", "560102", 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
-            4: (4, 2, "Saket", "110017", 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
-            5: (5, 4, "Hitech City", "500081", 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
-            6: (6, 3, "Andheri West", "400053", 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
+            1: (1, 1, "Central Ward", "000001", 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
+            2: (2, 1, "North Market", "000002", 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
+            3: (3, 1, "Transit Hub", "000003", 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
+            4: (4, 2, "Residential Edge", "000004", 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
+            5: (5, 4, "Growth Corridor", "000005", 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
+            6: (6, 3, "Logistics Belt", "000006", 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
         }
         if neighborhood_id in dummy_nbhds:
             nid, cid, name, pc, pop, age, inc, wp, ps, ts, comp, mps, rank = dummy_nbhds[neighborhood_id]

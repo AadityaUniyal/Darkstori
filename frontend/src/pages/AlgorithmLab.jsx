@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Terminal, Play, CheckCircle, AlertTriangle, ShieldCheck, RefreshCw, BarChart4, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_MODEL_REGISTRY, FALLBACK_SHAP_FEATURES, FALLBACK_RUN_COMPARISON } from '../constants/fallbacks';
 
 export default function AlgorithmLab() {
   const [compareRuns, setCompareRuns] = useState(false);
@@ -17,7 +21,7 @@ export default function AlgorithmLab() {
   });
 
   // Fetch Background Scheduler Jobs
-  const { data: jobsData, refetch: refetchJobs } = useQuery({
+  const { data: jobsData, isLoading: jobsLoading, refetch: refetchJobs } = useQuery({
     queryKey: ['scheduler-jobs-list'],
     queryFn: () => api.getSchedulerJobs(),
     refetchInterval: 5000 // Poll every 5 seconds to show updates
@@ -44,58 +48,51 @@ export default function AlgorithmLab() {
         ]);
         triggerTraining();
       } else {
-        window.alert(`Drift scan complete. Drift detected: ${data.drift_detected}. Auto-retraining is ${mlSettings?.auto_retrain_enabled ? 'ENABLED' : 'DISABLED'}.`);
+        toast.info(`Drift scan complete: ${data.drift_detected ? 'Drift Detected' : 'Distributions Stable'}. Auto-retraining is ${mlSettings?.auto_retrain_enabled ? 'ENABLED' : 'DISABLED'}.`);
       }
     }
   });
 
-  const modelRegistry = modelsData || [
-    { name: 'demand_forecasting_model', latest_version: '3.1.0', production_version: '3.0.0', staging_version: '3.1.0-rc', is_fallback: true }
-  ];
+  const modelRegistry = modelsData || FALLBACK_MODEL_REGISTRY;
 
   const hasFallbackModel = modelRegistry.some(m => m.is_fallback);
 
   // SHAP feature weights
-  const shapFeatures = [
-    { feature: 'lag_1_orders', value: 0.38 },
-    { feature: 'working_professionals_pct', value: 0.24 },
-    { feature: 'population_density', value: 0.18 },
-    { feature: 'avg_household_income', value: 0.12 },
-    { feature: 'price_sensitivity', value: 0.08 }
-  ];
+  const shapFeatures = FALLBACK_SHAP_FEATURES;
 
   // Comparison Runs Data
-  const runComparison = {
-    metrics: [
-      { name: 'R² Score', run_3_1_0: '0.88', run_2_4_1: '0.81', better: 'run_3_1_0' },
-      { name: 'MAPE %', run_3_1_0: '6.4%', run_2_4_1: '9.2%', better: 'run_3_1_0' },
-      { name: 'Training Time', run_3_1_0: '124s', run_2_4_1: '84s', better: 'run_2_4_1' },
-      { name: 'Validation Loss', run_3_1_0: '0.012', run_2_4_1: '0.028', better: 'run_3_1_0' }
-    ]
-  };
+  const runComparison = FALLBACK_RUN_COMPARISON;
 
   const triggerTraining = async () => {
     setIsTraining(true);
-    setTrainingLogs(prev => [...prev, '[INFO] Connecting to training pipeline...']);
-    const logs = [
-      '[INFO] Loading dataset from warehouse...',
-      '[INFO] Refitting time-series features (lag_1, lag_7)...',
-      '[INFO] Optimizing hyper-parameters with TimeSeriesSplit...',
-      '[INFO] XGBoost run MAPE: 6.42% (Accuracy: 93.58%)',
-      '[SUCCESS] Model refitted and weights saved. v3.1.1 registered successfully.'
-    ];
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < logs.length) {
-        setTrainingLogs(prev => [...prev, logs[i]]);
-        i++;
-      } else {
-        clearInterval(interval);
+    setTrainingLogs((prev) => [
+      ...prev,
+      `[${new Date().toLocaleTimeString()}] [INFO] Initiating POST /api/v1/ml/train call...`
+    ]);
+    try {
+      const res = await api.trainModel();
+      setTrainingLogs((prev) => [
+        ...prev,
+        `[${new Date().toLocaleTimeString()}] [INFO] ${res.message || 'Model training task started in background.'}`,
+        `[${new Date().toLocaleTimeString()}] [INFO] Polling background scheduler job history...`
+      ]);
+      
+      setTimeout(async () => {
+        await refetchJobs();
+        await refetchModels();
+        setTrainingLogs((prev) => [
+          ...prev,
+          `[${new Date().toLocaleTimeString()}] [SUCCESS] Background training pipeline complete. Model registry updated.`
+        ]);
         setIsTraining(false);
-        refetchModels();
-      }
-    }, 600);
+      }, 3000);
+    } catch (err) {
+      setTrainingLogs((prev) => [
+        ...prev,
+        `[${new Date().toLocaleTimeString()}] [ERROR] Retraining failed: ${err.response?.data?.detail || err.message}`
+      ]);
+      setIsTraining(false);
+    }
   };
 
   return (
@@ -142,32 +139,43 @@ export default function AlgorithmLab() {
                 Model Registry Info
               </h3>
               
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'var(--font-body)', fontSize: '0.88rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    <th style={{ padding: '8px 12px' }}>Model Name</th>
-                    <th style={{ padding: '8px 12px' }}>Prod Version</th>
-                    <th style={{ padding: '8px 12px' }}>Staging Version</th>
-                    <th style={{ padding: '8px 12px' }}>Latest</th>
-                    <th style={{ padding: '8px 12px' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {modelRegistry.map((m, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
-                      <td style={{ padding: '12px', fontWeight: 600, color: 'var(--color-text-primary)' }}>{m.name}</td>
-                      <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.production_version}</td>
-                      <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.staging_version}</td>
-                      <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.latest_version}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span className="badge badge-success" style={{ background: 'rgba(14, 124, 134, 0.15)', color: 'var(--peacock-500)', border: 'none' }}>
-                          {m.is_fallback ? 'OFFLINE FALLBACK' : 'MLFLOW SYNCED'}
-                        </span>
-                      </td>
+              {modelsLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 0' }}>
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[44px] w-full rounded-md" />)}
+                </div>
+              ) : modelRegistry.length === 0 ? (
+                <EmptyState
+                  title="No models registered"
+                  description="Connect MLflow tracking server or run a training job to populate the registry."
+                />
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'var(--font-body)', fontSize: '0.88rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                      <th style={{ padding: '8px 12px' }}>Model Name</th>
+                      <th style={{ padding: '8px 12px' }}>Prod Version</th>
+                      <th style={{ padding: '8px 12px' }}>Staging Version</th>
+                      <th style={{ padding: '8px 12px' }}>Latest</th>
+                      <th style={{ padding: '8px 12px' }}>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {modelRegistry.map((m, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
+                        <td style={{ padding: '12px', fontWeight: 600, color: 'var(--color-text-primary)' }}>{m.name}</td>
+                        <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.production_version}</td>
+                        <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.staging_version}</td>
+                        <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>v{m.latest_version}</td>
+                        <td style={{ padding: '12px' }}>
+                          <span className="badge badge-success" style={{ background: 'rgba(14, 124, 134, 0.15)', color: 'var(--peacock-500)', border: 'none' }}>
+                            {m.is_fallback ? 'OFFLINE FALLBACK' : 'MLFLOW SYNCED'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
               {/* SHAP */}
               <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
@@ -259,24 +267,35 @@ export default function AlgorithmLab() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {jobsData?.map((job) => (
-                <div key={job.job_name} style={{ background: 'var(--color-surface)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block' }}>{job.job_name}</span>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Interval: {job.interval_mins} mins</span>
+            {jobsLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-[48px] w-full rounded-md" />)}
+              </div>
+            ) : !jobsData || jobsData.length === 0 ? (
+              <EmptyState
+                title="No background jobs"
+                description="No scheduled background cron jobs registered."
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {jobsData?.map((job) => (
+                  <div key={job.job_name} style={{ background: 'var(--color-surface)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block' }}>{job.job_name}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Interval: {job.interval_mins} mins</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span className="badge" style={{ background: 'rgba(14, 124, 134, 0.15)', color: 'var(--peacock-500)', fontSize: '0.68rem', padding: '2px 6px' }}>
+                        {job.status}
+                      </span>
+                      <span style={{ fontSize: '0.68rem', display: 'block', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                        Last: {job.last_run ? new Date(job.last_run).toLocaleTimeString() : 'Never'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="badge" style={{ background: 'rgba(14, 124, 134, 0.15)', color: 'var(--peacock-500)', fontSize: '0.68rem', padding: '2px 6px' }}>
-                      {job.status}
-                    </span>
-                    <span style={{ fontSize: '0.68rem', display: 'block', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                      Last: {job.last_run ? new Date(job.last_run).toLocaleTimeString() : 'Never'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* MLOps Settings Panel */}

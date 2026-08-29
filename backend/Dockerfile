@@ -17,6 +17,10 @@ COPY .env.example .env
 RUN mkdir -p data models mlruns logs && \
     chmod +x docker-entrypoint.sh
 
+RUN adduser --disabled-password --gecos '' --uid 1001 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

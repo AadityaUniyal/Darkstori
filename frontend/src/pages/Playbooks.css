@@ -1,0 +1,512 @@
+/* ── Playbooks Page ────────────────────────────────────────────────── */
+.playbooks-page {
+  position: relative;
+  padding: 1.5rem 2rem;
+  min-height: 100vh;
+}
+
+/* Header */
+.playbooks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.playbooks-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.playbooks-header-icon {
+  color: var(--saffron-500);
+  filter: drop-shadow(0 0 6px var(--saffron-500));
+}
+
+.playbooks-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.playbooks-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
+}
+
+.playbook-create-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+}
+
+/* Stats Bar */
+.playbook-stats-bar {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0.85rem 1.5rem;
+  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 2;
+}
+
+.playbook-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.playbook-stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.playbook-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Create Form Card */
+.playbook-create-form-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.playbook-create-form-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.playbook-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.playbook-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.playbook-form-row label,
+.playbook-conditions-section label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.playbook-form-row input,
+.playbook-form-row select,
+.playbook-form-row-split input,
+.playbook-form-row-split select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.playbook-form-row input:focus,
+.playbook-form-row select:focus,
+.playbook-form-row-split input:focus,
+.playbook-form-row-split select:focus {
+  outline: none;
+  border-color: var(--saffron-500);
+}
+
+.playbook-form-row-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr 140px;
+  gap: 0.75rem;
+}
+
+.playbook-form-row-split > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.playbook-form-row-split > div label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Conditions Builder */
+.playbook-conditions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.playbook-condition-builder {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.playbook-condition-builder input,
+.playbook-condition-builder select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.playbook-condition-builder input {
+  flex: 1;
+}
+
+.btn-outline-sm {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--saffron-500);
+  color: var(--saffron-500);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline-sm:hover {
+  background: rgba(var(--saffron-500-rgb, 245, 158, 11), 0.1);
+}
+
+.playbook-conditions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.playbook-condition-chip,
+.playbook-condition-chip-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  background: rgba(var(--saffron-500-rgb, 245, 158, 11), 0.12);
+  color: var(--saffron-500);
+  border-radius: 20px;
+  border: 1px solid rgba(var(--saffron-500-rgb, 245, 158, 11), 0.3);
+}
+
+.playbook-condition-chip button {
+  background: none;
+  border: none;
+  color: var(--saffron-500);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+}
+
+/* Playbooks Grid */
+.playbooks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.playbook-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 1.15rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.25s;
+  position: relative;
+}
+
+.playbook-card:hover {
+  border-color: var(--saffron-500);
+  box-shadow: 0 0 20px rgba(var(--saffron-500-rgb, 245, 158, 11), 0.08);
+}
+
+.playbook-paused {
+  opacity: 0.55;
+}
+
+.playbook-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.playbook-trigger-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.playbook-card-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.playbook-card-title h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.playbook-status-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.playbook-status-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.playbook-status-badge.paused {
+  background: rgba(156, 163, 175, 0.15);
+  color: var(--text-muted);
+}
+
+.playbook-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}
+
+.playbook-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.playbook-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.playbook-conditions-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.playbook-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+
+.playbook-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playbook-action-btn:hover {
+  border-color: var(--saffron-500);
+  color: var(--saffron-500);
+}
+
+.playbook-action-btn.delete:hover {
+  border-color: var(--spice-500);
+  color: var(--spice-500);
+}
+
+.playbook-action-btn.play:hover {
+  border-color: var(--peacock-500);
+  color: var(--peacock-500);
+}
+
+.playbook-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem;
+}
+
+/* Executions Section */
+.playbook-executions-section {
+  position: relative;
+  z-index: 2;
+}
+
+.playbook-executions-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.playbook-executions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.playbook-exec-row {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.playbook-exec-row:hover {
+  border-color: var(--saffron-500);
+}
+
+.exec-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.exec-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.exec-playbook-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.exec-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.exec-status-badge[data-status="success"] {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.exec-status-badge[data-status="failed"] {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.exec-status-badge[data-status="skipped"] {
+  background: rgba(156, 163, 175, 0.12);
+  color: var(--text-muted);
+}
+
+.exec-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.exec-detail {
+  overflow: hidden;
+}
+
+.exec-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.exec-detail-grid strong {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.exec-detail-grid pre {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 0.6rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  max-height: 180px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

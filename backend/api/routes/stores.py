@@ -88,12 +88,12 @@ async def get_stores(
 
 
 @router.get("/stats")
-async def get_store_stats(db: AsyncSession = Depends(get_db)):
+async def get_store_stats(db: AsyncSession = Depends(get_db), payload: dict = Depends(verify_token)):
     """Get store statistics."""
     # Total stores
     total_query = select(func.count(DarkStore.id)).where(DarkStore.is_active.is_(True))
     total_result = await db.execute(total_query)
-    total_stores = total_result.scalar()
+    total_stores = total_result.scalar() or 0
 
     # By platform
     platform_query = (
@@ -103,7 +103,7 @@ async def get_store_stats(db: AsyncSession = Depends(get_db)):
     )
 
     platform_result = await db.execute(platform_query)
-    by_platform = {row[0]: row[1] for row in platform_result}
+    by_platform = {row[0]: row[1] for row in platform_result.all()}
 
     # By city tier
     tier_query = (
@@ -113,7 +113,7 @@ async def get_store_stats(db: AsyncSession = Depends(get_db)):
     )
 
     tier_result = await db.execute(tier_query)
-    by_tier = {row[0]: row[1] for row in tier_result}
+    by_tier = {row[0]: row[1] for row in tier_result.all()}
 
     return {
         "total_stores": total_stores,

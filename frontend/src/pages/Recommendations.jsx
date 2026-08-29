@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Sparkles, Layers, TrendingUp, IndianRupee, FileDown, Terminal, Globe, ShieldAlert, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
 
 const TRANSLATIONS = {
   en: {
@@ -102,18 +104,18 @@ export default function Recommendations() {
     queryFn: () => api.getNeighborhoods(),
   });
 
-  const { data: auditLogs } = useQuery({
+  const { data: auditLogs, isLoading: auditLoading } = useQuery({
     queryKey: ['audit-logs-list'],
     queryFn: () => api.getAuditLogs(),
     refetchInterval: 5000
   });
 
   const neighborhoodList = nbhds && nbhds.length > 0 ? nbhds : [
-    { neighborhood_id: 1, neighborhood_name: 'Koramangala' },
-    { neighborhood_id: 2, neighborhood_name: 'Indiranagar' },
-    { neighborhood_id: 3, neighborhood_name: 'HSR Layout' },
-    { neighborhood_id: 4, neighborhood_name: 'Saket' },
-    { neighborhood_id: 5, neighborhood_name: 'Hitech City' },
+    { neighborhood_id: 1, neighborhood_name: 'Central Ward' },
+    { neighborhood_id: 2, neighborhood_name: 'North Market' },
+    { neighborhood_id: 3, neighborhood_name: 'Transit Hub' },
+    { neighborhood_id: 4, neighborhood_name: 'Residential Edge' },
+    { neighborhood_id: 5, neighborhood_name: 'Growth Corridor' },
   ];
 
   const { data: recData, isLoading, refetch } = useQuery({
@@ -206,8 +208,8 @@ export default function Recommendations() {
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', color: 'var(--color-text-muted)' }}>
-          Loading AI Recommendations Engine...
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[280px] w-full rounded-2xl" />)}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -379,52 +381,56 @@ export default function Recommendations() {
               Historical audit log of approved store deployments, tracking the specific model credentials and parameters utilized at validation.
             </span>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
-                  <th style={{ padding: '8px 6px' }}>Store Name</th>
-                  <th style={{ padding: '8px 6px' }}>Approver</th>
-                  <th style={{ padding: '8px 6px' }}>Model Version</th>
-                  <th style={{ padding: '8px 6px' }}>Capex</th>
-                  <th style={{ padding: '8px 6px' }}>Daily Orders (Proj)</th>
-                  <th style={{ padding: '8px 6px' }}>Approved Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditLogs?.map((log) => {
-                  const prov = log.new_state?.decision_provenance;
-                  return (
-                    <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: '10px 6px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                        {log.new_state?.store_provisioned || "Darkstore Hub"}
-                      </td>
-                      <td style={{ padding: '10px 6px', color: 'var(--color-text-secondary)' }}>
-                        {prov?.approver?.email || "regional_head@darkstori.com"}
-                      </td>
-                      <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
-                        v{prov?.model_version || "3.1.0"}
-                      </td>
-                      <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
-                        ₹{(prov?.parameters_snapshot?.investment || 1500000).toLocaleString('en-IN')}
-                      </td>
-                      <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
-                        {prov?.parameters_snapshot?.predicted_daily_orders || 240} orders
-                      </td>
-                      <td style={{ padding: '10px 6px', color: 'var(--color-text-muted)' }}>
-                        {new Date(log.created_at).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {(!auditLogs || auditLogs.length === 0) && (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                      No store approval audit logs found. Approve a simulated site to seed.
-                    </td>
+            {auditLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 0' }}>
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-[48px] w-full rounded-md" />)}
+              </div>
+            ) : !auditLogs || auditLogs.length === 0 ? (
+              <EmptyState
+                title="No approval audit logs"
+                description="No store approval audit logs found. Approve a simulated site to seed."
+              />
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                    <th style={{ padding: '8px 6px' }}>Store Name</th>
+                    <th style={{ padding: '8px 6px' }}>Approver</th>
+                    <th style={{ padding: '8px 6px' }}>Model Version</th>
+                    <th style={{ padding: '8px 6px' }}>Capex</th>
+                    <th style={{ padding: '8px 6px' }}>Daily Orders (Proj)</th>
+                    <th style={{ padding: '8px 6px' }}>Approved Date</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {auditLogs?.map((log) => {
+                    const prov = log.new_state?.decision_provenance;
+                    return (
+                      <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '10px 6px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                          {log.new_state?.store_provisioned || "Darkstore Hub"}
+                        </td>
+                        <td style={{ padding: '10px 6px', color: 'var(--color-text-secondary)' }}>
+                          {prov?.approver?.email || "regional_head@darkstori.com"}
+                        </td>
+                        <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
+                          v{prov?.model_version || "3.1.0"}
+                        </td>
+                        <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
+                          ₹{(prov?.parameters_snapshot?.investment || 1500000).toLocaleString('en-IN')}
+                        </td>
+                        <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
+                          {prov?.parameters_snapshot?.predicted_daily_orders || 240} orders
+                        </td>
+                        <td style={{ padding: '10px 6px', color: 'var(--color-text-muted)' }}>
+                          {new Date(log.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* DEVELOPER API SURFACE */}

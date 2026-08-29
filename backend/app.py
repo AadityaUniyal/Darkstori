@@ -22,6 +22,11 @@ from backend.api.routes import (
     analytics_heatmap,
     ml_models,
     events,
+    playbooks,
+    cannibalization,
+    mood_score,
+    expansion,
+    geo,
 )
 import asyncio
 import socketio
@@ -57,6 +62,8 @@ async def lifespan(app: FastAPI):
     """Handle startup and shutdown events."""
     # Startup
     logger.info("Starting Darkstori — Hyperlocal Delivery Intelligence API...")
+    scheduler_task = None
+    heartbeat_task = None
 
     # Validate production configuration
     if settings.ENVIRONMENT == "production":
@@ -91,6 +98,10 @@ async def lifespan(app: FastAPI):
         from backend.database.realtime_listener import start_realtime_listener
         listener_task = asyncio.create_task(start_realtime_listener(sio))
         logger.info("[OK] Database listener background task spawned")
+    else:
+        from backend.database.realtime_listener import start_sqlite_polling_listener
+        listener_task = asyncio.create_task(start_sqlite_polling_listener(sio))
+        logger.info("[OK] SQLite polling listener background task spawned")
 
     # Initialize cache layer
     await redis_cache.init()
@@ -100,6 +111,20 @@ async def lifespan(app: FastAPI):
     from backend.utils.scheduler import global_scheduler
     scheduler_task = asyncio.create_task(global_scheduler.run())
     logger.info("[OK] Background scheduler task spawned")
+
+    # Start WebSocket heartbeat
+    async def websocket_heartbeat():
+        while True:
+            try:
+                await sio.emit('heartbeat', {'ts': asyncio.get_event_loop().time()})
+                await asyncio.sleep(25)
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                await asyncio.sleep(25)
+    
+    heartbeat_task = asyncio.create_task(websocket_heartbeat())
+    logger.info("[OK] WebSocket heartbeat task spawned")
 
     # Start MLflow server if enabled
     if mlflow_config.enable_tracking and get_server_manager is not None:
@@ -143,6 +168,14 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             logger.info("Scheduler task cancelled cleanly")
 
+    if heartbeat_task:
+        logger.info("Cancelling WebSocket heartbeat task...")
+        heartbeat_task.cancel()
+        try:
+            await heartbeat_task
+        except asyncio.CancelledError:
+            logger.info("WebSocket heartbeat task cancelled cleanly")
+
     if listener_task:
         logger.info("Cancelling database listener task...")
         listener_task.cancel()
@@ -181,6 +214,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from backend.core.idempotency import IdempotencyMiddleware  # noqa: E402
+
 # Metrics middleware (add early to time the whole request)
 app.add_middleware(MetricsMiddleware)
 
@@ -193,12 +228,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Idempotency middleware for mutation endpoints (added first so it processes before GZip compression)
+app.add_middleware(IdempotencyMiddleware)
+
 # GZip compression
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
+# Multi-tenancy organization scoping middleware
+@app.middleware("http")
+async def tenant_scoping_middleware(request, call_next):
+    from backend.core.tenant import set_current_tenant_id, clear_current_tenant_id
+    from backend.core.security import decode_token
+
+    auth_header = request.headers.get("Authorization")
+    tenant_id = None
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = decode_token(token)
+            # Support both org_id and organization_id claims
+            oid = payload.get("org_id") or payload.get("organization_id")
+            if oid:
+                tenant_id = int(oid)
+        except Exception:
+            pass
+
+    set_current_tenant_id(tenant_id)
+    try:
+        response = await call_next(request)
+    finally:
+        clear_current_tenant_id()
+    return response
+
 
 # Initialize Socket.io server (configured with CORS allowed origins and mounted after middleware)
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.ALLOWED_ORIGINS)
 app.mount("/socket.io", socketio.ASGIApp(sio))
+
+# Socket.IO event handlers
+@sio.event
+async def connect(sid, environ):
+    """Handle new WebSocket connection."""
+    logger.info(f"[WebSocket] Client connected: {sid}")
+
+@sio.event
+async def disconnect(sid):
+    """Handle WebSocket disconnection."""
+    logger.info(f"[WebSocket] Client disconnected: {sid}")
+
+@sio.event
+async def join_room(sid, data):
+    """Allow clients to join tenant-specific rooms."""
+    room = data.get('room', 'global') if isinstance(data, dict) else 'global'
+    sio.enter_room(sid, room)
+    logger.info(f"[WebSocket] Client {sid} joined room: {room}")
+
+@sio.event 
+async def leave_room(sid, data):
+    """Allow clients to leave rooms."""
+    room = data.get('room', 'global') if isinstance(data, dict) else 'global'
+    sio.leave_room(sid, room)
+    logger.info(f"[WebSocket] Client {sid} left room: {room}")
 
 # Health check endpoint
 
@@ -316,6 +407,13 @@ app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
 app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
 app.include_router(economics.router, prefix="/api/v1/economics", tags=["Unit Economics"])
 app.include_router(events.router, prefix="/api/v1/events", tags=["Local Events"])
+
+# ── Competitive Moat Features ──────────────────────────────────────────────────────
+app.include_router(playbooks.router, prefix="/api/v1/playbooks", tags=["Automation Playbooks"])
+app.include_router(cannibalization.router, prefix="/api/v1/cannibalization", tags=["Cannibalization Simulator"])
+app.include_router(mood_score.router, prefix="/api/v1/mood", tags=["Neighborhood Mood Score"])
+app.include_router(expansion.router, prefix="/api/v1/expansion", tags=["Expansion Intelligence"])
+app.include_router(geo.router, prefix="/api/v1/geo", tags=["Geo Intelligence"])
 
 # ── Seed Data ────────────────────────────────────────────────────────────────────
 app.include_router(seed_data.router, prefix="/api/v1", tags=["Seed Data"])

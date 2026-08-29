@@ -64,7 +64,8 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         * math.cos(math.radians(lat2))
         * math.sin(dlon / 2) ** 2
     )
-    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    a = min(1.0, max(0.0, a))
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(max(0.0, 1.0 - a)))
 
 
 def _simple_dbscan(coords: list, eps_km: float = 1.5, min_samples: int = 3):
@@ -124,42 +125,36 @@ async def get_opportunity_zones(
     # Check if database is PostgreSQL and try to use PostGIS ST_ClusterDBSCAN
     use_postgis = False
     clusters = {}
-    if getattr(db, "bind", None) and db.bind.dialect.name == "postgresql":
-        try:
-            from sqlalchemy import text
-            eps_meters = eps_km * 1000.0
-            sql = """
-                SELECT 
-                  id,
-                  platform,
-                  latitude,
-                  longitude,
-                  ST_ClusterDBSCAN(
-                    ST_Transform(ST_SetSRID(ST_MakePoint(longitude, latitude), 4326), 3857),
-                    eps := :eps_m,
-                    minpoints := :min_samples
-                  ) OVER() AS cid
-                FROM dark_stores
-                WHERE is_active = true
-            """
-            params = {"eps_m": eps_meters, "min_samples": min_stores}
-            if city:
-                sql += " AND city = :city"
-                params["city"] = city
+    try:
+        from sqlalchemy import text
+        eps_meters = eps_km * 1000.0
+        sql = """
+            SELECT 
+              id,
+              platform,
+              latitude,
+              longitude,
+              ST_ClusterDBSCAN(
+                ST_Transform(ST_SetSRID(ST_MakePoint(longitude, latitude), 4326), 3857),
+                eps := :eps_m,
+                minpoints := :min_samples
+              ) OVER() AS cid
+            FROM (
+                SELECT id, platform, latitude, longitude, city, is_active FROM dark_stores
+                UNION ALL
+                SELECT id, platform, latitude, longitude, city, is_active FROM competitor_stores
+            ) AS all_active_stores
+            WHERE is_active = true
+        """
+        params = {"eps_m": eps_meters, "min_samples": min_stores}
+        if city:
+            sql += " AND city = :city"
+            params["city"] = city
 
-            db_res = await db.execute(text(sql), params)
-            rows = db_res.mappings().all()
+        db_res = await db.execute(text(sql), params)
+        rows = db_res.mappings().all()
 
-            if len(rows) < min_stores:
-                # Use standard fallback zones if too few stores
-                return [
-                    OpportunityZone(
-                        cluster_id=0, centroid_lat=12.93, centroid_lng=77.62,
-                        store_count=5, dominant_platform="Zepto", platforms={"Zepto": 3, "Blinkit": 2},
-                        opportunity_score=85.0, zone_type="growth"
-                    )
-                ]
-
+        if len(rows) >= min_stores:
             for r in rows:
                 cid = r["cid"]
                 if cid is None:
@@ -169,17 +164,24 @@ async def get_opportunity_zones(
                 )
             use_postgis = True
             logger.info("Successfully calculated opportunity zones using PostGIS ST_ClusterDBSCAN")
-        except Exception as e:
-            logger.warning(f"PostGIS DBSCAN query failed, falling back to python DBSCAN: {e}")
-            use_postgis = False
+    except Exception as e:
+        logger.debug(f"PostGIS DBSCAN query not available, falling back to python DBSCAN: {e}")
+        use_postgis = False
 
     if not use_postgis:
+        from backend.database.models.models import CompetitorStore
         query = select(DarkStore).where(DarkStore.is_active.is_(True))
         if city:
             query = query.where(DarkStore.city == city)
 
         result = await db.execute(query)
-        stores = result.scalars().all()
+        stores = list(result.scalars().all())
+
+        comp_query = select(CompetitorStore).where(CompetitorStore.is_active.is_(True))
+        if city:
+            comp_query = comp_query.where(CompetitorStore.city == city)
+        comp_result = await db.execute(comp_query)
+        stores.extend(comp_result.scalars().all())
 
         if len(stores) < min_stores:
             # Fallback zones

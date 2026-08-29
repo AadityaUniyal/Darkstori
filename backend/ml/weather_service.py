@@ -208,24 +208,37 @@ async def _fetch_forecast_api(url: str, params: dict) -> dict:
         resp.raise_for_status()
         return resp.json()
 
-async def fetch_weather_forecast(pincode: str) -> Optional[dict]:
+async def fetch_weather_forecast(pincode: str) -> dict:
     """
-    Fetch hourly forecast from Open-Meteo API for the next 24 hours.
-    Returns a dict with alert message if rain is expected, or None.
+    Fetch live real-time forecast and weather conditions from Open-Meteo API.
+    Returns full telemetry including temperature, rain forecast, and demand surge multipliers.
     """
     city = _pincode_to_city(pincode)
     coords = CITY_COORDS.get(city, CITY_COORDS["Bangalore"])
+    cache_key = f"live_weather_radar:{city}"
+
+    try:
+        cached = await cache.get(cache_key)
+        if cached:
+            return json.loads(cached)
+    except Exception:
+        pass
 
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": coords["lat"],
         "longitude": coords["lng"],
-        "hourly": "precipitation,weathercode",
+        "current": "temperature_2m,precipitation,weather_code",
+        "hourly": "precipitation,weather_code",
         "timezone": "Asia/Kolkata",
         "forecast_days": 1,
     }
+    
     try:
         data = await _fetch_forecast_api(url, params)
+        current = data.get("current", {})
+        temp = current.get("temperature_2m", 28.5)
+        current_precip = current.get("precipitation", 0.0)
 
         hourly = data.get("hourly", {})
         times = hourly.get("time", [])
@@ -235,26 +248,66 @@ async def fetch_weather_forecast(pincode: str) -> Optional[dict]:
         current_time = datetime.now()
         rain_start: Optional[datetime] = None
         rain_end: Optional[datetime] = None
+        max_next_4h_precip = 0.0
 
         for t_str, p_val in zip(times, precip):
-            t = datetime.strptime(t_str, "%Y-%m-%dT%H:%M")
-            if current_time <= t <= current_time + timedelta(hours=4):
-                if p_val > 0.5:
-                    if rain_start is None:
-                        rain_start = t
-                    rain_end = t
+            try:
+                t = datetime.strptime(t_str, "%Y-%m-%dT%H:%M")
+                if current_time <= t <= current_time + timedelta(hours=4):
+                    max_next_4h_precip = max(max_next_4h_precip, p_val)
+                    if p_val > 0.5:
+                        if rain_start is None:
+                            rain_start = t
+                        rain_end = t
+            except Exception:
+                continue
 
+        is_rainy = max_next_4h_precip > 0.5 or current_precip > 0.5
+        condition = "Rainy" if is_rainy else ("Cloudy" if max_next_4h_precip > 0.1 else "Clear")
+        surge_multiplier = 1.25 if is_rainy else (1.08 if condition == "Cloudy" else 1.0)
+
+        alert_msg = None
         if rain_start and rain_end:
             start_hour = rain_start.strftime("%I%p").lstrip('0').lower()
             end_time = rain_end + timedelta(hours=1)
             end_hour = end_time.strftime("%I%p").lstrip('0').lower()
-            return {
-                "alert": f"Rain expected {start_hour}-{end_hour} — historically +22% order volume in similar conditions",
-                "is_rainy": True,
-                "city": city,
-            }
-    except Exception as e:
-        logger.warning(f"Failed to fetch forecast for {city}: {e}")
+            alert_msg = f"Monsoon Surge: Rain forecast {start_hour}-{end_hour} (Historically +22% to +35% volume surge)"
+        elif is_rainy:
+            alert_msg = "Live Rain Detected: +25% order volume surge active"
 
-    return None
+        telemetry = {
+            "city": city,
+            "pincode": pincode,
+            "temperature_c": round(float(temp), 1),
+            "precipitation_mm": round(float(current_precip), 1),
+            "condition": condition,
+            "is_rainy": is_rainy,
+            "surge_multiplier": surge_multiplier,
+            "alert": alert_msg,
+            "forecast_source": "Open-Meteo Live API",
+            "updated_at": datetime.now().isoformat()
+        }
+
+        try:
+            await cache.set(cache_key, json.dumps(telemetry), ttl=600) # Cache for 10 mins
+        except Exception:
+            pass
+
+        return telemetry
+    except Exception as e:
+        logger.warning(f"Failed to fetch live forecast for {city}: {e}, using seasonal fallback")
+        seasonal = _seasonal_heuristic(city, date.today())
+        is_rain = seasonal["is_rainy"]
+        return {
+            "city": city,
+            "pincode": pincode,
+            "temperature_c": seasonal["temperature_max"],
+            "precipitation_mm": seasonal["precipitation_sum"],
+            "condition": seasonal["weather_category"],
+            "is_rainy": is_rain,
+            "surge_multiplier": 1.22 if is_rain else 1.0,
+            "alert": f"Monsoon Surge: Expected rain in {city} (Weather Alert Active)" if is_rain else None,
+            "forecast_source": "Seasonal Climatology Engine",
+            "updated_at": datetime.now().isoformat()
+        }
 

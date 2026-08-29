@@ -32,8 +32,10 @@ from backend.database.models.models import (
 router = APIRouter()
 
 
+from backend.core.security import verify_admin
+
 @router.post("/seed-data")
-async def seed_database(db: AsyncSession = Depends(get_db)):
+async def seed_database(db: AsyncSession = Depends(get_db), _admin: dict = Depends(verify_admin)):
     """Seed the database with complete set of demo and analysis data."""
     try:
         logger.info("Starting database seeding...")

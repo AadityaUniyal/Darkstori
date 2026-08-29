@@ -12,18 +12,44 @@ async def test_get_opportunity_zones_sqlite_fallback():
     db.bind = MagicMock()
     db.bind.dialect.name = "sqlite"
     
-    # Mock return values for standard query select(DarkStore)
-    mock_store = MagicMock()
-    mock_store.latitude = 12.9345
-    mock_store.longitude = 77.6266
-    mock_store.platform = "Zepto"
-    mock_store.id = 1
-    mock_store.city = "Bangalore"
-    mock_store.is_active = True
-    
-    mock_result = MagicMock()
-    mock_result.scalars.return_value.all.return_value = [mock_store, mock_store, mock_store]
-    db.execute.return_value = mock_result
+    # Mock return values for DarkStore query
+    mock_dark_store1 = MagicMock()
+    mock_dark_store1.latitude = 12.9345
+    mock_dark_store1.longitude = 77.6266
+    mock_dark_store1.platform = "Zepto"
+    mock_dark_store1.id = 1
+    mock_dark_store1.city = "Bangalore"
+    mock_dark_store1.is_active = True
+
+    mock_dark_store2 = MagicMock()
+    mock_dark_store2.latitude = 12.9345
+    mock_dark_store2.longitude = 77.6266
+    mock_dark_store2.platform = "Zepto"
+    mock_dark_store2.id = 2
+    mock_dark_store2.city = "Bangalore"
+    mock_dark_store2.is_active = True
+
+    # Mock return values for CompetitorStore query
+    mock_comp_store = MagicMock()
+    mock_comp_store.latitude = 12.9345
+    mock_comp_store.longitude = 77.6266
+    mock_comp_store.platform = "Blinkit"
+    mock_comp_store.id = 3
+    mock_comp_store.city = "Bangalore"
+    mock_comp_store.is_active = True
+
+    mock_dark_result = MagicMock()
+    mock_dark_result.scalars.return_value.all.return_value = [mock_dark_store1, mock_dark_store2]
+
+    mock_comp_result = MagicMock()
+    mock_comp_result.scalars.return_value.all.return_value = [mock_comp_store]
+
+    # PostGIS attempt on SQLite fails / raises exception, triggering fallback to DarkStore and CompetitorStore queries
+    db.execute.side_effect = [
+        Exception("PostGIS ST_ClusterDBSCAN not supported on SQLite"),
+        mock_dark_result,
+        mock_comp_result,
+    ]
     
     # Run endpoint logic
     payload = {"sub": "test_user"}
@@ -32,7 +58,8 @@ async def test_get_opportunity_zones_sqlite_fallback():
     # Since all 3 mock stores have the same coords, they should cluster into 1 zone
     assert len(zones) > 0
     assert zones[0].store_count == 3
-    db.execute.assert_called_once() # Should only execute the SQLAlchemy select query once
+    assert zones[0].dominant_platform == "Zepto"
+    assert db.execute.call_count == 3
 
 
 @pytest.mark.asyncio
@@ -75,22 +102,43 @@ async def test_get_opportunity_zones_postgis_query_failure_fallback():
     db.bind.dialect.name = "postgresql"
     
     # Set up fallback select stores return values
-    mock_store = MagicMock()
-    mock_store.latitude = 12.9345
-    mock_store.longitude = 77.6266
-    mock_store.platform = "Zepto"
-    mock_store.id = 1
-    mock_store.city = "Bangalore"
-    mock_store.is_active = True
+    mock_dark_store1 = MagicMock()
+    mock_dark_store1.latitude = 12.9345
+    mock_dark_store1.longitude = 77.6266
+    mock_dark_store1.platform = "Zepto"
+    mock_dark_store1.id = 1
+    mock_dark_store1.city = "Bangalore"
+    mock_dark_store1.is_active = True
+
+    mock_dark_store2 = MagicMock()
+    mock_dark_store2.latitude = 12.9345
+    mock_dark_store2.longitude = 77.6266
+    mock_dark_store2.platform = "Zepto"
+    mock_dark_store2.id = 2
+    mock_dark_store2.city = "Bangalore"
+    mock_dark_store2.is_active = True
+
+    mock_comp_store = MagicMock()
+    mock_comp_store.latitude = 12.9345
+    mock_comp_store.longitude = 77.6266
+    mock_comp_store.platform = "Blinkit"
+    mock_comp_store.id = 3
+    mock_comp_store.city = "Bangalore"
+    mock_comp_store.is_active = True
     
-    mock_result_fallback = MagicMock()
-    mock_result_fallback.scalars.return_value.all.return_value = [mock_store, mock_store, mock_store]
+    mock_dark_result = MagicMock()
+    mock_dark_result.scalars.return_value.all.return_value = [mock_dark_store1, mock_dark_store2]
+
+    mock_comp_result = MagicMock()
+    mock_comp_result.scalars.return_value.all.return_value = [mock_comp_store]
     
     # First call (PostGIS query) raises exception
-    # Second call (Fallback SELECT query) succeeds
+    # Second call (Fallback DarkStore query) succeeds
+    # Third call (Fallback CompetitorStore query) succeeds
     db.execute.side_effect = [
         RuntimeError("ST_ClusterDBSCAN does not exist"), # postgis query fail
-        mock_result_fallback # fallback stores query
+        mock_dark_result,                                # dark stores query
+        mock_comp_result,                                # competitor stores query
     ]
     
     payload = {"sub": "test_user"}
@@ -98,4 +146,5 @@ async def test_get_opportunity_zones_postgis_query_failure_fallback():
     
     assert len(zones) > 0
     assert zones[0].store_count == 3
-    assert db.execute.call_count == 2
+    assert zones[0].dominant_platform == "Zepto"
+    assert db.execute.call_count == 3

@@ -16,6 +16,8 @@ from backend.ml.model_loader import ModelLoader
 from backend.ml.performance_monitor import PerformanceMonitor
 from backend.ml.schemas import PredictionRequest, PredictionResponse
 from backend.database.models.models import Neighborhood
+from backend.ml.holiday_service import is_india_holiday
+from backend.ml.weather_service import fetch_weather_for_date
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,15 @@ class PredictionService:
                 use_fallback = True
 
             dt = pd.to_datetime(request.order_date)
+            
+            # Fetch weather and holiday details concurrently
+            is_holiday = is_india_holiday(dt)
+            try:
+                weather_data = await fetch_weather_for_date(request.pincode, dt)
+            except Exception as e:
+                logger.warning(f"Could not fetch weather: {e}")
+                weather_data = {"is_cloudy": False, "is_rainy": False}
+
             pop = request.population or nbhd.get("population", 50000)
             density = nbhd.get("population_density", 5000)
             avg_income = nbhd.get("avg_household_income", 400000)
@@ -108,6 +119,10 @@ class PredictionService:
                 platform_factor = active_platforms * 25.0
 
                 base_val = 120.0 + income_factor + density_factor + platform_factor
+                # Blend with actual neighborhood historical average if available
+                if nbhd_mean:
+                    base_val = 0.7 * nbhd_mean + 0.3 * base_val
+
                 day_multiplier = 1.25 if is_weekend else 0.95
 
                 # Monthly seasonality factors for Indian quick commerce
@@ -128,8 +143,7 @@ class PredictionService:
                 }
                 seasonality_multiplier = monthly_factors.get(month, 1.0)
 
-                # Check for public / retail holidays
-                is_holiday = nbhd.get("is_holiday", 0)
+                # Check for public / retail holidays (using real-time variable)
                 holiday_multiplier = 1.30 if is_holiday else 1.0
 
                 # Add deterministic pseudo-random noise based on date & pincode
@@ -169,9 +183,9 @@ class PredictionService:
                 "platform_count": active_platforms,
                 "day_of_week": day_of_week,
                 "is_weekend": is_weekend,
-                "is_holiday": nbhd.get("is_holiday", 0),
-                "weather_Cloudy": 0,
-                "weather_Rainy": 0,
+                "is_holiday": 1 if is_holiday else 0,
+                "weather_Cloudy": 1 if weather_data.get("is_cloudy") else 0,
+                "weather_Rainy": 1 if weather_data.get("is_rainy") else 0,
                 "avg_order_value": nbhd.get("avg_order_value", 450),
                 "avg_discount": nbhd.get("avg_discount", 30),
                 "total_stores": nbhd.get("total_stores", 5),

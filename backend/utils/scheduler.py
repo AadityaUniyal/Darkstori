@@ -401,7 +401,7 @@ class BackgroundScheduler:
                         if job["job_name"] == "WEEKLY_SCRAPE_JOB":
                             await self._run_weekly_scraper()
                         
-                        job["last_run"] = datetime.utcnow().isoformat()
+                        job["last_run"] = datetime.now().isoformat()
                         job["status"] = "SUCCESS"
                         logger.info(f"[Scheduler] Executed periodic background task: {job['job_name']}")
                         

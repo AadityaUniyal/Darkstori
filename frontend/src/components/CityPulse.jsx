@@ -5,6 +5,9 @@ import { Activity, Building2 } from 'lucide-react';
 import { api } from '../services/api';
 import RangoliGauge from './RangoliGauge';
 
+import { Skeleton } from './ui/skeleton';
+import { EmptyState } from './ui/empty-state';
+
 export default function CityPulse() {
   const navigate = useNavigate();
 
@@ -16,11 +19,11 @@ export default function CityPulse() {
   });
 
   const fallbackCities = [
-    { city: 'Bangalore', store_count: 12, neighborhood_count: 24, avg_opportunity_score: 8.2 },
-    { city: 'Delhi', store_count: 8, neighborhood_count: 16, avg_opportunity_score: 7.1 },
-    { city: 'Mumbai', store_count: 10, neighborhood_count: 20, avg_opportunity_score: 7.8 },
-    { city: 'Hyderabad', store_count: 7, neighborhood_count: 15, avg_opportunity_score: 8.0 },
-    { city: 'Pune', store_count: 5, neighborhood_count: 10, avg_opportunity_score: 7.4 },
+    { city: 'North Zone', store_count: 12, neighborhood_count: 24, avg_opportunity_score: 8.2 },
+    { city: 'West Zone', store_count: 8, neighborhood_count: 16, avg_opportunity_score: 7.1 },
+    { city: 'Central Zone', store_count: 10, neighborhood_count: 20, avg_opportunity_score: 7.8 },
+    { city: 'South Zone', store_count: 7, neighborhood_count: 15, avg_opportunity_score: 8.0 },
+    { city: 'Growth Zone', store_count: 5, neighborhood_count: 10, avg_opportunity_score: 7.4 },
   ];
 
   const citiesData = cityOverview && cityOverview.length > 0 ? cityOverview : fallbackCities;
@@ -29,7 +32,35 @@ export default function CityPulse() {
   const sortedCities = [...citiesData].sort((a, b) => b.avg_opportunity_score - a.avg_opportunity_score);
 
   if (isLoading) {
-    return <div style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-6)' }}>Loading city pulse...</div>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: 'var(--space-2)', borderBottom: '1px solid var(--color-border)' }}>
+          <Activity size={18} color="var(--saffron-500)" />
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0 }}>
+            City Pulse & Telemetry
+          </h3>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-[48px] w-full rounded-md" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (sortedCities.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: 'var(--space-2)', borderBottom: '1px solid var(--color-border)' }}>
+          <Activity size={18} color="var(--saffron-500)" />
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0 }}>
+            City Pulse & Telemetry
+          </h3>
+        </div>
+        <EmptyState title="No telemetry data" description="No city telemetry mapped." />
+      </div>
+    );
   }
 
   return (

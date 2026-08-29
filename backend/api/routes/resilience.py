@@ -4,6 +4,7 @@ Handles inventory fresh-produce decay simulation, markdown scheduling,
 quality verification via photo analysis, and QR scan workflows.
 """
 
+import math
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +18,16 @@ from backend.database.connection import get_db
 from backend.database.models.models import ProductBatch, DarkStore
 
 router = APIRouter()
+
+
+def calculate_sigmoid_discount(freshness_score: float, steepness: float = 7.5, midpoint: float = 0.52) -> float:
+    """Calculates continuous Sigmoid perishable salvage markdown rate."""
+    if freshness_score >= 0.90:
+        return 0.0
+    # Sigmoid discount curve
+    raw_discount = 1.0 / (1.0 + math.exp(steepness * (freshness_score - midpoint)))
+    # Cap discount between 0.0 and 0.85 (max 85% markdown)
+    return round(min(0.85, max(0.0, raw_discount)), 2)
 
 
 # ── Schemas ─────────────────────────────────────────────────────────────────
@@ -133,19 +144,8 @@ async def simulate_decay(
         total_decay = b.decay_rate_per_hour * hours_to_decay * decay_multiplier
         b.freshness_score = max(0.0, b.freshness_score - total_decay)
 
-        # Dynamic pricing rule based on freshness decay
-        if b.freshness_score < 0.4:
-            # Critical freshness: 60% off
-            b.discount_rate = 0.60
-        elif b.freshness_score < 0.6:
-            # Medium decay: 40% off
-            b.discount_rate = 0.40
-        elif b.freshness_score < 0.8:
-            # Slight decay: 20% off
-            b.discount_rate = 0.20
-        else:
-            b.discount_rate = 0.0
-
+        # Dynamic pricing rule based on continuous Sigmoid freshness decay
+        b.discount_rate = calculate_sigmoid_discount(b.freshness_score)
         b.current_price = round(b.base_price * (1.0 - b.discount_rate), 2)
         if req.temp_failure:
             b.color_state = "Accelerated Decay / Temperature Breach"

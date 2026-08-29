@@ -21,12 +21,16 @@ export default function RangoliLoader() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      height: '100%',
-      minHeight: '200px',
+      minHeight: '280px',
       width: '100%',
       color: 'var(--color-text-muted)',
       fontFamily: 'var(--font-body)',
-      fontSize: '0.88rem'
+      fontSize: '0.88rem',
+      padding: '24px',
+      borderRadius: '24px',
+      background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+      border: '1px solid rgba(255,255,255,0.06)',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.22)',
     }}>
       <motion.svg
         width="80"
@@ -79,12 +83,14 @@ export default function RangoliLoader() {
           fontWeight: 600, 
           letterSpacing: '0.05em', 
           color: 'var(--saffron-500)', 
-          animation: 'pulse 1.8s infinite ease-in-out' 
+          animation: 'pulse 1.8s infinite ease-in-out',
+          textAlign: 'center',
+          maxWidth: '320px',
+          lineHeight: 1.4
         }}
       >
-        LOADING HYPERLOCAL INTELLIGENCE...
+        Loading expansion intelligence...
       </div>
     </div>
   );
 }
-
