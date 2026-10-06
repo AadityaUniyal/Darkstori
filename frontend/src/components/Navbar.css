@@ -1,8 +1,8 @@
 .navbar {
   height: 64px;
-  background: rgba(11, 15, 23, 0.85); /* Enterprise Obsidian */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(7, 9, 14, 0.82); /* Apple Space Titanium Glass */
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
@@ -28,24 +28,24 @@
   font-weight: 800;
   color: var(--color-text-primary);
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+  background: linear-gradient(180deg, #FFFFFF 20%, #A1A1A6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--emerald-500);
-  margin-left: 6px;
+  background: var(--darkstori-500, #0071E3);
+  margin-left: 7px;
   display: inline-block;
-  box-shadow: 0 0 10px var(--emerald-500);
+  box-shadow: 0 0 8px rgba(0, 113, 227, 0.7);
   animation: slowPulse 3s ease-in-out infinite;
 }
 
 @keyframes slowPulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
   50% { opacity: 1.0; transform: scale(1.1); }
 }
 

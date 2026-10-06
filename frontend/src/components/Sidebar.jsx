@@ -78,14 +78,14 @@ const Sidebar = memo(() => {
 
   if (isMobile) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 h-[60px] bg-[#0b0d14]/95 backdrop-blur-md border-t border-border flex justify-around items-center z-[1000] pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 h-[60px] bg-[#07090E]/95 backdrop-blur-md border-t border-border flex justify-around items-center z-[1000] pb-safe">
         {mobileRoutes.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             end={item.path === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium flex-1 text-center transition-colors ${isActive ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'}`
+              `flex flex-col items-center gap-1 text-[10px] font-medium flex-1 text-center transition-colors ${isActive ? 'text-[#0071E3]' : 'text-muted-foreground hover:text-foreground'}`
             }
           >
             <item.icon size={20} strokeWidth={isActive ? 2 : 1.75} />
@@ -97,7 +97,7 @@ const Sidebar = memo(() => {
   }
 
   return (
-    <aside className={`flex flex-col bg-[#090b11]/85 backdrop-blur-md border-r border-border h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
+    <aside className={`flex flex-col bg-[#07090E]/85 backdrop-blur-md border-r border-border h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
       <nav className="flex-1 py-4 flex flex-col gap-6 overflow-y-auto scrollbar-thin">
         {menuGroups.map((group, idx) => (
           <div key={idx} className="flex flex-col gap-1">
@@ -118,7 +118,7 @@ const Sidebar = memo(() => {
                 className={({ isActive }) =>
                   `relative flex items-center gap-3 px-5 py-2.5 transition-all duration-200 text-[13px] font-medium border-l-[3px] ${
                     isActive 
-                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500' 
+                      ? 'bg-[#0071E3]/12 text-[#38BDF8] border-[#0071E3] font-semibold' 
                       : 'text-muted-foreground border-transparent hover:bg-surface hover:text-foreground'
                   }`
                 }
