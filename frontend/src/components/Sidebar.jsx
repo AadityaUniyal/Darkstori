@@ -40,37 +40,37 @@ const Sidebar = memo(() => {
     {
       title: 'OPERATIONS',
       items: [
-        { path: '/',          icon: Compass,         label: 'Expansion Cockpit' },
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/resilience',   icon: Leaf,             label: 'Resilience Cockpit' },
+        { path: '/cockpit',     icon: Compass,         label: 'Live Cockpit' },
+        { path: '/dashboard',   icon: LayoutDashboard, label: 'Overview & KPIs' },
+        { path: '/resilience',  icon: Leaf,            label: 'Zero-Waste Perishables' },
       ]
     },
     {
-      title: 'INTELLIGENCE',
+      title: 'INTELLIGENCE & SCOUTING',
       items: [
-        { path: '/analytics', icon: BarChart2,       label: 'Analytics' },
-        { path: '/forecast',     icon: TrendingUp,        label: 'Forecast' },
-        { path: '/neighborhoods',icon: MapPin,            label: 'Neighborhoods' },
-        { path: '/simulator',    icon: FlaskConical,     label: 'Simulator' },
+        { path: '/forecast',      icon: TrendingUp,      label: 'Demand Forecaster' },
+        { path: '/neighborhoods', icon: MapPin,          label: 'Neighborhood DNA' },
+        { path: '/simulator',     icon: FlaskConical,    label: 'Store Simulator' },
+        { path: '/analytics',     icon: BarChart2,       label: 'SLA & Heatmaps' },
       ]
     },
     {
-      title: 'ADVANCED',
+      title: 'AUTOMATION & FLEET',
       items: [
-        { path: '/algorithm-lab',icon: Cpu,               label: 'Algorithm Lab' },
-        { path: '/recommendations',icon: Sparkles,         label: 'Recommendations' },
-        { path: '/events',       icon: Calendar,         label: 'Local Events' },
-        { path: '/playbooks',    icon: Workflow,         label: 'Playbooks' },
+        { path: '/playbooks',     icon: Workflow,        label: 'Autonomous Playbooks' },
+        { path: '/events',        icon: Calendar,        label: 'Local Events' },
+        { path: '/recommendations', icon: Sparkles,      label: 'AI Recommendations' },
+        { path: '/algorithm-lab', icon: Cpu,             label: 'MLOps & Algorithms' },
       ]
     }
   ];
 
   const mobileRoutes = [
-    { path: '/',          icon: Compass,         label: 'Expansion' },
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/analytics', icon: BarChart2,       label: 'Analytics' },
-    { path: '/neighborhoods',icon: MapPin,            label: 'Places' },
-    { path: '/simulator',    icon: FlaskConical,     label: 'Simulator' },
+    { path: '/cockpit',     icon: Compass,         label: 'Cockpit' },
+    { path: '/dashboard',   icon: LayoutDashboard, label: 'Overview' },
+    { path: '/resilience',  icon: Leaf,            label: 'Perishables' },
+    { path: '/forecast',    icon: TrendingUp,      label: 'Forecast' },
+    { path: '/playbooks',   icon: Workflow,        label: 'Playbooks' },
   ];
 
   // Mobile navigation below 640px

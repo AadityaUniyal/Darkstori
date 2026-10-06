@@ -4,43 +4,24 @@
  * Each dataset marks `is_fallback: true` for UI awareness.
  */
 
-export const FALLBACK_DASHBOARD_METRICS = {
-  is_fallback: true,
+export const ZERO_DASHBOARD_METRICS = {
   summary: {
-    total_stores: 42,
-    total_neighborhoods: 85,
-    total_orders_30d: 118420,
-    total_competitive_moves: 24,
+    total_stores: 0,
+    total_neighborhoods: 0,
+    total_orders_30d: 0,
+    total_competitive_moves: 0,
+    total_pincodes: 0,
+    pincode_coverage_rate: 0,
   },
-  city_overview: [
-    { city: 'North Zone', store_count: 12, neighborhood_count: 24, avg_opportunity_score: 8.2 },
-    { city: 'West Zone', store_count: 8, neighborhood_count: 16, avg_opportunity_score: 7.1 },
-    { city: 'Central Zone', store_count: 10, neighborhood_count: 20, avg_opportunity_score: 7.8 },
-    { city: 'South Zone', store_count: 7, neighborhood_count: 15, avg_opportunity_score: 8.0 },
-    { city: 'Growth Zone', store_count: 5, neighborhood_count: 10, avg_opportunity_score: 7.4 },
-  ],
-  top_opportunities: [
-    { neighborhood_id: 1, neighborhood_name: 'Central Ward', city: 'North Zone', opportunity_score: 9.2 },
-    { neighborhood_id: 2, neighborhood_name: 'North Market', city: 'North Zone', opportunity_score: 8.9 },
-    { neighborhood_id: 3, neighborhood_name: 'Transit Hub', city: 'Central Zone', opportunity_score: 8.2 },
-    { neighborhood_id: 4, neighborhood_name: 'Residential Edge', city: 'West Zone', opportunity_score: 9.0 },
-    { neighborhood_id: 5, neighborhood_name: 'Growth Corridor', city: 'South Zone', opportunity_score: 8.8 },
-    { neighborhood_id: 6, neighborhood_name: 'Logistics Belt', city: 'Growth Zone', opportunity_score: 8.5 },
-  ],
-  sentiment: [
-    { platform: 'Instamart', positive_pct: 68, negative_pct: 12, avg_sentiment: 0.56 },
-    { platform: 'Zepto', positive_pct: 72, negative_pct: 10, avg_sentiment: 0.62 },
-    { platform: 'Blinkit', positive_pct: 61, negative_pct: 18, avg_sentiment: 0.43 },
-    { platform: 'Swiggy Genie', positive_pct: 54, negative_pct: 22, avg_sentiment: 0.32 },
-  ],
+  city_overview: [],
+  top_opportunities: [],
+  sentiment: [],
   recent_competitive_moves: {
-    moves: [
-      { move_id: 1, platform: 'Zepto', move_type: 'payout_increase', description: 'Increased rider payout structure in a high-density market.', city: 'North Zone', impact_level: 'HIGH' },
-      { move_id: 2, platform: 'Blinkit', move_type: 'dark_store_launch', description: 'Opened a new large-format dark store in a competitive market.', city: 'West Zone', impact_level: 'MEDIUM' },
-      { move_id: 3, platform: 'Instamart', move_type: 'free_delivery_promo', description: 'Launched a free delivery promo for orders above 99 in a growth market.', city: 'Growth Zone', impact_level: 'LOW' },
-    ]
+    moves: []
   }
 };
+
+export const FALLBACK_DASHBOARD_METRICS = ZERO_DASHBOARD_METRICS;
 
 export const FALLBACK_RESILIENCE_ALERTS = [
   { id: 'ALT-101', title: 'Feature Drift Detected: temp_celsius', description: 'Kolmogorov-Smirnov statistics (KS=0.178) exceeded threshold of 0.150 in a sample market.', severity: 'MEDIUM', timestamp: '10:42:15', category: 'drift', is_fallback: true },

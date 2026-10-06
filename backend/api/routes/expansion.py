@@ -87,42 +87,7 @@ async def list_opportunities(
     neighborhoods = result.scalars().all()
 
     if not neighborhoods:
-        fallback = [
-            {"neighborhood_id": 1, "neighborhood_name": "Central Ward", "city": city or "Demo City", "pincode": "000001", "population_density": 6200.0, "avg_household_income": 950000.0, "competition_intensity": "High"},
-            {"neighborhood_id": 2, "neighborhood_name": "North Market", "city": city or "Demo City", "pincode": "000002", "population_density": 5800.0, "avg_household_income": 1100000.0, "competition_intensity": "High"},
-            {"neighborhood_id": 3, "neighborhood_name": "Transit Hub", "city": city or "Demo City", "pincode": "000003", "population_density": 5400.0, "avg_household_income": 850000.0, "competition_intensity": "Medium"},
-            {"neighborhood_id": 4, "neighborhood_name": "Residential Edge", "city": city or "Demo City", "pincode": "000004", "population_density": 4900.0, "avg_household_income": 1200000.0, "competition_intensity": "Medium"},
-        ]
-        neighborhoods = []
-        for idx, nb in enumerate(fallback[:limit]):
-            score = _score_from_neighbors(
-                type("N", (), {
-                    "population": 100000 + idx * 10000,
-                    "population_density": nb["population_density"],
-                    "avg_household_income": nb["avg_household_income"],
-                    "total_stores": 4 - idx,
-                })(),
-                active_stores=4 - idx,
-                competitor_stores=2 + idx,
-            )
-            neighborhoods.append(OpportunityOut(
-                neighborhood_id=nb["neighborhood_id"],
-                neighborhood_name=nb["neighborhood_name"],
-                city=nb["city"],
-                pincode=nb["pincode"],
-                opportunity_score=score["opportunity_score"],
-                demand_estimate=score["demand_estimate"],
-                coverage_gain_pct=score["coverage_gain_pct"],
-                cannibalization_risk_pct=score["cannibalization_risk_pct"],
-                roi_12_months_pct=score["roi_12_months_pct"],
-                breakeven_months=score["breakeven_months"],
-                status="unmapped",
-                store_count=3 - idx,
-                competition_intensity=nb["competition_intensity"],
-                avg_household_income=nb["avg_household_income"],
-                population_density=nb["population_density"],
-            ).model_dump())
-        return neighborhoods
+        return []
 
     output = []
     for nb in neighborhoods[:limit]:

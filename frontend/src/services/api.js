@@ -138,6 +138,16 @@ const getMe = async () => {
   return response.data;
 };
 
+const forgotPassword = async (email) => {
+  const response = await apiClient.post('/api/v1/auth/forgot-password', { email });
+  return response.data;
+};
+
+const resetPassword = async (token, newPassword) => {
+  const response = await apiClient.post('/api/v1/auth/reset-password', { token, new_password: newPassword });
+  return response.data;
+};
+
 // ── Stores ─────────────────────────────────────────────────────────────────────
 
 const getStores = async (params = {}) => {
@@ -152,6 +162,11 @@ const getStoreWeatherAlert = async (storeId) => {
 
 const getStoreStats = async () => {
   const response = await apiClient.get('/api/v1/stores/stats');
+  return response.data;
+};
+
+const createStore = async (storeData) => {
+  const response = await apiClient.post('/api/v1/stores/', storeData);
   return response.data;
 };
 
@@ -488,6 +503,21 @@ const ocrExpiry = async (imageUrl) => {
   return response.data;
 };
 
+const createBatch = async (batchData) => {
+  const response = await apiClient.post('/api/v1/resilience/batches', batchData);
+  return response.data;
+};
+
+const deleteBatch = async (batchId) => {
+  const response = await apiClient.delete(`/api/v1/resilience/batches/${batchId}`);
+  return response.data;
+};
+
+const seedOptionA = async () => {
+  const response = await apiClient.post('/api/v1/seed-data');
+  return response.data;
+};
+
 // ── Health ─────────────────────────────────────────────────────────────────────
 
 const getHealth = async () => {
@@ -656,11 +686,14 @@ export const api = {
   register,
   logout,
   getMe,
+  forgotPassword,
+  resetPassword,
 
   // Stores
   getStores,
   getStoreStats,
   getStoreWeatherAlert,
+  createStore,
 
   // Analytics
   getCoverageGaps,
@@ -733,6 +766,8 @@ export const api = {
 
   // Resilience
   getResilienceBatches,
+  createBatch,
+  deleteBatch,
   simulateDecay,
   scanQRCrate,
   verifyPhoto,
@@ -741,6 +776,7 @@ export const api = {
   // System
   getHealth,
   getHealthReady,
+  seedOptionA,
 
   // Expansion Intelligence
   getExpansionOpportunities,

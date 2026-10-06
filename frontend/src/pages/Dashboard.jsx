@@ -24,7 +24,8 @@ import WeatherRadarCard from '../components/WeatherRadarCard';
 import VrpDispatchCard from '../components/VrpDispatchCard';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
+import { ZERO_DASHBOARD_METRICS } from '../constants/fallbacks';
+import QuickSetupWizard from '../components/QuickSetupWizard';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -41,7 +42,7 @@ const PLATFORM_COLORS = {
   'Swiggy Genie': 'var(--peacock-500)',
 };
 
-const FALLBACK_METRICS = FALLBACK_DASHBOARD_METRICS;
+const FALLBACK_METRICS = ZERO_DASHBOARD_METRICS;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -73,13 +74,14 @@ export default function Dashboard() {
     retry: 1,
   });
 
-  const isUsingFallback = !metrics || isError;
   const displayMetrics = metrics || FALLBACK_METRICS;
-  const summary = displayMetrics.summary;
+  const summary = displayMetrics.summary || { total_stores: 0, total_neighborhoods: 0, total_orders_30d: 0, total_competitive_moves: 0 };
   const cities = displayMetrics.city_overview || [];
   const topOpps = displayMetrics.top_opportunities || [];
   const sentiment = displayMetrics.sentiment || [];
   const competitiveMoves = displayMetrics.recent_competitive_moves?.moves || [];
+
+  const isCleanZeroState = !isLoading && (summary.total_stores === 0 && topOpps.length === 0);
 
   const handleLiveOrder = (order) => {
     setLiveOrders((prev) => {
@@ -91,25 +93,6 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <AmbientBackground />
-
-      {/* Inline Fallback Banner */}
-      {isUsingFallback && (
-        <div style={{
-          background: 'var(--peacock-100)',
-          borderLeft: '4px solid var(--peacock-500)',
-          padding: '12px 16px',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.88rem',
-          color: 'var(--color-text-primary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          marginBottom: 'var(--space-2)'
-        }}>
-          <AlertTriangle size={18} color="var(--peacock-500)" />
-          <span>Showing sample data — live metrics unavailable</span>
-        </div>
-      )}
 
       {/* Weather Forecast Alert Banner */}
       {weatherAlert?.alert && (
@@ -157,6 +140,15 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* iOS-Style Quick Setup Onboarding for New Accounts or Zero-Stores */}
+      {isCleanZeroState && (
+        <QuickSetupWizard
+          totalStores={summary.total_stores}
+          totalBatches={0}
+          totalPlaybooks={0}
+        />
+      )}
+
       {/* ROW 1: Summary Strip (4 KPI cards) */}
       {isLoading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
@@ -167,25 +159,25 @@ export default function Dashboard() {
       ) : (
         <StaggerChildren className="dash-kpi-row">
           <AnimatedCounter
-            value={summary?.total_stores || 42}
+            value={summary.total_stores ?? 0}
             label="Active Dark Stores"
             icon={Building2}
             color="var(--peacock-500)"
           />
           <AnimatedCounter
-            value={summary?.total_neighborhoods || 85}
+            value={summary.total_neighborhoods ?? 0}
             label="Neighborhoods Mapped"
             icon={MapPin}
             color="var(--saffron-500)"
           />
           <AnimatedCounter
-            value={summary?.total_orders_30d || 118420}
+            value={summary.total_orders_30d ?? 0}
             label="Orders (30 days)"
             icon={Zap}
             color="var(--monsoon-500)"
           />
           <AnimatedCounter
-            value={summary?.total_competitive_moves || 24}
+            value={summary.total_competitive_moves ?? 0}
             label="Competitor Moves"
             icon={TrendingUp}
             color="var(--spice-500)"

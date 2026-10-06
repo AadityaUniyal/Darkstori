@@ -10,6 +10,10 @@ import AnimatedCard from '../components/AnimatedCard';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 
+import { Plus } from 'lucide-react';
+import QuickSetupWizard from '../components/QuickSetupWizard';
+import AddStoreModal from '../components/AddStoreModal';
+
 function MetricCard({ label, value, sublabel, icon: Icon }) {
   return (
     <div className="glass-card" style={{ display: 'flex', gap: 12, alignItems: 'center', minHeight: 110 }}>
@@ -35,6 +39,22 @@ export default function ExpansionCockpit() {
   const [locationQuery, setLocationQuery] = useState('');
   const [resolvedPoint, setResolvedPoint] = useState(null);
   const [activeTab, setActiveTab] = useState('sites');
+  const [isAddStoreOpen, setIsAddStoreOpen] = useState(false);
+
+  const { data: storesList = [] } = useQuery({
+    queryKey: ['stores-list', selectedCity],
+    queryFn: () => api.getStores({ city: selectedCity }),
+  });
+
+  const { data: batchesList = [] } = useQuery({
+    queryKey: ['resilience-batches', selectedCity],
+    queryFn: () => api.getResilienceBatches(selectedCity),
+  });
+
+  const { data: playbooksList = [] } = useQuery({
+    queryKey: ['playbooks'],
+    queryFn: () => api.getPlaybooks(),
+  });
 
   const { data: opportunities = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['expansion-opportunities', selectedCity],
@@ -139,10 +159,26 @@ export default function ExpansionCockpit() {
             Find the best place to open next using free geo intelligence, ROI simulation, and auditable approvals.
           </p>
         </div>
-        <button className="btn-secondary" onClick={() => { refetch(); refetchLedger(); }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <RefreshCw size={14} /> Refresh market view
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            className="btn-primary"
+            onClick={() => setIsAddStoreOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Plus size={16} /> Add Dark Store
+          </button>
+          <button className="btn-secondary" onClick={() => { refetch(); refetchLedger(); }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </div>
+
+      {/* iOS-Style Quick Setup Wizard */}
+      <QuickSetupWizard
+        totalStores={storesList.length}
+        totalBatches={batchesList.length}
+        totalPlaybooks={playbooksList.length}
+      />
 
       <div className="glass-card" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 320px' }}>
@@ -393,6 +429,7 @@ export default function ExpansionCockpit() {
           </AnimatedCard>
         </div>
       </div>
+      <AddStoreModal isOpen={isAddStoreOpen} onClose={() => setIsAddStoreOpen(false)} />
     </div>
   );
 }
