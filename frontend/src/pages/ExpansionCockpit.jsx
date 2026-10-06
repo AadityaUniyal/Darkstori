@@ -16,13 +16,13 @@ import AddStoreModal from '../components/AddStoreModal';
 
 function MetricCard({ label, value, sublabel, icon: Icon }) {
   return (
-    <div className="glass-card" style={{ display: 'flex', gap: 12, alignItems: 'center', minHeight: 110 }}>
-      <div style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'rgba(14, 124, 134, 0.12)', color: 'var(--peacock-500)' }}>
-        <Icon size={18} />
+    <div className="glass-card" style={{ display: 'flex', gap: 14, alignItems: 'center', minHeight: 110, padding: '16px 20px', borderRadius: '16px' }}>
+      <div style={{ width: 44, height: 44, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'rgba(0, 113, 227, 0.12)', color: '#0071E3' }}>
+        <Icon size={20} />
       </div>
       <div>
-        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)' }}>{value}</div>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)' }}>{value}</div>
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{sublabel}</div>
       </div>
     </div>
@@ -268,7 +268,7 @@ export default function ExpansionCockpit() {
                     alignItems: 'center',
                     padding: '12px 14px',
                     borderRadius: 14,
-                    border: selectedOpportunity?.neighborhood_id === opp.neighborhood_id ? '1px solid var(--peacock-500)' : '1px solid var(--color-border)',
+                    border: selectedOpportunity?.neighborhood_id === opp.neighborhood_id ? '1px solid #0071E3' : '1px solid var(--color-border)',
                     background: 'var(--color-surface)',
                     color: 'inherit',
                     cursor: 'pointer',
@@ -279,8 +279,8 @@ export default function ExpansionCockpit() {
                     <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{opp.city} - PIN {opp.pincode || 'NA'}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>{opp.opportunity_score}</div>
-                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Opportunity</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#38BDF8' }}>{opp.opportunity_score}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Score</div>
                   </div>
                 </button>
               ))
@@ -334,7 +334,7 @@ export default function ExpansionCockpit() {
                   </div>
                 )}
 
-                <button className="btn-primary" onClick={runSimulation} disabled={simulateMutation.isPending}>
+                <button className="btn-primary" onClick={runSimulation} disabled={simulateMutation.isPending} style={{ background: '#0071E3', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}>
                   {simulateMutation.isPending ? 'Running simulation...' : 'Simulate economics'}
                 </button>
 
@@ -342,11 +342,11 @@ export default function ExpansionCockpit() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="glass-card" style={{ padding: 14 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>12-month ROI</div>
-                      <div style={{ fontSize: 28, fontWeight: 700 }}>{activeSimulation.roi_12_months_pct}%</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: '#34C759' }}>{activeSimulation.roi_12_months_pct}%</div>
                     </div>
                     <div className="glass-card" style={{ padding: 14 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Breakeven</div>
-                      <div style={{ fontSize: 28, fontWeight: 700 }}>{activeSimulation.break_even_month} mo</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: '#38BDF8' }}>{activeSimulation.break_even_month} mo</div>
                     </div>
                     <div className="glass-card" style={{ padding: 14 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Daily orders</div>
@@ -380,10 +380,10 @@ export default function ExpansionCockpit() {
                         Save review
                       </button>
                       <button
-                        className="btn-secondary"
+                        className="btn-primary"
                         onClick={() => approveMutation.mutate(activeSimulation.simulation_id)}
                         disabled={approveMutation.isPending}
-                        style={{ background: 'var(--peacock-500)', color: '#0b0d14', border: 'none' }}
+                        style={{ background: '#34C759', color: '#ffffff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}
                       >
                         Approve site
                       </button>
