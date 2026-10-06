@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import KineticScrambleHeadline from '../components/KineticScrambleHeadline';
 import AmbientBackground from '../components/AmbientBackground';
+import InteractiveProductDemo from '../components/InteractiveProductDemo';
 import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
 
@@ -48,7 +49,7 @@ export default function LandingPage() {
   const [storeSqft, setStoreSqft] = useState(1800);
   const [perishableHours, setPerishableHours] = useState(14);
   const [activeSimTab, setActiveSimTab] = useState('expansion');
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   // Dynamic calculations for live sandbox widget
   const calculatedDailyOrders = Math.round(storeSqft * 0.48 + (selectedCity === 'mumbai' ? 120 : selectedCity === 'bangalore' ? 95 : 70));
@@ -103,9 +104,9 @@ export default function LandingPage() {
           </nav>
 
           <div className="apple-nav-actions">
-            <button onClick={handleQuickDemo} className="btn-ghost-nav">
+            <button onClick={() => setIsDemoModalOpen(true)} className="btn-ghost-nav">
               <Sparkles size={15} />
-              <span>Instant Demo</span>
+              <span>Interactive Tour</span>
             </button>
             <button onClick={handleLaunchApp} className="btn-primary-nav">
               <span>{isAuthenticated ? 'Open Cockpit' : 'Partner Sign In'}</span>
@@ -121,7 +122,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="hero-badge-pill"
           >
             <span className="pulse-indicator" />
@@ -131,7 +132,7 @@ export default function LandingPage() {
           <motion.h1
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="hero-title-main"
           >
             Sub-10-Minute Dark Store Precision.
@@ -140,7 +141,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="hero-kinetic-container"
           >
             <span className="hero-lead-text">Automate operational execution with </span>
@@ -159,7 +160,7 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="hero-subtext-description"
           >
             Quick commerce is a war of seconds and wafer-thin margins. Traditional dashboards only tell you what broke yesterday. Darkstori is the prescriptive AI operating system that automates location scouting, dynamic pricing decay, rider routing, and demand surges across India's focus metros.
@@ -168,20 +169,20 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="hero-cta-group"
           >
             <button onClick={handleLaunchApp} className="hero-btn-primary">
               <span>Launch Darkstori Cockpit</span>
               <ArrowRight size={18} />
             </button>
-            <button onClick={handleQuickDemo} className="hero-btn-secondary">
+            <button onClick={() => setIsDemoModalOpen(true)} className="hero-btn-secondary">
               <Sparkles size={18} className="sparkle-gold" />
-              <span>Explore 1-Click Sandbox</span>
+              <span>Interactive Live Tour</span>
             </button>
-            <button onClick={() => setIsVideoModalOpen(true)} className="hero-btn-tertiary">
+            <button onClick={handleQuickDemo} className="hero-btn-tertiary">
               <Play size={16} fill="currentColor" />
-              <span>Watch 2-Min Film</span>
+              <span>1-Click Sandbox</span>
             </button>
           </motion.div>
 
@@ -189,7 +190,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.5 }}
+            transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="hero-metrics-ticker"
           >
             <div className="ticker-item">
@@ -833,28 +834,11 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* Video Modal */}
-      {isVideoModalOpen && (
-        <div className="video-modal-backdrop" onClick={() => setIsVideoModalOpen(false)}>
-          <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Darkstori: The Prescriptive Operating System</h3>
-              <button onClick={() => setIsVideoModalOpen(false)} className="close-btn">✕</button>
-            </div>
-            <div className="video-viewport">
-              <iframe
-                width="100%"
-                height="420"
-                src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"
-                title="Darkstori Platform Demo"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Interactive Live Product Demo Modal */}
+      <InteractiveProductDemo
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+      />
     </div>
   );
 }
