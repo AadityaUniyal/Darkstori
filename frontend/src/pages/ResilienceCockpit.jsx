@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, RefreshCw, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  ShieldAlert, RefreshCw, AlertTriangle, AlertCircle, CheckCircle,
+  Leaf, Plus, Trash2, QrCode, Sparkles, TrendingDown, Clock, Layers
+} from 'lucide-react';
+import { toast } from 'sonner';
 import AmbientBackground from '../components/AmbientBackground';
 import api from '../services/api';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
+import AddBatchModal from '../components/AddBatchModal';
 import { FALLBACK_RESILIENCE_ALERTS } from '../constants/fallbacks';
 
 export default function ResilienceCockpit() {
+  const queryClient = useQueryClient();
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
   const [alerts, setAlerts] = useState(FALLBACK_RESILIENCE_ALERTS);
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
   // Fetch competitive moves & SLA metrics via React Query
   const { data: compMoves, isLoading: compLoading, refetch: refetchCompMoves } = useQuery({
@@ -26,6 +33,25 @@ export default function ResilienceCockpit() {
     queryFn: () => api.getSLAMetrics(),
     staleTime: 30000,
     refetchInterval: refreshInterval * 1000,
+  });
+
+  // Fetch live perishable product batches
+  const { data: batches = [], isLoading: batchesLoading, refetch: refetchBatches } = useQuery({
+    queryKey: ['resilience-batches'],
+    queryFn: () => api.getBatches(),
+    staleTime: 10000,
+  });
+
+  // Delete batch mutation
+  const deleteBatchMutation = useMutation({
+    mutationFn: (id) => api.deleteBatch(id),
+    onSuccess: () => {
+      toast.success('Batch removed from dynamic markdown cycle');
+      queryClient.invalidateQueries({ queryKey: ['resilience-batches'] });
+    },
+    onError: () => {
+      toast.error('Failed to remove batch');
+    }
   });
 
   const isLoading = compLoading || slaLoading;
@@ -272,21 +298,170 @@ export default function ResilienceCockpit() {
                 <span>Email Notifications (SMTP Relay)</span>
               </label>
             </div>
-            
-            <div style={{ background: '#090a0f', border: '1px solid rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }}>
-              <div style={{ color: 'var(--saffron-500)', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span>-</span> WHATSAPP SIMULATOR STREAM
-              </div>
-              <div style={{ color: 'var(--color-text-secondary)' }}>
-                {alerts[0] 
-                  ? `[System] Outbound to +91 98765 43210: "ALERT [${alerts[0].severity}] ${alerts[0].title} - ${alerts[0].description.slice(0, 50)}..."`
-                  : '[System] Outbound channel active: No active alerts.'}
-              </div>
-            </div>
           </div>
         </div>
-
       </div>
+      
+      {/* Dynamic Perishables & Zero-Waste Markdown Management */}
+      <div className="glass-card" style={{ padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Leaf size={20} color="var(--monsoon-500)" />
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.35rem', fontWeight: 700, margin: 0, color: 'var(--color-text-primary)' }}>
+                Perishable Dynamic Markdown & Produce Inventory
+              </h2>
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.86rem', marginTop: '4px', margin: 0 }}>
+              AI Sigmoid dynamic discounting curve prevents produce waste before expiration through automated price salvaging.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsBatchModalOpen(true)}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none', color: '#fff', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Plus size={16} /> Ingest Produce Batch
+          </button>
+        </div>
+
+        {batchesLoading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-[140px] w-full rounded-xl" />)}
+          </div>
+        ) : batches.length === 0 ? (
+          <div style={{ padding: '36px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--color-border)' }}>
+            <Leaf size={40} color="var(--color-text-muted)" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-text-primary)', margin: '0 0 6px 0' }}>No Active Produce Batches Ingested</h4>
+            <p style={{ fontSize: '0.84rem', color: 'var(--color-text-secondary)', maxWidth: '420px', margin: '0 auto 16px auto' }}>
+              Ingest fresh produce (Greens, Tomatoes, Milk, Berries) to activate continuous Sigmoid freshness scoring and dynamic markdown discounts.
+            </p>
+            <button
+              onClick={() => setIsBatchModalOpen(true)}
+              className="btn-secondary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px' }}
+            >
+              <Plus size={14} /> Add First Batch
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+            {batches.map((batch) => {
+              const discountPct = Math.round(batch.discount_rate * 100);
+              const freshnessPct = Math.round(batch.freshness_score * 100);
+              const isUrgent = freshnessPct < 50;
+
+              return (
+                <div
+                  key={batch.id}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isUrgent ? 'rgba(239,68,68,0.3)' : 'var(--color-border)'}`,
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '1.02rem', color: 'var(--color-text-primary)' }}>
+                          {batch.product_name}
+                        </span>
+                        <span className="badge" style={{ fontSize: '0.7rem', background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          {batch.category}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                        Batch #{batch.id} · Qty: {batch.quantity} units
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => deleteBatchMutation.mutate(batch.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
+                      title="Delete Batch"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
+                  {/* Freshness & Markdown Strip */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Freshness Level</span>
+                      <span style={{ fontWeight: 700, color: freshnessPct > 70 ? '#10B981' : freshnessPct > 40 ? '#F59E0B' : '#EF4444' }}>
+                        {freshnessPct}%
+                      </span>
+                    </div>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${freshnessPct}%`,
+                          background: freshnessPct > 70 ? '#10B981' : freshnessPct > 40 ? '#F59E0B' : '#EF4444',
+                          transition: 'width 0.4s ease'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pricing Matrix */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 'var(--radius-md)' }}>
+                    <div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Current Dynamic Price</div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                          ₹{batch.current_price?.toFixed(0) || batch.base_price}
+                        </span>
+                        {discountPct > 0 && (
+                          <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
+                            ₹{batch.base_price}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {discountPct > 0 ? (
+                      <div className="badge badge-warning" style={{ background: 'rgba(239,68,68,0.15)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', fontWeight: 700, fontSize: '0.82rem' }}>
+                        -{discountPct}% OFF
+                      </div>
+                    ) : (
+                      <div className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>
+                        Peak Price
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Clock size={12} />
+                      <span>Decay: {(batch.decay_rate_per_hour * 100).toFixed(1)}%/hr</span>
+                    </div>
+                    {batch.qr_code_hash && (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: '4px' }}>
+                        QR: {batch.qr_code_hash.slice(0, 10)}...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <AddBatchModal
+        isOpen={isBatchModalOpen}
+        onClose={() => setIsBatchModalOpen(false)}
+        onSuccess={() => {
+          refetchBatches();
+        }}
+      />
     </div>
   );
 }

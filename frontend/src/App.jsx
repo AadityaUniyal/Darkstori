@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 
+const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const ExpansionCockpit = lazy(() => import('./pages/ExpansionCockpit'));
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
 const ResilienceCockpit = lazy(() => import('./pages/ResilienceCockpit'));
@@ -14,7 +15,7 @@ const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
 const Recommendations  = lazy(() => import('./pages/Recommendations'));
 const LocalEvents      = lazy(() => import('./pages/LocalEvents'));
 const Playbooks        = lazy(() => import('./pages/Playbooks'));
-const Login            = lazy(() => import('./pages/Login'));
+const AuthPage         = lazy(() => import('./pages/AuthPage'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
 
 import Navbar from './components/Navbar';
@@ -71,7 +72,8 @@ function AnimatedPage({ children }) {
 
 function AppContent() {
   const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/auth';
+  const isLandingPage = location.pathname === '/' || location.pathname === '/welcome';
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -91,11 +93,20 @@ function AppContent() {
     };
   }, []);
 
-  if (isLoginPage) {
+  if (isLandingPage) {
+    return (
+      <Suspense fallback={<RangoliLoader />}>
+        <LandingPage />
+      </Suspense>
+    );
+  }
+
+  if (isAuthPage) {
     return (
       <Suspense fallback={<RangoliLoader />}>
         <Routes location={location}>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Suspense>
@@ -113,7 +124,7 @@ function AppContent() {
           <Suspense fallback={<RangoliLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/"              element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/cockpit"       element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
                 <Route path="/dashboard"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
                 <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><ResilienceCockpit /></AnimatedPage></PrivateRoute>} />
                 <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><Simulator /></AnimatedPage></PrivateRoute>} />

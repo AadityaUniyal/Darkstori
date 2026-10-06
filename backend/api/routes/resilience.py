@@ -32,6 +32,16 @@ def calculate_sigmoid_discount(freshness_score: float, steepness: float = 7.5, m
 
 # ── Schemas ─────────────────────────────────────────────────────────────────
 
+class BatchCreate(BaseModel):
+    product_name: str
+    category: str
+    store_id: Optional[int] = None
+    quantity: int = 10
+    base_price: float
+    shelf_life_hours: float = 48.0
+    decay_rate_per_hour: float = 0.02
+
+
 class BatchResponse(BaseModel):
     id: int
     product_name: str
@@ -97,29 +107,57 @@ async def get_batches(
 
     result = await db.execute(query)
     batches = result.scalars().all()
+    return list(batches)
 
-    if not batches:
-        # Fallback to realistic produce batches
-        now = datetime.now()
-        dummy = [
-            (1, "Organic Bananas", "Fruits", 150, 60.0, 60.0, 0.0, 0.95, now - timedelta(hours=6), now + timedelta(hours=48), 0.015, "qr_ban_01"),
-            (2, "Fresh Spinach", "Vegetables", 80, 40.0, 32.0, 0.20, 0.80, now - timedelta(hours=12), now + timedelta(hours=24), 0.025, "qr_spi_02"),
-            (3, "Toned Milk 1L", "Dairy", 200, 56.0, 56.0, 0.0, 0.99, now - timedelta(hours=2), now + timedelta(hours=72), 0.010, "qr_milk_03"),
-            (4, "Red Tomatoes", "Vegetables", 120, 35.0, 24.5, 0.30, 0.70, now - timedelta(hours=18), now + timedelta(hours=36), 0.020, "qr_tom_04"),
-            (5, "Alphonso Mangoes", "Fruits", 40, 450.0, 450.0, 0.0, 0.92, now - timedelta(hours=4), now + timedelta(hours=96), 0.012, "qr_man_05"),
-        ]
-        return [
-            BatchResponse(
-                id=bid, product_name=pname, category=cat, store_id=1,
-                quantity=qty, base_price=bp, current_price=cp, discount_rate=dr,
-                freshness_score=fs, arrival_time=arr, expiry_time=exp,
-                decay_rate_per_hour=drh, qr_code_hash=qrh, last_verified_photo=None,
-                bruising_percent=0.0, color_state="Fresh/Optimal"
-            )
-            for bid, pname, cat, qty, bp, cp, dr, fs, arr, exp, drh, qrh in dummy
-        ]
 
-    return batches
+@router.post("/batches", response_model=BatchResponse)
+async def create_batch(
+    req: BatchCreate,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
+):
+    """Add a new inventory batch to track for perishable dynamic markdown."""
+    import time
+    now = datetime.now()
+    expiry = now + timedelta(hours=req.shelf_life_hours)
+    qr_hash = f"qr_{req.product_name[:3].lower()}_{int(time.time())}"
+    
+    new_batch = ProductBatch(
+        product_name=req.product_name,
+        category=req.category,
+        store_id=req.store_id,
+        quantity=req.quantity,
+        base_price=req.base_price,
+        current_price=req.base_price,
+        discount_rate=0.0,
+        freshness_score=1.0,
+        arrival_time=now,
+        expiry_time=expiry,
+        decay_rate_per_hour=req.decay_rate_per_hour,
+        qr_code_hash=qr_hash,
+        bruising_percent=0.0,
+        color_state="Fresh/Optimal",
+    )
+    db.add(new_batch)
+    await db.commit()
+    await db.refresh(new_batch)
+    return new_batch
+
+
+@router.delete("/batches/{batch_id}")
+async def delete_batch(
+    batch_id: int,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token),
+):
+    """Delete a perishable batch (e.g. after full sale or clearance)."""
+    result = await db.execute(select(ProductBatch).where(ProductBatch.id == batch_id))
+    batch = result.scalar_one_or_none()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Product batch not found")
+    await db.delete(batch)
+    await db.commit()
+    return {"message": "Batch removed successfully"}
 
 
 @router.post("/batches/decay", response_model=List[BatchResponse])

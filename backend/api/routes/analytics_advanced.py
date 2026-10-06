@@ -84,16 +84,6 @@ async def get_dashboard_metrics(
             "avg_opportunity_score": round(float(avg_score) / 10.0, 1) if avg_score > 10.0 else round(float(avg_score), 1),
         })
 
-    if not city_overview:
-        # Fallback dummy city data
-        city_overview = [
-            {"city": "Bangalore", "store_count": 12, "neighborhood_count": 24, "avg_opportunity_score": 8.2},
-            {"city": "Delhi", "store_count": 8, "neighborhood_count": 16, "avg_opportunity_score": 7.1},
-            {"city": "Mumbai", "store_count": 10, "neighborhood_count": 20, "avg_opportunity_score": 7.8},
-            {"city": "Hyderabad", "store_count": 7, "neighborhood_count": 15, "avg_opportunity_score": 8.0},
-            {"city": "Pune", "store_count": 5, "neighborhood_count": 10, "avg_opportunity_score": 7.4},
-        ]
-
     # 3. Top Opportunities
     opp_q = (
         select(PlacementScore)
@@ -110,16 +100,6 @@ async def get_dashboard_metrics(
         }
         for idx, o in enumerate(opp_rows)
     ]
-
-    if not top_opportunities:
-        top_opportunities = [
-            {"neighborhood_id": 1, "neighborhood_name": "Koramangala", "city": "Bangalore", "opportunity_score": 9.2},
-            {"neighborhood_id": 2, "neighborhood_name": "Indiranagar", "city": "Bangalore", "opportunity_score": 8.9},
-            {"neighborhood_id": 3, "neighborhood_name": "HSR Layout", "city": "Bangalore", "opportunity_score": 8.2},
-            {"neighborhood_id": 4, "neighborhood_name": "Saket", "city": "Delhi", "opportunity_score": 9.0},
-            {"neighborhood_id": 5, "neighborhood_name": "Hitech City", "city": "Hyderabad", "opportunity_score": 8.8},
-            {"neighborhood_id": 6, "neighborhood_name": "Andheri West", "city": "Mumbai", "opportunity_score": 8.5},
-        ]
 
     # 4. Platform Sentiment
     sent_q = (
@@ -143,14 +123,6 @@ async def get_dashboard_metrics(
             "avg_sentiment": round(float(srow[4] or 0.5), 2),
         })
 
-    if not sentiment:
-        sentiment = [
-            {"platform": "Swiggy Instamart", "positive_pct": 68.0, "negative_pct": 12.0, "avg_sentiment": 0.56},
-            {"platform": "Zepto", "positive_pct": 72.0, "negative_pct": 10.0, "avg_sentiment": 0.62},
-            {"platform": "Blinkit", "positive_pct": 61.0, "negative_pct": 18.0, "avg_sentiment": 0.43},
-            {"platform": "Flipkart Minutes", "positive_pct": 54.0, "negative_pct": 22.0, "avg_sentiment": 0.32},
-        ]
-
     # 5. Recent Competitive Moves
     moves_q = select(CompetitiveMove).order_by(CompetitiveMove.detected_date.desc()).limit(5)
     moves_rows = (await db.execute(moves_q)).scalars().all()
@@ -166,20 +138,13 @@ async def get_dashboard_metrics(
         for m in moves_rows
     ]
 
-    if not moves:
-        moves = [
-            {"move_id": 1, "platform": "Zepto", "move_type": "payout_increase", "description": "Increased rider payout structure by 12% in Koramangala.", "city": "Bangalore", "impact_level": "HIGH"},
-            {"move_id": 2, "platform": "Blinkit", "move_type": "dark_store_launch", "description": "Opened a new large-format dark store in Saket.", "city": "Delhi", "impact_level": "MEDIUM"},
-            {"move_id": 3, "platform": "Swiggy Instamart", "move_type": "free_delivery_promo", "description": "Launched a free delivery promo for orders above ₹99 in Andheri West.", "city": "Mumbai", "impact_level": "LOW"},
-        ]
-
     return {
         "summary": {
-            "total_stores": total_stores or 42,
-            "total_neighborhoods": total_nbhds or 85,
-            "total_orders_30d": total_orders or 118420,
-            "total_competitive_moves": total_moves or 24,
-            "total_pincodes": total_pincodes or 376,
+            "total_stores": total_stores,
+            "total_neighborhoods": total_nbhds,
+            "total_orders_30d": total_orders,
+            "total_competitive_moves": total_moves,
+            "total_pincodes": total_pincodes,
             "pincode_coverage_rate": pincode_coverage_rate,
         },
         "city_overview": city_overview,
