@@ -90,6 +90,8 @@ export default function Dashboard() {
     });
   };
 
+  const [activeSection, setActiveSection] = useState('opportunities'); // 'opportunities' | 'dispatch' | 'sla' | 'growth'
+
   return (
     <div className="dashboard">
       <AmbientBackground />
@@ -97,27 +99,24 @@ export default function Dashboard() {
       {/* Weather Forecast Alert Banner */}
       {weatherAlert?.alert && (
         <div style={{
-          background: 'rgba(235, 94, 85, 0.1)',
-          borderLeft: '4px solid var(--saffron-500)',
-          border: '1px solid rgba(235, 94, 85, 0.15)',
+          background: 'rgba(0, 113, 227, 0.1)',
+          borderLeft: '4px solid #0071E3',
+          border: '1px solid rgba(0, 113, 227, 0.2)',
           padding: '14px 18px',
-          borderRadius: 'var(--radius-md)',
+          borderRadius: '12px',
           fontSize: '0.9rem',
           color: 'var(--color-text-primary)',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          marginBottom: 'var(--space-4)',
+          marginBottom: '20px',
           backdropFilter: 'blur(10px)'
         }}>
-          <CloudRain size={20} color="var(--saffron-500)" style={{ animation: 'pulse 2s infinite' }} />
+          <CloudRain size={20} color="#0071E3" style={{ animation: 'pulse 2s infinite' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontWeight: 700, color: 'var(--saffron-500)' }}>Hyperlocal Weather Alert</span>
+            <span style={{ fontWeight: 700, color: '#38BDF8' }}>Hyperlocal Weather Advisory</span>
             <span style={{ fontSize: '0.84rem', color: 'var(--color-text-primary)' }}>
               {weatherAlert.alert}
-              <span style={{ marginLeft: '8px', fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)', padding: '2px 6px', borderRadius: '4px' }}>
-                [Open-Meteo Forecast]
-              </span>
             </span>
           </div>
         </div>
@@ -135,12 +134,12 @@ export default function Dashboard() {
             Intelligence Dashboard
           </h1>
           <p className="dash-subtitle" style={{ fontFamily: 'var(--font-body)' }}>
-            Real-time hyperlocal insights across focus cities
+            Real-time network telemetry, demand heatmaps, and prescriptive actions
           </p>
         </div>
       </motion.div>
 
-      {/* iOS-Style Quick Setup Onboarding for New Accounts or Zero-Stores */}
+      {/* Quick Setup Onboarding for New Accounts or Zero-Stores */}
       {isCleanZeroState && (
         <QuickSetupWizard
           totalStores={summary.total_stores}
@@ -151,7 +150,7 @@ export default function Dashboard() {
 
       {/* ROW 1: Summary Strip (4 KPI cards) */}
       {isLoading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-[100px] w-full rounded-xl" />
           ))}
@@ -162,52 +161,50 @@ export default function Dashboard() {
             value={summary.total_stores ?? 0}
             label="Active Dark Stores"
             icon={Building2}
-            color="var(--peacock-500)"
+            color="#0071E3"
           />
           <AnimatedCounter
             value={summary.total_neighborhoods ?? 0}
             label="Neighborhoods Mapped"
             icon={MapPin}
-            color="var(--saffron-500)"
+            color="#38BDF8"
           />
           <AnimatedCounter
             value={summary.total_orders_30d ?? 0}
             label="Orders (30 days)"
             icon={Zap}
-            color="var(--monsoon-500)"
+            color="#34C759"
           />
           <AnimatedCounter
             value={summary.total_competitive_moves ?? 0}
-            label="Competitor Moves"
+            label="Competitor Signals"
             icon={TrendingUp}
-            color="var(--spice-500)"
+            color="#FF9500"
           />
         </StaggerChildren>
       )}
 
       {/* ROW 2: Map + City Pulse (60/40 Split) */}
-      <div className="dash-map-row">
+      <div className="dash-map-row" style={{ marginBottom: '24px' }}>
         <AnimatedCard className="dash-map-section" delay={0.1}>
-          <div className="dash-map-header" style={{ marginBottom: 'var(--space-3)' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.25rem' }}>City Coverage Map</h2>
+          <div className="dash-map-header" style={{ marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.25rem', margin: 0 }}>City Coverage Map</h2>
             <div className="dash-map-controls" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
                 className={`btn-secondary ${showHeatmap ? 'active' : ''}`}
                 onClick={() => setShowHeatmap((v) => !v)}
-                style={{ padding: '4px 12px', fontSize: '0.8rem', borderColor: showHeatmap ? 'var(--peacock-500)' : 'var(--color-border)' }}
+                style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '10px', borderColor: showHeatmap ? '#0071E3' : 'rgba(255,255,255,0.1)' }}
               >
-                {showHeatmap ? 'Hide' : 'Show'} Heatmap
+                {showHeatmap ? 'Hide Opportunity Layer' : 'Show Opportunity Layer'}
               </button>
             </div>
           </div>
           <LazyMapView
-            neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Sample Market' }))}
-            center={[20.0, 77.0]}
-            zoom={5}
-            height="400px"
+            neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Focus Market' }))}
+            height="420px"
             liveOrders={liveOrders}
             showHeatmap={showHeatmap}
-            onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Sample Market'}`)}
+            onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Focus Market'}`)}
           />
         </AnimatedCard>
 
@@ -216,200 +213,277 @@ export default function Dashboard() {
         </AnimatedCard>
       </div>
 
-      {/* ROW 3: Top Opportunities (3 Columns card grid) */}
-      <div style={{ marginBottom: 'var(--space-4)' }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
-          Top Opportunities
-        </h2>
-        {isLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
-            ))}
-          </div>
-        ) : topOpps.length === 0 ? (
-          <EmptyState title="No opportunities found" description="No top market opportunities available for the selected city." />
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-            {topOpps.slice(0, 3).map((opp, idx) => (
-              <div key={opp.neighborhood_id || idx} className="space-y-4">
-                <div
-                  onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
-                  className="glass-card interactive"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    margin: 0,
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                      {opp.neighborhood_name}
-                    </span>
-                    <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'var(--peacock-100)', color: 'var(--peacock-500)', border: 'none' }}>
-                      {opp.city}
-                    </span>
-                  </div>
-                  <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
+      {/* ROW 3: Segmented Intelligence Switcher */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '6px', background: '#0E121A', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)', width: 'fit-content' }}>
+          <button
+            onClick={() => setActiveSection('opportunities')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'opportunities' ? '#0071E3' : 'transparent',
+              color: activeSection === 'opportunities' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Market Opportunities & Intel
+          </button>
+          <button
+            onClick={() => setActiveSection('dispatch')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'dispatch' ? '#0071E3' : 'transparent',
+              color: activeSection === 'dispatch' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Weather Radar & Dispatch
+          </button>
+          <button
+            onClick={() => setActiveSection('sla')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'sla' ? '#0071E3' : 'transparent',
+              color: activeSection === 'sla' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Service Level SLAs
+          </button>
+          <button
+            onClick={() => setActiveSection('growth')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'growth' ? '#0071E3' : 'transparent',
+              color: activeSection === 'growth' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Growth & Customer Lifecycle
+          </button>
+        </div>
+
+        {/* Section 1: Market Opportunities & Intel */}
+        {activeSection === 'opportunities' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px' }}>
+                High-Potential Expansion Hubs
+              </h2>
+              {isLoading ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
+                  ))}
                 </div>
-                <MoodGauge neighborhoodId={opp.neighborhood_id} />
+              ) : topOpps.length === 0 ? (
+                <EmptyState title="No opportunities found" description="No top market opportunities available for the selected city." />
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  {topOpps.slice(0, 3).map((opp, idx) => (
+                    <div key={opp.neighborhood_id || idx} className="space-y-4">
+                      <div
+                        onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
+                        className="glass-card interactive"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          margin: 0,
+                          padding: '16px',
+                          borderRadius: '16px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                            {opp.neighborhood_name}
+                          </span>
+                          <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'rgba(0, 113, 227, 0.15)', color: '#38BDF8', border: 'none' }}>
+                            {opp.city}
+                          </span>
+                        </div>
+                        <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
+                      </div>
+                      <MoodGauge neighborhoodId={opp.neighborhood_id} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+              <AnimatedCard className="dash-card" delay={0.2}>
+                <div className="dash-card-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Customer Sentiment by Platform</h2>
+                  <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>30-Day Window</span>
+                </div>
+                {isLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-[48px] w-full rounded-md" />
+                    ))}
+                  </div>
+                ) : sentiment.length === 0 ? (
+                  <EmptyState title="No sentiment data" description="No customer platform sentiment recorded." />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {sentiment.map((s) => (
+                      <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                          <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                            {s.platform}
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? '#34C759' : '#FF3B30', fontWeight: 600 }}>
+                            {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
+                          </span>
+                        </div>
+                        <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '999px', overflow: 'hidden', display: 'flex' }}>
+                          <div style={{ width: `${s.positive_pct}%`, background: '#34C759' }} />
+                          <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'rgba(255,255,255,0.1)' }} />
+                          <div style={{ width: `${s.negative_pct}%`, background: '#FF3B30' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </AnimatedCard>
+
+              <AnimatedCard className="dash-card" delay={0.25}>
+                <div className="dash-card-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Competitor Movement Alerts</h2>
+                  <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Recent 7 Days</span>
+                </div>
+                {isLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-[64px] w-full rounded-md" />
+                    ))}
+                  </div>
+                ) : competitiveMoves.length === 0 ? (
+                  <EmptyState title="No competitor alerts" description="No recent competitor moves detected." />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {competitiveMoves.slice(0, 3).map((move) => {
+                      const badgeColor = IMPACT_COLORS[move.impact_level] || '#86868B';
+                      const platformColor = PLATFORM_COLORS[move.platform] || '#0071E3';
+                      return (
+                        <div
+                          key={move.move_id}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                            padding: '12px 14px',
+                            borderRadius: '12px',
+                            background: 'var(--color-surface)',
+                            border: '1px solid var(--color-border)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="badge" style={{ background: `${platformColor}20`, color: platformColor, border: `1px solid ${platformColor}40` }}>
+                              {move.platform}
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
+                                {move.impact_level} IMPACT
+                              </span>
+                            </div>
+                          </div>
+                          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                            {move.description}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </AnimatedCard>
+            </div>
+          </div>
+        )}
+
+        {/* Section 2: Weather Radar & Dispatch */}
+        {activeSection === 'dispatch' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+            <WeatherRadarCard storeId={activeStoreId} />
+            <VrpDispatchCard storeId={activeStoreId} />
+          </div>
+        )}
+
+        {/* Section 3: SLA Monitor */}
+        {activeSection === 'sla' && (
+          <AnimatedCard as="section" className="dash-pulse-section">
+            <div className="section-header" style={{ marginBottom: '16px' }}>
+              <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="section-header-icon" style={{ background: 'rgba(0, 113, 227, 0.15)', color: '#0071E3', padding: '8px', borderRadius: '10px' }}>
+                  <Zap size={18} />
+                </div>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Delivery SLA Performance Monitor</h2>
+                  <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Neighborhood-level delivery performance and on-time reliability</p>
+                </div>
               </div>
-            ))}
+            </div>
+            <SLAHeatmap />
+          </AnimatedCard>
+        )}
+
+        {/* Section 4: Growth & Customer Lifecycle */}
+        {activeSection === 'growth' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <AnimatedCard as="section" className="dash-pulse-section">
+              <div className="section-header" style={{ marginBottom: '16px' }}>
+                <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="section-header-icon" style={{ background: 'rgba(0, 113, 227, 0.15)', color: '#0071E3', padding: '8px', borderRadius: '10px' }}>
+                    <TrendingUp size={18} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Market Evolution & Growth Simulation</h2>
+                    <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Explore multi-year market expansion and store density evolution</p>
+                  </div>
+                </div>
+              </div>
+              <TimeMachine height={360} />
+            </AnimatedCard>
+
+            <AnimatedCard as="section" className="dash-pulse-section">
+              <div className="section-header" style={{ marginBottom: '16px' }}>
+                <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="section-header-icon" style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', padding: '8px', borderRadius: '10px' }}>
+                    <Building2 size={18} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Customer Cohort & Retention Dashboard</h2>
+                    <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Longitudinal order frequency, retention cohorts, and user lifecycle health</p>
+                  </div>
+                </div>
+              </div>
+              <CohortDashboard />
+            </AnimatedCard>
           </div>
         )}
       </div>
-
-      {/* ROW 4: Platform Sentiment & Recent Competitor Moves */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-4)' }}>
-        {/* Platform Sentiment using stacked bar chart */}
-        <AnimatedCard className="dash-card" delay={0.2}>
-          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Platform Sentiment</h2>
-            <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 30 days</span>
-          </div>
-          {isLoading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-[48px] w-full rounded-md" />
-              ))}
-            </div>
-          ) : sentiment.length === 0 ? (
-            <EmptyState title="No sentiment data" description="No customer platform sentiment recorded for the last 30 days." />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {sentiment.map((s) => (
-                <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                    <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                      {s.platform}
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? 'var(--monsoon-500)' : 'var(--spice-500)', fontWeight: 600 }}>
-                      {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
-                    </span>
-                  </div>
-                  {/* Stacked bar */}
-                  <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden', display: 'flex' }}>
-                    <div style={{ width: `${s.positive_pct}%`, background: 'var(--monsoon-500)' }} />
-                    <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'var(--color-text-muted)', opacity: 0.2 }} />
-                    <div style={{ width: `${s.negative_pct}%`, background: 'var(--spice-500)' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </AnimatedCard>
-
-        {/* Competitor Alerts */}
-        <AnimatedCard className="dash-card" delay={0.25}>
-          <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-              Competitor Alerts
-            </h2>
-            <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 7 days</span>
-          </div>
-          {isLoading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-[64px] w-full rounded-md" />
-              ))}
-            </div>
-          ) : competitiveMoves.length === 0 ? (
-            <EmptyState title="No competitor alerts" description="No recent competitor moves detected." />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {competitiveMoves.slice(0, 3).map((move) => {
-                const badgeColor = IMPACT_COLORS[move.impact_level] || 'var(--color-text-muted)';
-                const platformColor = PLATFORM_COLORS[move.platform] || 'var(--color-text-muted)';
-                return (
-                  <div
-                    key={move.move_id}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
-                      padding: '12px',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--color-surface)',
-                      border: '1px solid var(--color-border)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span className="badge" style={{ background: `${platformColor}15`, color: platformColor, border: `1px solid ${platformColor}30` }}>
-                        {move.platform}
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
-                          {move.impact_level} IMPACT
-                        </span>
-                      </div>
-                    </div>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-                      {move.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </AnimatedCard>
-      </div>
-
-      {/* ROW 5: Market Evolution (Time Machine) */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.3}>
-        <div className="section-header">
-          <div className="section-header-left">
-            <div className="section-header-icon">
-              <TrendingUp size={18} />
-            </div>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Market Evolution</h2>
-              <p className="section-header-subtitle">Time Machine · scrub through market growth since 2020</p>
-            </div>
-          </div>
-        </div>
-        <TimeMachine height={360} />
-      </AnimatedCard>
-
-      {/* ROW 5.5: Hyperlocal Weather Radar & VRP Dispatch Command */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
-        <WeatherRadarCard storeId={activeStoreId} />
-        <VrpDispatchCard storeId={activeStoreId} />
-      </div>
-
-      {/* ROW 6: SLA Monitor */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.35}>
-        <div className="section-header">
-          <div className="section-header-left">
-            <div className="section-header-icon">
-              <Zap size={18} />
-            </div>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Delivery SLA Monitor</h2>
-              <p className="section-header-subtitle">Pincode-level delivery performance · breach rate tracking</p>
-            </div>
-          </div>
-        </div>
-        <SLAHeatmap />
-      </AnimatedCard>
-
-      {/* ROW 7: Cohort Dashboard */}
-      <AnimatedCard as="section" className="dash-pulse-section" delay={0.4}>
-        <div className="section-header">
-          <div className="section-header-left">
-            <div className="section-header-icon">
-              <Building2 size={18} />
-            </div>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Customer Cohort Dashboard</h2>
-              <p className="section-header-subtitle">Retention analytics · user lifecycle tracking</p>
-            </div>
-          </div>
-        </div>
-        <CohortDashboard />
-      </AnimatedCard>
     </div>
   );
 }

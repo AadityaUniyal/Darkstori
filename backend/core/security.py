@@ -87,7 +87,7 @@ def decode_token(token: str) -> Dict:
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         return payload
-    except JWTError as e:
+    except Exception as e:
         logger.warning(f"Token decode failed: {e}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 

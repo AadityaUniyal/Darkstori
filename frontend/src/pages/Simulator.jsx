@@ -101,14 +101,14 @@ export default function Simulator() {
   };
 
   const handleMapSelect = (nb) => {
-    if (!placementMode) return;
     if (drafts.length >= 3) {
       toast.warning("Maximum of 3 simultaneous simulations allowed for comparison.");
       return;
     }
+    setPlacementMode(true);
 
-    const lat = nb.centroid_lat || 12.9716 + (Math.random() - 0.5) * 0.05;
-    const lng = nb.centroid_lng || 77.5946 + (Math.random() - 0.5) * 0.05;
+    const lat = nb.centroid_lat || nb.lat || 12.9716 + (Math.random() - 0.5) * 0.05;
+    const lng = nb.centroid_lng || nb.lng || 77.5946 + (Math.random() - 0.5) * 0.05;
 
     const nearestNb = getNearestNeighborhood(lat, lng);
 
@@ -123,11 +123,11 @@ export default function Simulator() {
       routing_constraint_mins: routingMins
     }, {
       onSuccess: (data) => {
-        const newId = `Sim-${nearestNb.neighborhood_id}-${Date.now().toString().slice(-4)}`;
+        const newId = `Node-${nearestNb.neighborhood_id || 'Hub'}-${Date.now().toString().slice(-4)}`;
         const newDraft = {
           id: newId,
           dbId: data.simulation_id,
-          name: nearestNb.neighborhood_name,
+          name: nearestNb.neighborhood_name || `Store Candidate (${lat.toFixed(2)}, ${lng.toFixed(2)})`,
           lat,
           lng,
           metrics: {
@@ -146,6 +146,7 @@ export default function Simulator() {
         };
         setDrafts(prev => [...prev, newDraft]);
         setActiveDraftId(newId);
+        toast.success(`Simulation generated for ${newDraft.name}`);
         refetchProposals();
       }
     });
@@ -168,44 +169,63 @@ export default function Simulator() {
   const activeDraft = drafts.find(d => d.id === activeDraftId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Activity color="var(--saffron-500)" size={32} /> Hyperlocal Simulator & Workflows
+            <Activity color="#0071E3" size={32} /> Hyperlocal Store Simulator
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
-            Configure grounded costs, test OSRM serviceability polygons, and run Propose → Review → Approve location workflow cycles.
+            Configure localized unit economics, evaluate route serviceability, and execute approval workflows.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          {drafts.length > 0 && (
+            <button
+              onClick={clearAllDrafts}
+              className="btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Trash2 size={14} /> Clear Nodes
+            </button>
+          )}
           <button
             onClick={() => setPlacementMode(!placementMode)}
-            className={`btn-secondary ${placementMode ? 'active' : ''}`}
+            className="btn-primary"
             style={{
-              borderColor: placementMode ? 'var(--saffron-500)' : 'var(--color-border)',
-              color: placementMode ? 'var(--saffron-500)' : 'var(--color-text-primary)',
+              background: placementMode ? '#34C759' : '#0071E3',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '0.86rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)'
             }}
           >
             <Plus size={16} />
-            {placementMode ? 'Click Map to Place Node' : 'Enable Placement Mode'}
+            {placementMode ? 'Map Placement Active' : 'Enable Placement Mode'}
           </button>
         </div>
       </div>
 
       {/* Main Grid Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 'var(--space-6)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 380px', gap: '24px' }}>
         
         {/* Left Side: Map + Cost Configuration Panels */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          <div className="glass-card" style={{ padding: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="glass-card" style={{ padding: '16px', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '24px', left: '28px', zIndex: 5, background: 'rgba(14, 18, 26, 0.85)', backdropFilter: 'blur(12px)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.78rem', color: '#38BDF8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', pointerEvents: 'none' }}>
+              <Plus size={13} /> Click any location on the map to run localized ROI projection
+            </div>
             <LazyMapView
               showHeatmap={true}
               height="450px"
@@ -217,7 +237,7 @@ export default function Simulator() {
           {/* Configuration Cost Panel */}
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Landmark size={18} color="var(--peacock-500)" /> Grounded Cost & Serviceability Settings
+              <Landmark size={18} color="#0071E3" /> Grounded Cost & Serviceability Settings
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
@@ -229,7 +249,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={200000} max={5000000} step={50000}
                   value={capexOverride} onChange={(e) => setCapexOverride(Number(e.target.value))}
-                  style={{ accentColor: 'var(--peacock-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
                 />
               </div>
 
@@ -241,7 +261,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={20} max={180} step={2}
                   value={rentSqft} onChange={(e) => setRentSqft(Number(e.target.value))}
-                  style={{ accentColor: 'var(--peacock-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
                 />
               </div>
 
@@ -253,7 +273,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={15000} max={55000} step={1000}
                   value={staffSalary} onChange={(e) => setStaffSalary(Number(e.target.value))}
-                  style={{ accentColor: 'var(--peacock-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
                 />
               </div>
 
@@ -265,7 +285,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={10} max={45} step={1}
                   value={deliveryCost} onChange={(e) => setDeliveryCost(Number(e.target.value))}
-                  style={{ accentColor: 'var(--peacock-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
                 />
               </div>
 
@@ -277,19 +297,19 @@ export default function Simulator() {
                 <input 
                   type="range" min={500} max={5000} step={100}
                   value={storeSize} onChange={(e) => setStoreSize(Number(e.target.value))}
-                  style={{ accentColor: 'var(--peacock-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem' }}>
                   <span style={{ color: 'var(--color-text-secondary)' }}>Serviceability Promise</span>
-                  <span style={{ color: 'var(--saffron-500)', fontWeight: 600 }}>{routingMins} mins</span>
+                  <span style={{ color: '#38BDF8', fontWeight: 600 }}>{routingMins} mins</span>
                 </div>
                 <input 
                   type="range" min={5} max={30} step={1}
                   value={routingMins} onChange={(e) => setRoutingMins(Number(e.target.value))}
-                  style={{ accentColor: 'var(--saffron-500)', cursor: 'pointer' }}
+                  style={{ accentColor: '#38BDF8', cursor: 'pointer' }}
                 />
               </div>
             </div>
@@ -367,9 +387,9 @@ export default function Simulator() {
                           key={d.id}
                           onClick={() => setActiveDraftId(d.id)}
                           style={{
-                            flex: 1, padding: '4px 0', fontSize: '0.74rem', border: 'none', borderRadius: '3px', cursor: 'pointer',
-                            background: activeDraftId === d.id ? 'var(--peacock-500)' : 'transparent',
-                            color: activeDraftId === d.id ? '#0b0d14' : 'var(--color-text-secondary)',
+                            flex: 1, padding: '6px 0', fontSize: '0.74rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            background: activeDraftId === d.id ? '#0071E3' : 'transparent',
+                            color: activeDraftId === d.id ? '#FFFFFF' : 'var(--color-text-secondary)',
                             fontWeight: 600
                           }}
                         >
@@ -400,16 +420,16 @@ export default function Simulator() {
                           <strong style={{ fontFamily: 'var(--font-mono)' }}>₹{activeDraft.metrics.monthly_opex.toLocaleString('en-IN')}</strong>
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
-                          <span style={{ color: 'var(--color-text-secondary)' }}>OSRM Route Time:</span>
-                          <strong style={{ color: 'var(--saffron-500)', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.routing_mins.toFixed(1)} mins</strong>
+                          <span style={{ color: 'var(--color-text-secondary)' }}>Route Transit Time:</span>
+                          <strong style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.routing_mins.toFixed(1)} mins</strong>
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
                           <span style={{ color: 'var(--color-text-secondary)' }}>ROI 12 Months:</span>
-                          <strong style={{ color: activeDraft.metrics.roi_pct > 15 ? 'var(--peacock-500)' : 'var(--saffron-500)', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.roi_pct.toFixed(1)}%</strong>
+                          <strong style={{ color: activeDraft.metrics.roi_pct > 15 ? '#34C759' : '#FF9500', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.roi_pct.toFixed(1)}%</strong>
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
                           <span style={{ color: 'var(--color-text-secondary)' }}>Estimated Breakeven:</span>
-                          <strong style={{ color: 'var(--saffron-500)', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.estimated_breakeven_months} months</strong>
+                          <strong style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.estimated_breakeven_months} months</strong>
                         </div>
                       </div>
 
@@ -417,7 +437,7 @@ export default function Simulator() {
                         {(!user?.role || user.role === 'expansion_lead' || user.role === 'admin') && (
                           <button 
                             onClick={() => proposeMutation.mutate(activeDraft.dbId)}
-                            className="btn-secondary" style={{ width: '100%', background: 'var(--peacock-500)', color: '#0b0d14', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700 }}
+                            className="btn-primary" style={{ width: '100%', background: '#0071E3', color: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, padding: '10px 0', borderRadius: '10px', cursor: 'pointer' }}
                           >
                             <Check size={14} /> Propose Location
                           </button>
@@ -425,7 +445,7 @@ export default function Simulator() {
 
                         <button
                           onClick={() => removeDraft(activeDraft.id)}
-                          className="btn-destructive" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                          className="btn-destructive" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 0', borderRadius: '10px' }}
                         >
                           <Trash2 size={14} /> Discard Node
                         </button>
