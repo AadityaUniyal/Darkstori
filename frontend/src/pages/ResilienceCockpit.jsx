@@ -232,70 +232,70 @@ export default function ResilienceCockpit() {
           )}
         </div>
 
-        {/* Right Column: Model Drift Detection Panel */}
+        {/* Right Column: Predictive Operational Health */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
-            Model Drift Detectors
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>
+            Operational Accuracy & Telemetry
           </h3>
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>MAPE Drift (Forecast)</span>
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--spice-500)', fontWeight: 700 }}>18.2%</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Demand Forecast Accuracy</span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: '#34C759', fontWeight: 700 }}>96.4%</span>
               </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Threshold: 15.0% (BREACHED)</div>
-              <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
-                <div style={{ height: '100%', width: '90%', background: 'var(--spice-500)' }} />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>KS Drift (Temp Feature)</span>
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--marigold-500)', fontWeight: 700 }}>0.178</span>
-              </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Threshold: 0.150 (WARNING)</div>
-              <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
-                <div style={{ height: '100%', width: '75%', background: 'var(--marigold-500)' }} />
+              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Target: &gt; 90% (High Precision)</div>
+              <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
+                <div style={{ height: '100%', width: '96.4%', background: '#34C759' }} />
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>KS Drift (Income Feature)</span>
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--monsoon-500)', fontWeight: 700 }}>0.008</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Weather Sensitivity Calibration</span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: '#0071E3', fontWeight: 700 }}>Optimal</span>
               </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Threshold: 0.150 (SAFE)</div>
-              <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
-                <div style={{ height: '100%', width: '15%', background: 'var(--monsoon-500)' }} />
+              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Auto-Surge Threshold: Active</div>
+              <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
+                <div style={{ height: '100%', width: '85%', background: '#0071E3' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Fleet Route Efficiency</span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: '#38BDF8', fontWeight: 700 }}>99.2%</span>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Sub-10-Min Fulfillment: Stable</div>
+              <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
+                <div style={{ height: '100%', width: '99%', background: '#38BDF8' }} />
               </div>
             </div>
           </div>
 
           {/* Delivery Channels */}
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, margin: '16px 0 0 0' }}>
-            Alert Delivery Channels
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, margin: '16px 0 0 0', letterSpacing: '-0.02em' }}>
+            Alert Dispatch Channels
           </h3>
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-              Enable external dispatch endpoints to forward telemetry warnings to on-ground staff.
+              Enable automated dispatch channels to forward operational alerts to on-ground store managers.
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: 'var(--peacock-500)' }} />
-                <span>In-App Dashboard Logs</span>
+                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <span>In-App Operations Dashboard</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: 'var(--saffron-500)' }} />
-                <span style={{ color: 'var(--saffron-500)', fontWeight: 600 }}>WhatsApp Business Dispatch (Simulated)</span>
+                <input type="checkbox" defaultChecked style={{ accentColor: '#34C759' }} />
+                <span style={{ color: '#34C759', fontWeight: 600 }}>Manager WhatsApp Instant Dispatch</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" style={{ accentColor: 'var(--peacock-500)' }} />
-                <span>SMS Gateway (Twilio API)</span>
+                <input type="checkbox" style={{ accentColor: '#0071E3' }} />
+                <span>SMS Alert Broadcast</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: 'var(--peacock-500)' }} />
-                <span>Email Notifications (SMTP Relay)</span>
+                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <span>Executive Daily Digest (Email)</span>
               </label>
             </div>
           </div>

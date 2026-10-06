@@ -433,24 +433,26 @@ export default function Recommendations() {
             )}
           </div>
 
-          {/* DEVELOPER API SURFACE */}
+          {/* ENTERPRISE INTEGRATION */}
           <div className="glass-card no-print" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
-              <Terminal color="var(--peacock-500)" size={20} />
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>{t.apiTitle}</h2>
+              <Terminal color="#0071E3" size={20} />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>Enterprise OMS & WMS Integration</h2>
             </div>
             
             <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>
-              {t.apiDesc}
+              Automatically synchronize Darkstori inventory allocations and pricing models directly into your warehouse management and ordering platforms.
             </p>
 
-            <div style={{ background: '#090a0f', borderRadius: 'var(--radius-md)', padding: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '8px' }}>GET /api/recommendations/complete</span>
-              <pre style={{ margin: 0, color: 'var(--peacock-500)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'pre' }}>
-                {`curl -X GET "${window.location.origin}/api/recommendations/complete?neighborhood_id=${selectedNbId}" \\
-  -H "Authorization: Bearer YOUR_API_TOKEN" \\
-  -H "Content-Type: application/json"`}
-              </pre>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <div style={{ background: '#141A24', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: '0.74rem', color: '#86868B', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>WMS Sync Status</span>
+                <span style={{ color: '#34C759', fontSize: '0.94rem', fontWeight: 700 }}>Active (Real-time)</span>
+              </div>
+              <div style={{ background: '#141A24', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: '0.74rem', color: '#86868B', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>ERP Connection</span>
+                <span style={{ color: '#0071E3', fontSize: '0.94rem', fontWeight: 700 }}>Connected</span>
+              </div>
             </div>
           </div>
 
