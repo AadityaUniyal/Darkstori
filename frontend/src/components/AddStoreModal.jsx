@@ -81,16 +81,16 @@ export default function AddStoreModal({ isOpen, onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg bg-[#121826] border border-border/80 rounded-2xl p-6 shadow-2xl overflow-hidden relative"
+        className="w-full max-w-lg bg-[#0E121A] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden relative backdrop-blur-2xl"
       >
-        <div className="flex justify-between items-center mb-5 pb-3 border-b border-border/40">
+        <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="w-9 h-9 rounded-xl bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#38BDF8]">
               <Building2 size={18} />
             </div>
             <div>
-              <h3 className="font-semibold text-base text-foreground">Add New Dark Store Hub</h3>
-              <p className="text-xs text-muted-foreground">Register a new physical fulfillment center</p>
+              <h3 className="font-semibold text-base text-white font-display">Add New Dark Store Hub</h3>
+              <p className="text-xs text-[#86868B]">Register a new physical fulfillment center</p>
             </div>
           </div>
           <button
@@ -171,54 +171,54 @@ export default function AddStoreModal({ isOpen, onClose }) {
                 step="0.0001"
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3 py-2 text-foreground focus:outline-none focus:border-emerald-500 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Longitude</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Longitude</label>
               <input
                 type="number"
                 step="0.0001"
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3 py-2 text-foreground focus:outline-none focus:border-emerald-500 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Floor Size (Sq. Ft.)</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Floor Size (Sq. Ft.)</label>
               <input
                 type="number"
                 value={storageSqft}
                 onChange={(e) => setStorageSqft(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2 text-foreground focus:outline-none focus:border-emerald-500 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Daily Order Capacity</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Daily Order Capacity</label>
               <input
                 type="number"
                 value={dailyCapacity}
                 onChange={(e) => setDailyCapacity(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2 text-foreground focus:outline-none focus:border-emerald-500 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-border/40">
+          <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#86868B] hover:text-white hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold text-xs shadow-lg shadow-emerald-500/25 hover:from-emerald-400 hover:to-emerald-500 transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[#0071E3] text-white font-semibold text-xs shadow-lg shadow-[#0071E3]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
             >
               {createMutation.isPending ? (
                 <>

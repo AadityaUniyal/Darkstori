@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Typography Hierarchy */
+  /* Typography Hierarchy (Apple SF Pro / Plus Jakarta Sans Standard) */
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -18,109 +18,122 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
-  /* Borders & Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Apple-Grade Geometric Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
   --radius-full: 9999px;
 
-  /* Smooth Easing */
-  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Apple Smooth Springs & Easing */
+  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Nav */
+  /* Nav Heights */
   --navbar-height: 64px;
   --bottom-nav-height: 72px;
 
-  /* Default Dark Theme Backgrounds */
-  --color-bg: #0B0F17;
-  --color-bg-alt: #070A10;
-  --color-bg-card: rgba(17, 24, 39, 0.75);
-  --color-bg-card-hover: rgba(30, 41, 59, 0.85);
-  --color-surface: rgba(255, 255, 255, 0.03);
-  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  /* Darkstori Space Obsidian Titanium Canvas */
+  --color-bg: #07090E;
+  --color-bg-alt: #0C1017;
+  --color-bg-card: rgba(14, 18, 27, 0.76);
+  --color-bg-card-hover: rgba(20, 26, 38, 0.88);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-hover: rgba(255, 255, 255, 0.075);
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-glow: rgba(16, 185, 129, 0.35);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-border-glow: rgba(0, 113, 227, 0.35);
 
-  /* High Contrast Text */
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
+  /* High Contrast Apple-Grade Text */
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #86868B;
+  --color-text-muted: #636366;
   --color-text-on-dark: #FFFFFF;
 
-  /* Focus & Utility */
-  --color-focus-ring: rgba(16, 185, 129, 0.5);
+  /* Darkstori Iconic Signature Color Identity: Hyper-Cobalt & Radiant Cyan */
+  --darkstori-50: #EFF6FF;
+  --darkstori-100: #DBEAFE;
+  --darkstori-200: #BFDBFE;
+  --darkstori-300: #93C5FD;
+  --darkstori-400: #60A5FA;
+  --darkstori-500: #0071E3; /* Primary Hero Blue */
+  --darkstori-600: #0058B3;
+  --darkstori-700: #003F80;
+  --darkstori-cyan: #38BDF8;
+  --darkstori-glow: rgba(0, 113, 227, 0.22);
+  --color-focus-ring: rgba(0, 113, 227, 0.45);
 
-  /* Brand Accents (Emerald & Indigo) */
-  --emerald-400: #34D399;
-  --emerald-500: #10B981;
-  --emerald-600: #059669;
-  --emerald-glow: rgba(16, 185, 129, 0.2);
+  /* Apple Semantic Palette Mapping */
+  --emerald-400: #4ADE80;
+  --emerald-500: #34C759; /* Apple Growth Green */
+  --emerald-600: #248A3D;
+  --emerald-glow: rgba(52, 199, 89, 0.2);
 
-  --indigo-400: #818CF8;
-  --indigo-500: #6366F1;
-  --indigo-600: #4F46E5;
-  --indigo-glow: rgba(99, 102, 241, 0.2);
+  --indigo-400: #60A5FA;
+  --indigo-500: #0071E3; /* Unified to Darkstori Cobalt */
+  --indigo-600: #0058B3;
+  --indigo-glow: rgba(0, 113, 227, 0.2);
 
   --amber-400: #FBBF24;
-  --amber-500: #F59E0B;
-  --rose-500: #F43F5E;
-  --cyan-500: #06B6D4;
+  --amber-500: #FF9500; /* Apple Warning Amber */
+  --rose-500: #FF3B30;  /* Apple Critical Red */
+  --cyan-500: #38BDF8;
 
-  /* Standard Status Palette mapping */
-  --saffron-100: rgba(16, 185, 129, 0.12);
-  --saffron-200: #A7F3D0;
-  --saffron-500: #10B981;
-  --saffron-600: #059669;
-  --peacock-100: rgba(99, 102, 241, 0.12);
-  --peacock-500: #6366F1;
-  --monsoon-500: #10B981;
-  --spice-500: #F43F5E;
-  --marigold-500: #F59E0B;
-  --ink-950: #020617;
+  /* Backward-compatible semantic bindings */
+  --saffron-100: rgba(0, 113, 227, 0.12);
+  --saffron-200: #BFDBFE;
+  --saffron-500: #0071E3;
+  --saffron-600: #0058B3;
+  --peacock-100: rgba(0, 113, 227, 0.12);
+  --peacock-500: #0071E3;
+  --monsoon-500: #0071E3;
+  --spice-500: #FF3B30;
+  --marigold-500: #FF9500;
+  --ink-950: #07090E;
 
-  /* Elevation (Shadows) */
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.6), 0 4px 8px -2px rgba(0, 0, 0, 0.4);
-  --shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.25);
-  --shadow-glow-indigo: 0 0 25px rgba(99, 102, 241, 0.25);
+  /* Apple-Grade Elevation & Lighting */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.55), 0 6px 12px -2px rgba(0, 0, 0, 0.35);
+  --shadow-glow-emerald: 0 0 24px rgba(52, 199, 89, 0.2);
+  --shadow-glow-indigo: 0 0 24px rgba(0, 113, 227, 0.25);
 }
 
 [data-theme="light"] {
-  --color-bg: #F8FAFC;
-  --color-bg-alt: #F1F5F9;
-  --color-bg-card: #FFFFFF;
-  --color-bg-card-hover: #F8FAFC;
+  --color-bg: #F5F5F7;
+  --color-bg-alt: #E8E8ED;
+  --color-bg-card: rgba(255, 255, 255, 0.88);
+  --color-bg-card-hover: #FFFFFF;
   --color-surface: rgba(0, 0, 0, 0.03);
-  --color-surface-hover: rgba(0, 0, 0, 0.08);
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-glow: rgba(16, 185, 129, 0.2);
+  --color-surface-hover: rgba(0, 0, 0, 0.06);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-hover: rgba(0, 0, 0, 0.15);
+  --color-border-glow: rgba(0, 113, 227, 0.2);
 
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748B;
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-text-muted: #86868B;
   --color-text-on-dark: #FFFFFF;
 
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.15), 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 14px 30px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* Custom Scrollbars */
+/* Apple-Style Minimal Precision Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-alt);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--emerald-500);
+  background: rgba(0, 113, 227, 0.5);
 }

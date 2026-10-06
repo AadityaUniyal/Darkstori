@@ -58,21 +58,21 @@ export default function AddBatchModal({ isOpen, onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-[#121826] border border-border/80 rounded-2xl p-6 shadow-2xl overflow-hidden relative"
+        className="w-full max-w-md bg-[#0E121A] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden relative backdrop-blur-2xl"
       >
-        <div className="flex justify-between items-center mb-5 pb-3 border-b border-border/40">
+        <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <div className="w-9 h-9 rounded-xl bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#38BDF8]">
               <Leaf size={18} />
             </div>
             <div>
-              <h3 className="font-semibold text-base text-foreground">Add Perishable Inventory Batch</h3>
-              <p className="text-xs text-muted-foreground">Track dynamic Sigmoid markdown decay</p>
+              <h3 className="font-semibold text-base text-white font-display">Add Perishable Inventory Batch</h3>
+              <p className="text-xs text-[#86868B]">Track dynamic Sigmoid markdown decay</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-[#86868B] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
           >
             <X size={18} />
           </button>
@@ -87,24 +87,24 @@ export default function AddBatchModal({ isOpen, onClose }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Product SKU / Produce Name</label>
+            <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Product SKU / Produce Name</label>
             <input
               type="text"
               placeholder="e.g. Organic Roma Tomatoes (1kg)"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 transition-colors text-xs"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Category</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
               >
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
@@ -116,13 +116,13 @@ export default function AddBatchModal({ isOpen, onClose }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Base Price (INR ₹)</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Base Price (INR ₹)</label>
               <input
                 type="number"
                 step="0.5"
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
                 required
               />
             </div>
@@ -130,40 +130,40 @@ export default function AddBatchModal({ isOpen, onClose }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Quantity (Units/Kg)</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Quantity (Units/Kg)</label>
               <input
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Shelf Life (Hours)</label>
+              <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Shelf Life (Hours)</label>
               <input
                 type="number"
                 value={shelfLifeHours}
                 onChange={(e) => setShelfLifeHours(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
                 required
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-border/40">
+          <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#86868B] hover:text-white hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createBatchMutation.isPending}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[#0071E3] text-white font-semibold text-xs shadow-lg shadow-[#0071E3]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
             >
               {createBatchMutation.isPending ? (
                 <>
