@@ -36,15 +36,15 @@ const CITY_DEFAULTS = {
 
 /* ── Theme-aware colors ──────────────────────────────────────────── */
 const COLORS = {
-  highScore:    [16, 185, 129, 200],   // emerald
-  medScore:     [245, 158, 11, 190],   // amber
-  lowScore:     [244, 63, 94, 170],    // rose
-  competitor:   [244, 63, 94, 215],    // rose
-  activeStore:  [16, 185, 129, 255],   // emerald
-  heatHigh:     [255, 122, 26, 190],   // orange
-  heatMed:      [245, 158, 11, 170],   // amber
-  serviceCircle:[255, 255, 255, 45],
-  label:        [225, 230, 240, 180],
+  highScore:    [0, 113, 227, 210],    // Darkstori Cobalt
+  medScore:     [56, 189, 248, 190],   // Radiant Cyan
+  lowScore:     [134, 134, 139, 140],  // Space Gray
+  competitor:   [255, 59, 48, 200],    // Apple Red
+  activeStore:  [52, 199, 89, 240],    // Apple Green
+  heatHigh:     [0, 113, 227, 160],    // Cobalt Glow
+  heatMed:      [56, 189, 248, 130],   // Cyan Glow
+  serviceCircle:[255, 255, 255, 30],
+  label:        [245, 245, 247, 200],
 };
 
 function boundsFromPoints(points) {
@@ -112,17 +112,17 @@ export default function MapView({
 
   const initialViewState = useMemo(() => {
     if (Array.isArray(center) && center.length >= 2) {
-      return { longitude: center[1], latitude: center[0], zoom: zoom || 11, pitch: 45, bearing: 0 };
+      return { longitude: center[1], latitude: center[0], zoom: zoom || 11, pitch: 40, bearing: 0 };
     }
     if (center?.lng && center?.lat) {
-      return { longitude: center.lng, latitude: center.lat, zoom: zoom || 11, pitch: 45, bearing: 0 };
+      return { longitude: center.lng, latitude: center.lat, zoom: zoom || 11, pitch: 40, bearing: 0 };
     }
     if (autoBounds) {
       return {
         longitude: (autoBounds.minLng + autoBounds.maxLng) / 2,
         latitude: (autoBounds.minLat + autoBounds.maxLat) / 2,
         zoom: zoom || 10.2,
-        pitch: 45,
+        pitch: 40,
         bearing: 0,
       };
     }
@@ -130,7 +130,7 @@ export default function MapView({
       longitude: fallbackCenter.lng,
       latitude: fallbackCenter.lat,
       zoom: zoom || fallbackCenter.zoom,
-      pitch: 45,
+      pitch: 40,
       bearing: 0,
     };
   }, [center, zoom, autoBounds, fallbackCenter]);
@@ -148,9 +148,9 @@ export default function MapView({
         if (score >= 7) return COLORS.medScore;
         return COLORS.lowScore;
       },
-      getRadius: (d) => 140 + Math.max(0, Number(d.opportunity_score || d.market_potential_score || 0)) * 12,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 18,
+      getRadius: (d) => 120 + Math.max(0, Number(d.opportunity_score || d.market_potential_score || 0)) * 8,
+      radiusMinPixels: 4,
+      radiusMaxPixels: 14,
       pickable: true,
       onClick: ({ object }) => onSelect && object && onSelect(object),
     });
@@ -160,9 +160,9 @@ export default function MapView({
       data: stores.filter((s) => s.status === 'competitor'),
       getPosition: (d) => [d.lng, d.lat],
       getFillColor: COLORS.competitor,
-      getRadius: 170,
+      getRadius: 140,
       radiusMinPixels: 4,
-      radiusMaxPixels: 12,
+      radiusMaxPixels: 10,
       pickable: true,
     });
 
@@ -171,9 +171,9 @@ export default function MapView({
       data: stores.filter((s) => s.status === 'active' || s.is_active),
       getPosition: (d) => [d.lng, d.lat],
       getFillColor: COLORS.activeStore,
-      getRadius: 210,
+      getRadius: 180,
       radiusMinPixels: 5,
-      radiusMaxPixels: 14,
+      radiusMaxPixels: 12,
       pickable: true,
     });
 
@@ -185,9 +185,9 @@ export default function MapView({
         const score = Number(d.opportunity_score || 0);
         return score > 8 ? COLORS.heatHigh : COLORS.heatMed;
       },
-      getRadius: (d) => 250 + Number(d.opportunity_score || 0) * 35,
-      radiusMinPixels: 10,
-      radiusMaxPixels: 28,
+      getRadius: (d) => 220 + Number(d.opportunity_score || 0) * 25,
+      radiusMinPixels: 8,
+      radiusMaxPixels: 22,
       pickable: true,
     });
 
@@ -208,68 +208,55 @@ export default function MapView({
       getLineWidth: 1,
     });
 
-    const labels = new TextLayer({
-      id: 'store-labels',
-      data: stores.slice(0, 40),
-      getPosition: (d) => [d.lng, d.lat],
-      getText: (d) => d.store_name || d.platform || 'Store',
-      getSize: 11,
-      getColor: COLORS.label,
-      getTextAnchor: 'start',
-      getAlignmentBaseline: 'center',
-      getPixelOffset: [10, 0],
-      fontFamily: 'Inter, system-ui, sans-serif',
-    });
-
-    return [neighborhoodLayer, competitorLayer, activeStoreLayer, heatLayer, serviceCircleLayer, labels].filter(Boolean);
+    return [neighborhoodLayer, competitorLayer, activeStoreLayer, heatLayer, serviceCircleLayer].filter(Boolean);
   }, [neighborhoods, stores, zones, showHeatmap, showLayers, initialViewState.longitude, initialViewState.latitude, onSelect]);
 
   const mapHeight = isFullscreen ? '80vh' : height;
 
   return (
-    <div style={{ height: mapHeight, width: '100%', position: 'relative', borderRadius: '12px', overflow: 'hidden', transition: 'height 0.3s ease' }}>
+    <div style={{ height: mapHeight, width: '100%', position: 'relative', borderRadius: '16px', overflow: 'hidden', transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
-          <div className="flex items-center gap-3 bg-card/90 px-4 py-3 rounded-lg border border-border">
-            <Loader2 size={18} className="animate-spin text-emerald-500" />
-            <span className="text-sm text-muted-foreground">Loading map data...</span>
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-2xl">
+          <div className="flex items-center gap-2.5 bg-[#0E121A]/90 px-4 py-2.5 rounded-xl border border-white/10 shadow-xl">
+            <Loader2 size={16} className="animate-spin text-[#0071E3]" />
+            <span className="text-xs font-semibold text-[#86868B]">Updating map telemetry...</span>
           </div>
         </div>
       )}
 
       {/* Map controls */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+      <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
         <button
           onClick={() => setIsFullscreen(!isFullscreen)}
-          className="p-2 bg-card/80 backdrop-blur-sm border border-border rounded-lg hover:bg-accent/60 transition-colors"
+          className="p-2 bg-[#0E121A]/80 backdrop-blur-xl border border-white/10 rounded-xl text-white hover:bg-white/10 transition-colors shadow-lg"
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
         >
           {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
         <button
           onClick={() => setShowLayers(!showLayers)}
-          className={`p-2 bg-card/80 backdrop-blur-sm border rounded-lg transition-colors ${showLayers ? 'border-emerald-500/50 text-emerald-400' : 'border-border text-muted-foreground'}`}
+          className={`p-2 bg-[#0E121A]/80 backdrop-blur-xl border rounded-xl transition-colors shadow-lg ${showLayers ? 'border-[#0071E3]/50 text-[#38BDF8]' : 'border-white/10 text-[#86868B]'}`}
           title={showLayers ? 'Hide layers' : 'Show layers'}
         >
           <Layers size={14} />
         </button>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-3 left-3 z-10 flex gap-3 bg-card/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-border text-xs">
+      {/* Cupertino Frosted Legend */}
+      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 bg-[#0E121A]/85 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 text-[11px] font-medium text-white shadow-lg">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgb(16,185,129)' }} />
-          Active
+          <span className="w-2 h-2 rounded-full bg-[#34C759]" />
+          Active Hub
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgb(244,63,94)' }} />
+          <span className="w-2 h-2 rounded-full bg-[#FF3B30]" />
           Competitor
         </span>
         {showHeatmap && (
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgb(255,122,26)' }} />
-            Opportunity
+            <span className="w-2 h-2 rounded-full bg-[#0071E3]" />
+            Expansion Target
           </span>
         )}
       </div>
@@ -282,8 +269,8 @@ export default function MapView({
           if (!object) return null;
           const name = object.store_name || object.label || object.neighborhood_name || object.name;
           const score = object.opportunity_score || object.market_potential_score;
-          if (score) return `${name} — Score: ${Number(score).toFixed(1)}/10`;
-          return name || `Live Order: ${object.platform || ''}`;
+          if (score) return `${name} • Opportunity Score: ${Number(score).toFixed(1)}/10`;
+          return name || `Active Order: ${object.platform || ''}`;
         }}
       >
         <Map

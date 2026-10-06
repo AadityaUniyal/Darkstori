@@ -306,9 +306,6 @@ export default function Dashboard() {
           <div className="dash-card-header" style={{ marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
               Competitor Alerts
-              <span style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--color-text-muted)', marginLeft: '8px', verticalAlign: 'middle', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px' }}>
-                [OSM Data]
-              </span>
             </h2>
             <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Last 7 days</span>
           </div>

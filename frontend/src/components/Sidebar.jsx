@@ -40,27 +40,27 @@ const Sidebar = memo(() => {
     {
       title: 'OPERATIONS',
       items: [
-        { path: '/cockpit',     icon: Compass,         label: 'Live Cockpit' },
-        { path: '/dashboard',   icon: LayoutDashboard, label: 'Overview & KPIs' },
-        { path: '/resilience',  icon: Leaf,            label: 'Zero-Waste Perishables' },
+        { path: '/cockpit',     icon: Compass,         label: 'Network Cockpit' },
+        { path: '/dashboard',   icon: LayoutDashboard, label: 'Performance Overview' },
+        { path: '/resilience',  icon: Leaf,            label: 'Freshness & Pricing' },
       ]
     },
     {
-      title: 'INTELLIGENCE & SCOUTING',
+      title: 'INTELLIGENCE & EXPANSION',
       items: [
-        { path: '/forecast',      icon: TrendingUp,      label: 'Demand Forecaster' },
-        { path: '/neighborhoods', icon: MapPin,          label: 'Neighborhood DNA' },
+        { path: '/forecast',      icon: TrendingUp,      label: 'Demand Forecast' },
+        { path: '/neighborhoods', icon: MapPin,          label: 'City Exploration' },
         { path: '/simulator',     icon: FlaskConical,    label: 'Store Simulator' },
-        { path: '/analytics',     icon: BarChart2,       label: 'SLA & Heatmaps' },
+        { path: '/analytics',     icon: BarChart2,       label: 'Coverage & SLA' },
       ]
     },
     {
-      title: 'AUTOMATION & FLEET',
+      title: 'AUTOMATION & ADVISORY',
       items: [
-        { path: '/playbooks',     icon: Workflow,        label: 'Autonomous Playbooks' },
-        { path: '/events',        icon: Calendar,        label: 'Local Events' },
-        { path: '/recommendations', icon: Sparkles,      label: 'AI Recommendations' },
-        { path: '/algorithm-lab', icon: Cpu,             label: 'MLOps & Algorithms' },
+        { path: '/playbooks',     icon: Workflow,        label: 'Automation Rules' },
+        { path: '/events',        icon: Calendar,        label: 'Surge Events' },
+        { path: '/recommendations', icon: Sparkles,      label: 'Smart Insights' },
+        { path: '/algorithm-lab', icon: Cpu,             label: 'System Intelligence' },
       ]
     }
   ];
@@ -68,9 +68,9 @@ const Sidebar = memo(() => {
   const mobileRoutes = [
     { path: '/cockpit',     icon: Compass,         label: 'Cockpit' },
     { path: '/dashboard',   icon: LayoutDashboard, label: 'Overview' },
-    { path: '/resilience',  icon: Leaf,            label: 'Perishables' },
+    { path: '/resilience',  icon: Leaf,            label: 'Freshness' },
     { path: '/forecast',    icon: TrendingUp,      label: 'Forecast' },
-    { path: '/playbooks',   icon: Workflow,        label: 'Playbooks' },
+    { path: '/playbooks',   icon: Workflow,        label: 'Rules' },
   ];
 
   // Mobile navigation below 640px

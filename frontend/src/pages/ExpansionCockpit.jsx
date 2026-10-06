@@ -152,18 +152,18 @@ export default function ExpansionCockpit() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'end' }}>
         <div>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '2.3rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.03em' }}>
             Regional Expansion Cockpit
           </h1>
-          <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)' }}>
-            Find the best place to open next using free geo intelligence, ROI simulation, and auditable approvals.
+          <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)', fontSize: '0.94rem' }}>
+            Identify high-potential locations, simulate multi-year store economics, and execute approved launches.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button
             className="btn-primary"
             onClick={() => setIsAddStoreOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#0071E3', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
           >
             <Plus size={16} /> Add Dark Store
           </button>

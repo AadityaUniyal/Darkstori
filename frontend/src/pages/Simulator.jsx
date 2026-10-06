@@ -299,14 +299,15 @@ export default function Simulator() {
         {/* Right Side Panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           {/* Tab selectors */}
-          <div style={{ display: 'flex', gap: '2px', background: 'var(--color-surface)', padding: '2px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', gap: '4px', background: '#0E121A', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <button 
               onClick={() => setActiveTab('simulate')}
               style={{
-                flex: 1, padding: '6px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                background: activeTab === 'simulate' ? 'var(--peacock-500)' : 'transparent',
-                color: activeTab === 'simulate' ? '#0B0D14' : 'var(--color-text-secondary)'
+                flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+                border: 'none', borderRadius: '8px',
+                background: activeTab === 'simulate' ? '#0071E3' : 'transparent',
+                color: activeTab === 'simulate' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                transition: 'all 0.2s ease'
               }}
             >
               Simulation ({drafts.length})
@@ -314,10 +315,11 @@ export default function Simulator() {
             <button 
               onClick={() => setActiveTab('proposals')}
               style={{
-                flex: 1, padding: '6px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                background: activeTab === 'proposals' ? 'var(--peacock-500)' : 'transparent',
-                color: activeTab === 'proposals' ? '#0B0D14' : 'var(--color-text-secondary)'
+                flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+                border: 'none', borderRadius: '8px',
+                background: activeTab === 'proposals' ? '#0071E3' : 'transparent',
+                color: activeTab === 'proposals' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                transition: 'all 0.2s ease'
               }}
             >
               Proposals ({proposals?.length || 0})
@@ -325,10 +327,11 @@ export default function Simulator() {
             <button 
               onClick={() => setActiveTab('ledger')}
               style={{
-                flex: 1, padding: '6px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                background: activeTab === 'ledger' ? 'var(--peacock-500)' : 'transparent',
-                color: activeTab === 'ledger' ? '#0B0D14' : 'var(--color-text-secondary)'
+                flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+                border: 'none', borderRadius: '8px',
+                background: activeTab === 'ledger' ? '#0071E3' : 'transparent',
+                color: activeTab === 'ledger' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                transition: 'all 0.2s ease'
               }}
             >
               Ledger ({auditLogs?.length || 0})
@@ -336,10 +339,11 @@ export default function Simulator() {
             <button 
               onClick={() => setActiveTab('cannibalization')}
               style={{
-                flex: 1, padding: '6px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                background: activeTab === 'cannibalization' ? 'var(--peacock-500)' : 'transparent',
-                color: activeTab === 'cannibalization' ? '#0B0D14' : 'var(--color-text-secondary)'
+                flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
+                border: 'none', borderRadius: '8px',
+                background: activeTab === 'cannibalization' ? '#0071E3' : 'transparent',
+                color: activeTab === 'cannibalization' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                transition: 'all 0.2s ease'
               }}
             >
               Cannibalization
