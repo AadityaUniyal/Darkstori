@@ -96,7 +96,11 @@ function AppContent() {
   if (isLandingPage) {
     return (
       <Suspense fallback={<RangoliLoader />}>
-        <LandingPage />
+        <AnimatePresence mode="wait">
+          <AnimatedPage key="landing">
+            <LandingPage />
+          </AnimatedPage>
+        </AnimatePresence>
       </Suspense>
     );
   }
@@ -104,11 +108,15 @@ function AppContent() {
   if (isAuthPage) {
     return (
       <Suspense fallback={<RangoliLoader />}>
-        <Routes location={location}>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <AnimatedPage key={location.pathname}>
+            <Routes location={location}>
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </AnimatedPage>
+        </AnimatePresence>
       </Suspense>
     );
   }
