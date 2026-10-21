@@ -51,8 +51,11 @@ class MLflowConfig:
 
     def __post_init__(self):
         """Validate and process configuration after initialization."""
-        artifact_path = Path(self.artifact_location)
-        artifact_path.mkdir(parents=True, exist_ok=True)
+        try:
+            artifact_path = Path(self.artifact_location)
+            artifact_path.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
         self.tracking_uri = self._substitute_env_vars(self.tracking_uri)
 
