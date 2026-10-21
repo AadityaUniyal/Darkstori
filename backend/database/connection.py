@@ -1,4 +1,5 @@
 """Database connection management."""
+import os
 from urllib.parse import urlparse, urlunparse
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool, StaticPool
@@ -60,6 +61,7 @@ connect_args = {"ssl": True} if "neon.tech" in (settings.DATABASE_URL or "") els
 
 # Configure connection pool arguments dynamically based on the database dialect
 is_sqlite = DATABASE_URL.startswith("sqlite")
+is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 
 if is_sqlite:
     engine = create_async_engine(
@@ -67,6 +69,13 @@ if is_sqlite:
         echo=settings.DEBUG,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
+    )
+elif is_serverless:
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=settings.DEBUG,
+        poolclass=NullPool,
+        connect_args=connect_args,
     )
 else:
     engine = create_async_engine(

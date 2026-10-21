@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 from backend.core.security import verify_token
 from backend.ml.model_registry import ModelRegistry
-from backend.pipelines.training_pipeline import TrainingPipeline
 from backend.utils.scheduler import global_scheduler
 from backend.database.connection import get_db
 from backend.ml.drift_monitor import DriftMonitor
@@ -49,6 +48,7 @@ class ModelInfoResponse(BaseModel):
 def run_training_job():
     logger.info("Starting background ML model training task...")
     try:
+        from backend.pipelines.training_pipeline import TrainingPipeline
         pipeline = TrainingPipeline()
         results = pipeline.run()
         logger.info(f"Background ML training complete! Best Model: {results['best_model']}")
