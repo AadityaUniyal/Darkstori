@@ -1,7 +1,10 @@
 import asyncio
 import logging
 from typing import Any, Dict, Optional
-import redis.asyncio as redis
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
 from backend.core.config import settings
 
 logger = logging.getLogger(__name__)

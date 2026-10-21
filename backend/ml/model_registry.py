@@ -9,9 +9,17 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import mlflow
-from mlflow.entities.model_registry import ModelVersion, RegisteredModel
-from mlflow.tracking import MlflowClient
+try:
+    import mlflow
+    from mlflow.entities.model_registry import ModelVersion, RegisteredModel
+    from mlflow.tracking import MlflowClient
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    mlflow = None
+    ModelVersion = Any
+    RegisteredModel = Any
+    MlflowClient = None
+    MLFLOW_AVAILABLE = False
 
 from backend.core.config import settings
 from backend.ml.mlflow_config import get_mlflow_config
@@ -32,8 +40,8 @@ class ModelRegistry:
         Args:
             tracking_uri: MLflow tracking URI (uses config if not provided)
         """
-        self.enable_tracking = settings.MLFLOW_ENABLE_TRACKING
-        if os.getenv("MLFLOW_ENABLE_TRACKING", "true").lower() != "true":
+        self.enable_tracking = MLFLOW_AVAILABLE and settings.MLFLOW_ENABLE_TRACKING
+        if not MLFLOW_AVAILABLE or os.getenv("MLFLOW_ENABLE_TRACKING", "true").lower() != "true":
             self.enable_tracking = False
 
         if not self.enable_tracking:
@@ -243,12 +251,14 @@ class ModelRegistry:
         Returns:
             List of RegisteredModel objects
         """
+        if not self.client:
+            return []
         try:
             models = self.client.search_registered_models(filter_string=filter_string)
             return list(models)
         except Exception as e:
             logger.error(f"Failed to search models: {e}")
-            raise
+            return []
 
     def search_model_versions(
         self, filter_string: Optional[str] = None
@@ -261,12 +271,14 @@ class ModelRegistry:
         Returns:
             List of ModelVersion objects
         """
+        if not self.client:
+            return []
         try:
             versions = self.client.search_model_versions(filter_string=filter_string)
             return list(versions)
         except Exception as e:
             logger.error(f"Failed to search model versions: {e}")
-            raise
+            return []
 
     def delete_model_version(self, name: str, version: int) -> None:
         """Delete a specific model version.
