@@ -10,8 +10,15 @@ import threading
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
-import joblib
-import mlflow
+try:
+    import joblib
+except ImportError:
+    joblib = None
+
+try:
+    import mlflow
+except ImportError:
+    mlflow = None
 
 
 from backend.core.config import settings, MODELS_DIR
