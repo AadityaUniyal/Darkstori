@@ -20,7 +20,10 @@ MODELS_DIR = PROJECT_ROOT / "models"
 
 # Create directories if they don't exist
 for directory in [RAW_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, MODELS_DIR]:
-    directory.mkdir(parents=True, exist_ok=True)
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 
 class Settings(BaseSettings):
