@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Performance Monitoring for ML Models.
 
 This module provides performance monitoring, drift detection,
@@ -11,12 +12,17 @@ from typing import Any, Dict, List, Optional
 try:
     import numpy as np
 except ImportError:
-    np = None
+    class _MockNp:
+        ndarray = Any
+    np = _MockNp()
 
 try:
     import pandas as pd
 except ImportError:
-    pd = None
+    class _MockPd:
+        DataFrame = Any
+        Series = Any
+    pd = _MockPd()
 try:
     from scipy import stats
 except ImportError:

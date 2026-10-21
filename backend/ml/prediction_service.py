@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Prediction Service for ML Models."""
 import asyncio
 import logging
@@ -10,12 +11,19 @@ from typing import Any, Dict, Optional
 try:
     import numpy as np
 except ImportError:
-    np = None
+    class _MockNp:
+        ndarray = Any
+        number = Any
+    np = _MockNp()
 
 try:
     import pandas as pd
 except ImportError:
-    pd = None
+    class _MockPd:
+        DataFrame = Any
+        Series = Any
+        Timestamp = Any
+    pd = _MockPd()
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
