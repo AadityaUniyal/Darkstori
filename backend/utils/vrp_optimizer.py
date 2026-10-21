@@ -64,14 +64,14 @@ def optimize_dispatch_batches(
         max_batch_radius_km: Maximum clustering radius around hub
     """
     if not orders:
-        return {
+        return VRPBatchResult({
             "total_orders": 0,
             "riders_required": 0,
             "batches": [],
             "total_distance_km": 0.0,
             "co2_saved_kg": 0.0,
             "cost_savings_pct": 0.0,
-        }
+        })
 
     # 1. Base individual routes (dispatching 1 rider per order)
     single_rider_dist = sum(_haversine_km(store_lat, store_lng, o["lat"], o["lng"]) * 2 for o in orders)

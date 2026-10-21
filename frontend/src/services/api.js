@@ -86,7 +86,10 @@ apiClient.interceptors.response.use(
           isRefreshing = false;
         }
       }
-      // No refresh token available — force logout
+      // No refresh token available — force logout unless in sandbox demo mode
+      if (localStorage.getItem('darkstori_persona') || refreshToken?.includes('demo')) {
+        return Promise.reject(err);
+      }
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       window.dispatchEvent(new CustomEvent('auth:logout'));
@@ -120,6 +123,43 @@ const register = async (userData) => {
     }
   }
   return response.data;
+};
+
+const demoLogin = async (persona) => {
+  try {
+    const response = await apiClient.post('/api/v1/auth/demo-login', {
+      persona_id: persona.id,
+      role: persona.role,
+      email: `${persona.id}@darkstori.demo`,
+      full_name: persona.title,
+    });
+    if (response.data.access_token) {
+      localStorage.setItem('auth_token', response.data.access_token);
+      if (response.data.refresh_token) {
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+      }
+    }
+    return response.data;
+  } catch (err) {
+    console.warn('Backend demo-login unavailable, fallback to offline sandbox mode', err);
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({
+      sub: `${persona.id}@darkstori.demo`,
+      user_id: '999',
+      role: persona.role,
+      exp: Math.floor(Date.now() / 1000) + 86400
+    }));
+    const syntheticJwt = `${header}.${payload}.signature`;
+    localStorage.setItem('auth_token', syntheticJwt);
+    localStorage.setItem('refresh_token', 'offline-demo-refresh');
+    return {
+      access_token: syntheticJwt,
+      refresh_token: 'offline-demo-refresh',
+      user_id: '999',
+      role: persona.role,
+      email: `${persona.id}@darkstori.demo`
+    };
+  }
 };
 
 const logout = async () => {
@@ -189,8 +229,9 @@ const getPlatformComparison = async () => {
 
 // ── Advanced Analytics ────────────────────────────────────────────────────────
 
-const getDashboardMetrics = async () => {
-  const response = await apiClient.get('/api/v1/analytics/advanced/dashboard/metrics');
+const getDashboardMetrics = async (city = null) => {
+  const params = city ? { city } : {};
+  const response = await apiClient.get('/api/v1/analytics/advanced/dashboard/metrics', { params });
   return response.data;
 };
 
@@ -478,6 +519,8 @@ const getResilienceBatches = async (city = null, category = null) => {
   return response.data;
 };
 
+const getBatches = getResilienceBatches;
+
 const simulateDecay = async (hours, city = null, tempFailure = false) => {
   const payload = { hours, city, temp_failure: tempFailure };
   const response = await apiClient.post('/api/v1/resilience/batches/decay', payload);
@@ -683,6 +726,7 @@ export const api = {
 
   // Auth
   login,
+  demoLogin,
   register,
   logout,
   getMe,
@@ -766,6 +810,7 @@ export const api = {
 
   // Resilience
   getResilienceBatches,
+  getBatches,
   createBatch,
   deleteBatch,
   simulateDecay,

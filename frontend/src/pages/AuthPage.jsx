@@ -148,29 +148,9 @@ export default function AuthPage() {
   };
 
   const handleLaunchDemoPersona = async (persona) => {
-    // Generate simulated guest access for immediate sandbox testing
     try {
-      const demoTokenData = {
-        access_token: 'demo-token-' + persona.role + '-' + Date.now(),
-        refresh_token: 'demo-refresh-' + Date.now(),
-        user_id: '999',
-        role: persona.role,
-        email: persona.id + '@darkstori.demo'
-      };
-      // Synthetic base64 JWT payload with expiry in 24h
-      const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-      const payload = btoa(JSON.stringify({
-        sub: persona.id + '@darkstori.demo',
-        user_id: '999',
-        role: persona.role,
-        exp: Math.floor(Date.now() / 1000) + 86400
-      }));
-      const syntheticJwt = `${header}.${payload}.signature`;
-
-      localStorage.setItem('auth_token', syntheticJwt);
-      localStorage.setItem('refresh_token', demoTokenData.refresh_token);
       localStorage.setItem('darkstori_persona', JSON.stringify(persona));
-
+      await api.demoLogin(persona);
       window.location.href = '/cockpit';
     } catch (e) {
       setErrors({ submit: 'Failed to initialize demo sandbox.' });

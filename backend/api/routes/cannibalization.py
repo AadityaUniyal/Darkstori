@@ -6,10 +6,10 @@ cannibalized orders from the operator's own network.
 """
 
 import math
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,6 +39,18 @@ class CannibalizationRequest(BaseModel):
     radius_km: float = Field(default=3.0, ge=0.5, le=10.0)
     proposed_sqft: int = Field(default=1500, ge=200, le=10000)
     avg_order_value: float = Field(default=350.0, ge=50)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "latitude" in data and "lat" not in data:
+                data["lat"] = data["latitude"]
+            if "longitude" in data and "lng" not in data:
+                data["lng"] = data["longitude"]
+            if "sqft" in data and "proposed_sqft" not in data:
+                data["proposed_sqft"] = data["sqft"]
+        return data
 
 
 class AffectedStore(BaseModel):
@@ -139,51 +151,79 @@ async def analyze_cannibalization(
     if not nearby_stores:
         return _fallback_response(req)
 
-    # 2. Calculate current attractiveness for each store
-    existing_attractiveness = []
+    # 2. Extract existing store capacities
+    existing_stores = []
     total_current_orders = 0
     for store, dist in nearby_stores:
         sqft = getattr(store, "storage_capacity_sqft", None) or getattr(store, "estimated_size_sqft", None) or 1500
         orders = getattr(store, "estimated_daily_orders", None) or getattr(store, "daily_order_capacity", None) or max(80, int(sqft / 10))
-        attract = _huff_attractiveness(sqft, dist)
-        existing_attractiveness.append({
+        existing_stores.append({
             "store": store,
             "distance_km": round(dist, 2),
+            "lat": store.latitude,
+            "lng": store.longitude,
             "sqft": sqft,
             "current_orders": orders,
-            "attractiveness": attract,
         })
         total_current_orders += orders
 
-    # 3. Add proposed store
-    proposed_attract = _huff_attractiveness(req.proposed_sqft, 0.1)  # Self-distance ~100m
+    # 3. Authentic Multi-Point Huff Spatial Gravity Redistribution
+    # Sample customer demand points across concentric rings in the service catchment area
+    demand_points = [(req.lat, req.lng)]
+    num_rings = 4
+    points_per_ring = 8
+    for r_idx in range(1, num_rings + 1):
+        r_km = (req.radius_km * r_idx) / num_rings
+        for p_idx in range(points_per_ring):
+            angle = (2 * math.pi * p_idx) / points_per_ring
+            # 1 deg lat ~ 111 km, 1 deg lng ~ 111 * cos(lat) km
+            dlat = (r_km / 111.0) * math.cos(angle)
+            dlng = (r_km / (111.0 * max(0.1, math.cos(math.radians(req.lat))))) * math.sin(angle)
+            demand_points.append((req.lat + dlat, req.lng + dlng))
 
-    # Total attractiveness in the zone (all existing + proposed)
-    total_attract = sum(ea["attractiveness"] for ea in existing_attractiveness) + proposed_attract
+    # Evaluate pre-entry and post-entry choice probabilities across all demand centroids
+    num_dp = len(demand_points)
+    store_share_old = [0.0] * len(existing_stores)
+    store_share_new = [0.0] * len(existing_stores)
+    new_store_total_share = 0.0
 
-    # 4. Redistribute demand using Huff's model
-    # The proposed store "pulls" demand proportional to its share of attractiveness
-    proposed_share = proposed_attract / total_attract if total_attract else 0
+    for dp_lat, dp_lng in demand_points:
+        # Pre-entry attractiveness
+        old_attrs = [
+            _huff_attractiveness(es["sqft"], _haversine_km(dp_lat, dp_lng, es["lat"], es["lng"]))
+            for es in existing_stores
+        ]
+        sum_old = sum(old_attrs)
+        if sum_old > 0:
+            for s_idx, a in enumerate(old_attrs):
+                store_share_old[s_idx] += (a / sum_old) / num_dp
 
-    # Estimate total addressable market (current orders + latent demand from unserved population)
-    # Latent demand: assume 15% more orders become viable due to better coverage
+        # Post-entry attractiveness with proposed store
+        new_attr = _huff_attractiveness(req.proposed_sqft, _haversine_km(dp_lat, dp_lng, req.lat, req.lng))
+        sum_new = sum_old + new_attr
+        if sum_new > 0:
+            for s_idx, a in enumerate(old_attrs):
+                store_share_new[s_idx] += (a / sum_new) / num_dp
+            new_store_total_share += (new_attr / sum_new) / num_dp
+
+    # 4. Total addressable market with latent demand expansion
     latent_demand_factor = 0.15
     total_market = int(total_current_orders * (1 + latent_demand_factor))
-    new_store_orders = int(total_market * proposed_share)
+    new_store_orders = max(10, int(total_market * new_store_total_share))
 
     # 5. Calculate cannibalization per store
     affected_stores = []
     total_cannibalized_own = 0
     total_cannibalized_competitor = 0
 
-    for ea in existing_attractiveness:
-        store = ea["store"]
-        old_share = ea["attractiveness"] / (total_attract - proposed_attract) if (total_attract - proposed_attract) else 0
-        new_share = ea["attractiveness"] / total_attract if total_attract else 0
-        share_loss = old_share - new_share
+    for idx, es in enumerate(existing_stores):
+        store = es["store"]
+        old_s = store_share_old[idx]
+        new_s = store_share_new[idx]
+        fraction_lost = max(0.0, (old_s - new_s) / old_s) if old_s > 0 else 0.0
 
-        lost_orders = max(0, int(ea["current_orders"] * share_loss / old_share)) if old_share else 0
-        lost_pct = round(lost_orders / ea["current_orders"] * 100, 1) if ea["current_orders"] else 0
+        lost_orders = max(0, int(es["current_orders"] * fraction_lost))
+        lost_pct = round((lost_orders / es["current_orders"]) * 100, 1) if es["current_orders"] else 0.0
 
         is_own = store.platform and store.platform.lower() in ["darkstori", "own"]
         if is_own:
@@ -195,11 +235,11 @@ async def analyze_cannibalization(
             store_id=store.id,
             store_name=store.store_name or f"{store.platform} #{store.id}",
             platform=store.platform or "Unknown",
-            distance_km=ea["distance_km"],
-            current_daily_orders=ea["current_orders"],
+            distance_km=es["distance_km"],
+            current_daily_orders=es["current_orders"],
             lost_orders=lost_orders,
             lost_pct=lost_pct,
-            remaining_orders=ea["current_orders"] - lost_orders,
+            remaining_orders=es["current_orders"] - lost_orders,
         ))
 
     # Sort by impact (most affected first)

@@ -38,8 +38,13 @@ class CityResponse(BaseModel):
 class NeighborhoodResponse(BaseModel):
     neighborhood_id: int
     city_id: Optional[int] = None
+    city: Optional[str] = None
     neighborhood_name: Optional[str] = None
     pincode: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    centroid_lat: Optional[float] = None
+    centroid_lng: Optional[float] = None
     population: Optional[int] = None
     avg_age: Optional[float] = None
     avg_household_income: Optional[float] = None
@@ -105,7 +110,8 @@ async def get_focus_cities(
     return cities
 
 
-@router.get("/", response_model=List[NeighborhoodResponse])
+@router.get("", response_model=List[NeighborhoodResponse])
+@router.get("/", response_model=List[NeighborhoodResponse], include_in_schema=False)
 async def get_neighborhoods(
     city_id: Optional[int] = Query(None),
     limit: int = Query(50, le=200),
@@ -113,7 +119,8 @@ async def get_neighborhoods(
     payload: dict = Depends(verify_token),
 ):
     """Get neighborhoods, optionally filtered by city."""
-    query = select(Neighborhood)
+    from sqlalchemy.orm import selectinload
+    query = select(Neighborhood).options(selectinload(Neighborhood.city))
     if city_id is not None:
         query = query.where(Neighborhood.city_id == city_id)
     query = query.limit(limit)
@@ -122,18 +129,19 @@ async def get_neighborhoods(
     neighborhoods = result.scalars().all()
 
     if not neighborhoods:
-        # Fallback to realistic neighborhoods
+        # Fallback to realistic neighborhoods with geographic coordinates
         dummy_nbhds = [
-            (1, 1, "Central Ward", "000001", 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
-            (2, 1, "North Market", "000002", 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
-            (3, 1, "Transit Hub", "000003", 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
-            (4, 2, "Residential Edge", "000004", 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
-            (5, 4, "Growth Corridor", "000005", 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
-            (6, 3, "Logistics Belt", "000006", 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
+            (1, 1, "Bangalore", "Koramangala", "560034", 12.9345, 77.6266, 150000, 28.5, 950000.0, 72.0, "High", 3, "High", 9.2, 1),
+            (2, 1, "Bangalore", "Indiranagar", "560038", 12.9719, 77.6412, 120000, 29.2, 1100000.0, 68.0, "High", 4, "High", 8.9, 2),
+            (3, 1, "Bangalore", "HSR Layout", "560102", 12.9103, 77.6436, 180000, 27.8, 850000.0, 75.0, "Medium", 3, "Medium", 8.2, 3),
+            (4, 2, "Delhi", "Saket", "110017", 28.5244, 77.2166, 140000, 31.0, 1200000.0, 60.0, "High", 2, "Medium", 9.0, 4),
+            (5, 4, "Hyderabad", "Hitech City", "500081", 17.4474, 78.3762, 200000, 26.5, 900000.0, 80.0, "Medium", 2, "Medium", 8.8, 5),
+            (6, 3, "Mumbai", "Andheri West", "400053", 19.1293, 72.8271, 250000, 30.5, 1000000.0, 65.0, "High", 4, "High", 8.5, 6),
         ]
         res = [
             NeighborhoodResponse(
-                neighborhood_id=nid, city_id=cid, neighborhood_name=name, pincode=pc,
+                neighborhood_id=nid, city_id=cid, city=cname, neighborhood_name=name, pincode=pc,
+                latitude=lat, longitude=lng, centroid_lat=lat, centroid_lng=lng,
                 population=pop, avg_age=age, avg_household_income=inc, working_professionals_pct=wp,
                 peak_order_hours={"18-21": 0.45, "08-11": 0.25},
                 preferred_categories={"Produce": 0.35, "Dairy": 0.25},
@@ -141,13 +149,39 @@ async def get_neighborhoods(
                 market_potential_score=mps, opportunity_rank=rank, area_sqkm=5.5,
                 population_density=pop / 5.5
             )
-            for nid, cid, name, pc, pop, age, inc, wp, ps, ts, comp, mps, rank in dummy_nbhds
+            for nid, cid, cname, name, pc, lat, lng, pop, age, inc, wp, ps, ts, comp, mps, rank in dummy_nbhds
         ]
         if city_id is not None:
             return [n for n in res if n.city_id == city_id]
         return res[:limit]
 
-    return neighborhoods
+    return [
+        NeighborhoodResponse(
+            neighborhood_id=n.neighborhood_id,
+            city_id=n.city_id,
+            city=n.city.city_name if getattr(n, "city", None) and n.city else None,
+            neighborhood_name=n.neighborhood_name,
+            pincode=n.pincode,
+            latitude=n.latitude or n.centroid_lat,
+            longitude=n.longitude or n.centroid_lng,
+            centroid_lat=n.centroid_lat or n.latitude,
+            centroid_lng=n.centroid_lng or n.longitude,
+            population=n.population,
+            avg_age=n.avg_age,
+            avg_household_income=n.avg_household_income,
+            working_professionals_pct=n.working_professionals_pct,
+            peak_order_hours=n.peak_order_hours,
+            preferred_categories=n.preferred_categories,
+            price_sensitivity=n.price_sensitivity,
+            total_stores=n.total_stores,
+            competition_intensity=n.competition_intensity,
+            market_potential_score=n.market_potential_score,
+            opportunity_rank=n.opportunity_rank,
+            area_sqkm=n.area_sqkm,
+            population_density=n.population_density,
+        )
+        for n in neighborhoods
+    ]
 
 
 @router.get("/{neighborhood_id}", response_model=NeighborhoodResponse)

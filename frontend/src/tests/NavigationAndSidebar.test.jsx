@@ -15,15 +15,14 @@ describe('Navigation and Sidebar Component Tests', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Expansion Cockpit')).toBeInTheDocument();
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Analytics')).toBeInTheDocument();
-    expect(screen.getByText('Forecast')).toBeInTheDocument();
-    expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
-    expect(screen.getByText('Simulator')).toBeInTheDocument();
-    expect(screen.getByText('Algorithm Lab')).toBeInTheDocument();
-    expect(screen.getByText('Resilience Cockpit')).toBeInTheDocument();
-    expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    expect(screen.getByText('Network Cockpit')).toBeInTheDocument();
+    expect(screen.getByText('Performance Overview')).toBeInTheDocument();
+    expect(screen.getByText('Freshness & Pricing')).toBeInTheDocument();
+    expect(screen.getByText('Demand Forecast')).toBeInTheDocument();
+    expect(screen.getByText('City Exploration')).toBeInTheDocument();
+    expect(screen.getByText('Store Simulator')).toBeInTheDocument();
+    expect(screen.getByText('System Intelligence')).toBeInTheDocument();
+    expect(screen.getByText('Automation Rules')).toBeInTheDocument();
   });
 
   it('renders Navbar brand and operational controls', () => {

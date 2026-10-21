@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { MapPin, TrendingUp, AlertTriangle, ArrowRight, Activity, DollarSign, History } from 'lucide-react';
 import { api } from '../services/api';
@@ -103,7 +103,7 @@ export default function CannibalizationMap() {
                 </div>
                 <div className="p-3 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg">
                   <span className="block text-xs text-[var(--text-muted)]">Est. Monthly Profit</span>
-                  <span className="text-lg font-bold">â‚¹{(result.portfolio_impact.net_monthly_pnl / 100000).toFixed(1)}L</span>
+                  <span className="text-lg font-bold">₹{(result.portfolio_impact.net_monthly_pnl / 100000).toFixed(1)}L</span>
                 </div>
               </div>
 

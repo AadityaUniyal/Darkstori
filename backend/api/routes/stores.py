@@ -21,13 +21,13 @@ class StoreResponse(BaseModel):
 
     id: int
     platform: str
-    store_name: Optional[str]
-    city: str
-    pincode: Optional[str]
+    store_name: Optional[str] = None
+    city: Optional[str] = None
+    pincode: Optional[str] = None
     latitude: float
     longitude: float
-    city_tier: Optional[str]
-    is_active: bool
+    city_tier: Optional[str] = None
+    is_active: bool = True
 
     model_config = {"from_attributes": True}
 
@@ -45,7 +45,8 @@ class StoreCreate(BaseModel):
     source: str = "manual"
 
 
-@router.get("/", response_model=List[StoreResponse])
+@router.get("", response_model=List[StoreResponse])
+@router.get("/", response_model=List[StoreResponse], include_in_schema=False)
 async def get_stores(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, le=1000),
@@ -140,7 +141,8 @@ async def get_store(
     return store
 
 
-@router.post("/", response_model=StoreResponse, dependencies=[Depends(verify_token)])
+@router.post("", response_model=StoreResponse, dependencies=[Depends(verify_token)])
+@router.post("/", response_model=StoreResponse, dependencies=[Depends(verify_token)], include_in_schema=False)
 async def create_store(store: StoreCreate, db: AsyncSession = Depends(get_db)):
     """Create a new store (requires authentication)."""
     db_store = DarkStore(**store.model_dump())

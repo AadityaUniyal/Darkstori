@@ -68,9 +68,9 @@ export default function Dashboard() {
   });
 
   const { data: metrics, isError, isLoading } = useQuery({
-    queryKey: ['dashboard-metrics'],
-    queryFn: api.getDashboardMetrics,
-    staleTime: Infinity, // Now driven purely by WebSockets
+    queryKey: ['dashboard-metrics', selectedCity],
+    queryFn: () => api.getDashboardMetrics(selectedCity),
+    staleTime: 60 * 1000,
     retry: 1,
   });
 

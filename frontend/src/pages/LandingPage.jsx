@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,10 +12,13 @@ import {
   Activity,
   Layers,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
   Cpu,
   BarChart2,
   DollarSign,
   Play,
+  Pause,
   RotateCcw,
   CheckCircle2,
   XCircle,
@@ -24,13 +27,27 @@ import {
   Navigation,
   Globe2,
   Lock,
-  ChevronDown
+  Copy,
+  Check,
+  Mail,
+  Building2,
+  HelpCircle,
+  Send,
+  CloudRain,
+  Radio,
+  ExternalLink,
+  Sliders,
+  FileCheck2,
+  Workflow
 } from 'lucide-react';
+import { toast } from 'sonner';
 import KineticScrambleHeadline from '../components/KineticScrambleHeadline';
 import AmbientBackground from '../components/AmbientBackground';
 import InteractiveProductDemo from '../components/InteractiveProductDemo';
 import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
+
+const AUTHOR_EMAIL = 'aadityauniyal2004@gmail.com';
 
 const FOCUS_METROS = [
   { id: 'bangalore', name: 'Bangalore', hubs: 48, status: 'Active', latency: '42ms', greenfields: 'HSR, Indiranagar, Whitefield' },
@@ -40,16 +57,161 @@ const FOCUS_METROS = [
   { id: 'pune', name: 'Pune', hubs: 28, status: 'Active', latency: '48ms', greenfields: 'Koregaon Park, Baner, Viman Nagar' },
 ];
 
+const STORY_CHAPTERS = [
+  {
+    id: 'chapter-1',
+    chapterNum: '01',
+    tag: 'SPATIAL INTELLIGENCE',
+    title: 'PostGIS Greenfield Radar vs Blind Cannibalization',
+    subtitle: 'The ₹35 Lakh Expansion Trap',
+    problem: 'Quick commerce operators burn ₹25L–₹40L CapEx per store opening blindly in saturated corridors. New stores inadvertently siphon 35% of orders from existing sister hubs while leaving lucrative competitor whitespace untouched.',
+    solution: 'Darkstori executes spatial PostGIS DBSCAN clustering with a 1.35x Indian urban road-circuity matrix and Huff’s Gravity Model, identifying dense demographic pockets while mathematically ensuring cannibalization stays strictly below 5%.',
+    metrics: [
+      { label: 'CapEx Protected', value: '₹35L / Node' },
+      { label: 'Cannibalization', value: '< 4.2% Risk' },
+      { label: 'Whitespace Index', value: '94.2/100' },
+      { label: 'Catchment Radius', value: '1.8 km Isochrone' }
+    ],
+    interactiveType: 'radar'
+  },
+  {
+    id: 'chapter-2',
+    chapterNum: '02',
+    tag: 'MARGIN PRESERVATION',
+    title: 'Zero-Waste Sigmoid Decay vs Dumpster Landfills',
+    subtitle: 'The Perishable Death Spiral',
+    problem: 'Fresh dairy, meat, berries, and vegetables decay within 24–48 hours. Store managers apply blunt 20% or 50% discounts hours too late, forcing 14–18% of fresh stock into garbage dumps and decimating gross margins.',
+    solution: 'Darkstori’s autonomous Sigmoid Dynamic Decay calculates optimal markdown pricing every 15 minutes, matching consumer price sensitivity to clear 100% of perishable batches right before expiration with zero waste.',
+    metrics: [
+      { label: 'Landfill Avoidance', value: '100% Target' },
+      { label: 'Salvage Margin Recovery', value: '+24.6%' },
+      { label: 'Pricing Frequency', value: 'Every 15 mins' },
+      { label: 'Monthly Salvage Value', value: '₹1.84 Lakhs' }
+    ],
+    interactiveType: 'sigmoid'
+  },
+  {
+    id: 'chapter-3',
+    chapterNum: '03',
+    tag: 'FLEET OPTIMIZATION',
+    title: 'Clarke-Wright 10-Minute VRP vs 1-to-1 Dispatch Chaos',
+    subtitle: 'The Logistics Bottleneck',
+    problem: 'Dispatching 1 rider for every individual order clogs city streets, inflates fuel costs by 42%, and shatters the 10-minute delivery SLA during morning milk runs and evening snack peaks.',
+    solution: 'Darkstori deploys capacitated Clarke-Wright Savings heuristics, dynamically bundling 2–3 proximate drop points within a 1.8km radius into a single 8.2-minute loop, slashing fleet costs without SLA breach.',
+    metrics: [
+      { label: 'Average ETA', value: '8.2 mins' },
+      { label: 'Fleet Cost Reduction', value: '-38.4%' },
+      { label: '10-Min SLA Guard', value: '99.4%' },
+      { label: 'Carbon Avoided', value: '1.24 kg CO₂/hr' }
+    ],
+    interactiveType: 'vrp'
+  },
+  {
+    id: 'chapter-4',
+    chapterNum: '04',
+    tag: 'WEATHER & RESILIENCE',
+    title: 'Pre-Emptive Monsoon Defense vs Fleet Gridlock',
+    subtitle: 'The Flash Downpour Crisis',
+    problem: 'A sudden monsoon downpour in Bangalore or Mumbai blinds delivery fleets. Roads flood, delivery times spike past 45 minutes, riders log off, and furious customers cancel over 30% of incoming orders.',
+    solution: 'Darkstori streams Open-Meteo precipitation radar and temporal XGBoost models, detecting rain surges 20 minutes before impact. The system pre-emptively contracts delivery geofences, reallocates rider payouts, and stages rain gear.',
+    metrics: [
+      { label: 'Early Warning Lead', value: '20 Mins Ahead' },
+      { label: 'SLA Breach Rate', value: '< 0.6%' },
+      { label: 'Rider Retention', value: '+45% Active' },
+      { label: 'Autonomous Actions', value: '100% Prescriptive' }
+    ],
+    interactiveType: 'monsoon'
+  }
+];
+
+const FAQ_ITEMS = [
+  {
+    question: 'How does Darkstori solve dark store expansion without cannibalizing existing hubs?',
+    answer: 'Darkstori replaces spreadsheet guesswork with spatial PostGIS DBSCAN clustering and Huff’s Gravity Model. We analyze road network circuity (factoring in 1.35x Indian grid factors, flyovers, and railway barriers) to evaluate competitor saturation (Blinkit, Zepto, Swiggy Instamart) and predict exact order diversion. A greenfield site is only recommended if cannibalization of your own existing nodes remains below 5%.'
+  },
+  {
+    question: 'How does the Sigmoid Dynamic Markdown engine avoid inventory waste?',
+    answer: 'Traditional retail applies static 20% or 50% discount stickers when food is already spoiled. Darkstori models perishable shelf-life decay using a continuous sigmoid function: P(t) = P_base × [1 / (1 + exp(-k × (t_crit - t)))]. Discounts adjust continuously in real time based on remaining hours, local SKU velocity, and price elasticity, ensuring batches clear completely before reaching their expiry threshold.'
+  },
+  {
+    question: 'Can Darkstori guarantee 10-minute SLA delivery when batching multiple orders?',
+    answer: 'Yes. Our Clarke-Wright Vehicle Routing Problem (VRP) heuristic enforces a hard temporal ceiling of 10 minutes total turnaround time (including 2.5 minutes for in-store picker pack-time, transit time, and customer hand-off). Batches are only formed for delivery points sharing tight geographic clusters within 1.8km of the hub.'
+  },
+  {
+    question: 'How quickly can our quick commerce enterprise deploy Darkstori?',
+    answer: 'Darkstori integrates via REST and PostgreSQL LISTEN/NOTIFY webhooks with existing WMS/ERP systems (such as SAP, Oracle, Blue Yonder, or proprietary microservices). A pilot dark store hub can be calibrated and streaming live telemetry within 72 hours, with full 5-metro enterprise rollout taking under 14 days.'
+  },
+  {
+    question: 'Does Darkstori operate on-premises or inside our private cloud (AWS/GCP/Azure VPC)?',
+    answer: 'Yes. Darkstori can be deployed fully containerized via Docker and Kubernetes inside your isolated VPC, ensuring zero sensitive order or customer PII ever leaves your corporate security perimeter.'
+  }
+];
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  // Interactive Live Calculator State
+  // Clock state for India Standard Time (IST)
+  const [istTime, setIstTime] = useState('');
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const now = new Date();
+        const timeString = new Intl.DateTimeFormat('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).format(now);
+        setIstTime(timeString);
+      } catch {
+        setIstTime('23:45:00');
+      }
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Scrollytelling Story State
+  const [activeStoryIdx, setActiveStoryIdx] = useState(0);
+  const [isStoryAutoplay, setIsStoryAutoplay] = useState(false);
+  const [radarRadius, setRadarRadius] = useState(1.8);
+  const [storyPerishableHours, setStoryPerishableHours] = useState(10);
+  const [storyVrpMode, setStoryVrpMode] = useState('batched');
+  const [storyMonsoonActive, setStoryMonsoonActive] = useState(false);
+
+  // Story Autoplay Cycle
+  useEffect(() => {
+    if (!isStoryAutoplay) return;
+    const interval = setInterval(() => {
+      setActiveStoryIdx((prev) => (prev + 1) % STORY_CHAPTERS.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [isStoryAutoplay]);
+
+  // Interactive Live Calculator State (Tabbed Section)
   const [selectedCity, setSelectedCity] = useState('bangalore');
   const [storeSqft, setStoreSqft] = useState(1800);
   const [perishableHours, setPerishableHours] = useState(14);
   const [activeSimTab, setActiveSimTab] = useState('expansion');
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+
+  // Enterprise Contact Form State
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactCompany, setContactCompany] = useState('Zepto');
+  const [contactHubs, setContactHubs] = useState('25-100 Hubs');
+  const [contactCity, setContactCity] = useState('Bangalore');
+  const [contactChallenge, setContactChallenge] = useState('Greenfield Placement & Cannibalization');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  // FAQ Accordion State
+  const [openFaq, setOpenFaq] = useState(0);
 
   // Dynamic calculations for live sandbox widget
   const calculatedDailyOrders = Math.round(storeSqft * 0.48 + (selectedCity === 'mumbai' ? 120 : selectedCity === 'bangalore' ? 95 : 70));
@@ -68,6 +230,7 @@ export default function LandingPage() {
   };
 
   const { discountPct, salvageRev } = sigmoidDecay(perishableHours);
+  const storySigmoid = sigmoidDecay(storyPerishableHours);
 
   const handleLaunchApp = () => {
     if (isAuthenticated) {
@@ -78,15 +241,35 @@ export default function LandingPage() {
   };
 
   const handleQuickDemo = () => {
-    // Navigate with demo persona prefill
     navigate('/login?mode=demo');
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText(AUTHOR_EMAIL);
+    setCopiedEmail(true);
+    toast.success(`Copied to clipboard: ${AUTHOR_EMAIL}`);
+    setTimeout(() => setCopiedEmail(false), 3000);
+  };
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    if (!contactEmail) {
+      toast.error('Please enter your work email.');
+      return;
+    }
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      toast.success('Consultation request dispatched! We will respond within 4 hours.');
+    }, 900);
   };
 
   return (
     <div className="landing-page-root">
       <AmbientBackground />
 
-      {/* Floating Header */}
+      {/* Floating Cupertino Navigation Header */}
       <header className="apple-nav-header">
         <div className="apple-nav-container">
           <Link to="/" className="apple-brand-logo">
@@ -96,14 +279,21 @@ export default function LandingPage() {
           </Link>
 
           <nav className="apple-nav-links">
-            <a href="#story">The 10-Min War</a>
+            <a href="#crisis">The 10-Min Crisis</a>
+            <a href="#story">Scrollytelling Story</a>
             <a href="#interactive-sim">Live Simulators</a>
             <a href="#pillars">Core Engines</a>
             <a href="#comparison">Compare</a>
             <a href="#metros">Metros</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact" className="nav-link-highlight">Consulting & Pilots</a>
           </nav>
 
           <div className="apple-nav-actions">
+            <div className="nav-noc-status" title="Bangalore NOC Active Operations">
+              <span className="live-ping" />
+              <span className="noc-text">BLR NOC • 5 Metros Live</span>
+            </div>
             <button onClick={() => setIsDemoModalOpen(true)} className="btn-ghost-nav">
               <Sparkles size={15} />
               <span>Interactive Tour</span>
@@ -119,18 +309,21 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="apple-hero-section">
         <div className="hero-content-wrapper">
+          {/* Top Operational Pill with Live IST Clock */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="hero-badge-pill"
           >
             <span className="pulse-indicator" />
-            <span>Hyperlocal Quick Commerce Intelligence Platform</span>
+            <span className="badge-text">
+              Bangalore Operations: <strong>{istTime || '23:45:00'} IST</strong> • Sub-10-Min Prescriptive Execution
+            </span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="hero-title-main"
@@ -139,7 +332,7 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="hero-kinetic-container"
@@ -163,7 +356,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="hero-subtext-description"
           >
-            Quick commerce is a war of seconds and wafer-thin margins. Traditional dashboards only tell you what broke yesterday. Darkstori is the prescriptive AI operating system that automates location scouting, dynamic pricing decay, rider routing, and demand surges across India's focus metros.
+            Quick commerce is a war of seconds and wafer-thin margins where 78% of dark stores bleed capital. Traditional dashboards only tell you what broke yesterday. <strong>Darkstori 3.0</strong> is the prescriptive AI operating system that automates location scouting, dynamic markdown pricing decay, rider multi-drop routing, and weather defense across India's premier metros.
           </motion.p>
 
           <motion.div
@@ -184,11 +377,15 @@ export default function LandingPage() {
               <Play size={16} fill="currentColor" />
               <span>1-Click Sandbox</span>
             </button>
+            <a href="#contact" className="hero-btn-outline">
+              <Mail size={16} />
+              <span>Book Architecture Pilot</span>
+            </a>
           </motion.div>
 
           {/* Quick Metrics Ticker */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="hero-metrics-ticker"
@@ -209,15 +406,20 @@ export default function LandingPage() {
             </div>
             <div className="ticker-divider" />
             <div className="ticker-item">
+              <span className="ticker-val">₹40L+</span>
+              <span className="ticker-lbl">CapEx Protected / Hub</span>
+            </div>
+            <div className="ticker-divider" />
+            <div className="ticker-item">
               <span className="ticker-val">5 Metros</span>
               <span className="ticker-lbl">BLR • BOM • DEL • HYD • PNQ</span>
             </div>
           </motion.div>
         </div>
 
-        {/* Cinematic Mockup Frame */}
+        {/* Cinematic Device Viewport Mockup */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.94 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.0, delay: 0.3 }}
           className="hero-device-viewport"
@@ -234,7 +436,7 @@ export default function LandingPage() {
             </div>
             <div className="device-live-tag">
               <span className="live-ping" />
-              <span>LIVE TELEMETRY STREAM</span>
+              <span>LIVE TELEMETRY STREAM • 38ms</span>
             </div>
           </div>
 
@@ -320,7 +522,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="panel-footer">
-                  <span>-38% Distance Traveled • 0.24 kg CO2 Prevented</span>
+                  <span>-38% Distance Traveled • 0.24 kg CO₂ Prevented</span>
                 </div>
               </div>
             </div>
@@ -328,16 +530,16 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Narrative Section: The 10-Minute War */}
-      <section id="story" className="apple-story-section">
+      {/* SECTION 1: THE CORE PROBLEM / CRISIS BREAKDOWN */}
+      <section id="crisis" className="apple-story-section">
         <div className="section-container">
           <div className="section-badge">
             <Activity size={14} />
-            <span>THE QUICK COMMERCE CRISIS</span>
+            <span>THE 10-MINUTE QUICK COMMERCE DILEMMA</span>
           </div>
-          <h2 className="section-title">The High-Stakes War of 10-Minute Deliveries</h2>
+          <h2 className="section-title">Why 78% of Dark Stores Burn Capital</h2>
           <p className="section-subtitle">
-            78% of dark stores fail to turn profitable within their first 18 months. Why? Because quick commerce cannot be solved by spreadsheets or standard BI dashboards.
+            Quick commerce operators (Blinkit, Zepto, Swiggy Instamart, BB Now) operate in a pressure-cooker of wafer-thin margins, ruthless competition, and unforgiving 10-minute consumer expectations. These are the 4 systemic traps killing profitability:
           </p>
 
           <div className="crisis-grid">
@@ -345,42 +547,433 @@ export default function LandingPage() {
               <div className="crisis-icon danger">
                 <XCircle size={24} />
               </div>
-              <h3>Blind Greenfield Expansion</h3>
-              <p>Opening hubs without spatial PostGIS clustering leads to internal cannibalization—stealing orders from your own existing stores while leaving lucrative competitor whitespace untouched.</p>
-              <div className="stat-pill-red">Avg ₹28L CapEx Wasted</div>
+              <h3>1. Blind Expansion & Self-Cannibalization</h3>
+              <p>Opening hubs without spatial PostGIS clustering leads to internal cannibalization—stealing orders from your own existing stores while leaving lucrative competitor whitespace completely untouched.</p>
+              <div className="stat-pill-red">Avg ₹28L–₹40L CapEx Wasted</div>
             </div>
 
             <div className="crisis-card">
               <div className="crisis-icon danger">
                 <XCircle size={24} />
               </div>
-              <h3>The Perishable Death Spiral</h3>
-              <p>Flat discounts on milk, berries, and vegetables are enacted too late. Store managers either dump rotten inventory into landfills or panic-sell at zero margin.</p>
-              <div className="stat-pill-red">14-18% Margins Erased</div>
+              <h3>2. The Perishable Death Spiral</h3>
+              <p>Fresh inventory (berries, dairy, organic greens) decay rapidly. Blunt, delayed discounts force store operators to dump 14–18% of fresh stock directly into landfills, wiping out store gross margins.</p>
+              <div className="stat-pill-red">14–18% Inventory Dumped</div>
             </div>
 
             <div className="crisis-card">
               <div className="crisis-icon danger">
                 <XCircle size={24} />
               </div>
-              <h3>Rider Dispatch Bottlenecks</h3>
-              <p>Sending 1 rider for every single order creates crippling fleet congestion during rain surges, leading to SLA breaches, churned customers, and blown logistics budgets.</p>
-              <div className="stat-pill-red">42% Excess Rider Fuel</div>
+              <h3>3. 1-to-1 Dispatch Logistics Congestion</h3>
+              <p>Sending 1 rider for every individual order creates crippling street congestion during rain surges, leading to blown delivery SLAs, customer churn, and blown rider payout budgets.</p>
+              <div className="stat-pill-red">42% Excess Fuel & Fleet Cost</div>
             </div>
 
             <div className="crisis-card">
               <div className="crisis-icon danger">
                 <XCircle size={24} />
               </div>
-              <h3>Descriptive Dashboard Fatigue</h3>
-              <p>Looking at yesterday’s sales in Tableau tells you what died yesterday, but leaves store operators stranded with zero automated guidance for what to do right now.</p>
-              <div className="stat-pill-red">0 Prescriptive Action</div>
+              <h3>4. Weather Chaos & Descriptive Fatigue</h3>
+              <p>Looking at yesterday’s sales in Tableau tells you what died yesterday, but leaves store operators stranded with zero automated guidance when a flash Indian monsoon floods Bangalore or Mumbai.</p>
+              <div className="stat-pill-red">0 Prescriptive Action in Legacy BI</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Interactive Simulator Section */}
+      {/* SECTION 2: INTERACTIVE SCROLLYTELLING STORY JOURNEY */}
+      <section id="story" className="scrollytelling-section">
+        <div className="section-container">
+          <div className="section-header-center">
+            <div className="section-badge">
+              <Workflow size={14} />
+              <span>INTERACTIVE STORYTELLING WALKTHROUGH</span>
+            </div>
+            <h2 className="section-title">The 10-Minute Dark Store Survival Journey</h2>
+            <p className="section-subtitle">
+              Follow how Darkstori's 4 proprietary AI engines step in sequentially to turn systemic quick commerce chaos into automated, sub-10-minute profitable execution.
+            </p>
+          </div>
+
+          {/* Scrollytelling Interactive Stage */}
+          <div className="scrolly-container">
+            {/* Sticky Chapter Stepper Header */}
+            <div className="scrolly-nav-bar">
+              <div className="scrolly-nav-buttons">
+                {STORY_CHAPTERS.map((chap, idx) => (
+                  <button
+                    key={chap.id}
+                    onClick={() => {
+                      setActiveStoryIdx(idx);
+                      setIsStoryAutoplay(false);
+                    }}
+                    className={`scrolly-tab-btn ${activeStoryIdx === idx ? 'active' : ''}`}
+                  >
+                    <span className="tab-num">{chap.chapterNum}</span>
+                    <span className="tab-title">{chap.tag}</span>
+                    {activeStoryIdx === idx && (
+                      <motion.div layoutId="scrollyActivePill" className="active-pill-highlight" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="scrolly-nav-controls">
+                <button
+                  onClick={() => setIsStoryAutoplay(!isStoryAutoplay)}
+                  className={`scrolly-ctrl-btn ${isStoryAutoplay ? 'playing' : ''}`}
+                  title={isStoryAutoplay ? 'Pause auto-cycle' : 'Auto-play story chapters'}
+                >
+                  {isStoryAutoplay ? <Pause size={14} /> : <Play size={14} />}
+                  <span>{isStoryAutoplay ? 'Auto-Advancing' : 'Auto-Play'}</span>
+                </button>
+                <div className="scrolly-arrow-group">
+                  <button
+                    onClick={() => {
+                      setActiveStoryIdx((prev) => (prev - 1 + STORY_CHAPTERS.length) % STORY_CHAPTERS.length);
+                      setIsStoryAutoplay(false);
+                    }}
+                    className="scrolly-arrow-btn"
+                    title="Previous Chapter"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveStoryIdx((prev) => (prev + 1) % STORY_CHAPTERS.length);
+                      setIsStoryAutoplay(false);
+                    }}
+                    className="scrolly-arrow-btn"
+                    title="Next Chapter"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Chapter Card */}
+            <div className="scrolly-content-grid">
+              {/* Left Column: Narrative Explanation */}
+              <div className="scrolly-narrative-col">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={STORY_CHAPTERS[activeStoryIdx].id}
+                    initial={{ opacity: 0, x: -18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 18 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="chapter-narrative-wrapper"
+                  >
+                    <div className="chapter-header-badge">
+                      <span className="chap-num-label">CHAPTER {STORY_CHAPTERS[activeStoryIdx].chapterNum}</span>
+                      <span className="chap-tag-label">{STORY_CHAPTERS[activeStoryIdx].tag}</span>
+                    </div>
+
+                    <h3 className="chapter-headline">{STORY_CHAPTERS[activeStoryIdx].title}</h3>
+                    <div className="chapter-sub-callout">{STORY_CHAPTERS[activeStoryIdx].subtitle}</div>
+
+                    <div className="story-problem-box">
+                      <div className="box-title text-red">
+                        <XCircle size={15} />
+                        <span>The Operational Trap:</span>
+                      </div>
+                      <p>{STORY_CHAPTERS[activeStoryIdx].problem}</p>
+                    </div>
+
+                    <div className="story-solution-box">
+                      <div className="box-title text-emerald">
+                        <CheckCircle2 size={15} />
+                        <span>The Darkstori Prescriptive Fix:</span>
+                      </div>
+                      <p>{STORY_CHAPTERS[activeStoryIdx].solution}</p>
+                    </div>
+
+                    <div className="chapter-metrics-row">
+                      {STORY_CHAPTERS[activeStoryIdx].metrics.map((m, i) => (
+                        <div key={i} className="story-metric-pill">
+                          <span className="metric-label">{m.label}</span>
+                          <strong className="metric-val">{m.value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Right Column: Live Interactive Chapter Stage */}
+              <div className="scrolly-stage-col">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`stage-${STORY_CHAPTERS[activeStoryIdx].id}`}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="scrolly-interactive-canvas"
+                  >
+                    {/* Chapter 1 Stage: Spatial Radar */}
+                    {activeStoryIdx === 0 && (
+                      <div className="stage-panel stage-radar">
+                        <div className="stage-top-bar">
+                          <div className="stage-title-wrap">
+                            <MapPin size={16} className="text-cyan" />
+                            <span>Spatial Catchment Radar (HSR Layout Sector 4)</span>
+                          </div>
+                          <span className="stage-badge-pill">DBSCAN Epsilon: 0.8km</span>
+                        </div>
+
+                        <div className="interactive-radar-view">
+                          <div
+                            className="dynamic-radar-circle circle-active"
+                            style={{ width: `${radarRadius * 90}px`, height: `${radarRadius * 90}px` }}
+                          />
+                          <div className="radar-sweep" />
+                          <div className="radar-grid-lines" />
+                          <div className="radar-hub-pin" title="Proposed Darkstori Hub (Zero Cannibalization)" />
+                          <div className="competitor-pin blinkit-pin" style={{ top: '22%', left: '72%' }} title="Competitor Blinkit (1.9km away)" />
+                          <div className="competitor-pin zepto-pin" style={{ top: '78%', left: '26%' }} title="Competitor Zepto (2.1km away)" />
+                          <div className="competitor-pin instamart-pin" style={{ top: '65%', left: '80%' }} title="Competitor Swiggy Instamart (1.8km away)" />
+                          <div className="demand-bubble bubble-1" style={{ top: '38%', left: '42%' }}>High Tech Parks</div>
+                          <div className="demand-bubble bubble-2" style={{ top: '55%', left: '60%' }}>Residential Villas</div>
+                        </div>
+
+                        <div className="stage-controls-bar">
+                          <div className="slider-row-wrap">
+                            <label>Scouting Radius: <strong>{radarRadius} km</strong></label>
+                            <input
+                              type="range"
+                              min="1.0"
+                              max="3.0"
+                              step="0.1"
+                              value={radarRadius}
+                              onChange={(e) => setRadarRadius(parseFloat(e.target.value))}
+                              className="apple-slider"
+                            />
+                          </div>
+                          <div className="stage-status-row">
+                            <span className="status-item">Whitespace Capture: <strong>+18.4% Net</strong></span>
+                            <span className="status-item">Cannibalization Risk: <strong className="text-emerald">3.8% (Approved)</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Chapter 2 Stage: Dynamic Sigmoid Decay */}
+                    {activeStoryIdx === 1 && (
+                      <div className="stage-panel stage-sigmoid">
+                        <div className="stage-top-bar">
+                          <div className="stage-title-wrap">
+                            <DollarSign size={16} className="text-emerald" />
+                            <span>Autonomous Sigmoid Markdown Decay (Organic Berries Batch #84)</span>
+                          </div>
+                          <span className="stage-badge-pill">Shelf Life: 36h</span>
+                        </div>
+
+                        <div className="interactive-sigmoid-view">
+                          <svg viewBox="0 0 360 140" className="sigmoid-story-svg">
+                            <defs>
+                              <linearGradient id="storySigGrad" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stopColor="#10B981" />
+                                <stop offset="50%" stopColor="#F59E0B" />
+                                <stop offset="100%" stopColor="#EF4444" />
+                              </linearGradient>
+                            </defs>
+                            <path d="M 15 25 C 130 25, 180 115, 345 115" stroke="url(#storySigGrad)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+                            {/* Dynamic marker position based on storyPerishableHours */}
+                            <circle
+                              cx={Math.max(25, Math.min(335, 360 - (storyPerishableHours * 9)))}
+                              cy={Math.max(28, Math.min(112, 115 - (storySigmoid.salvageRev * 0.88)))}
+                              r="7"
+                              fill="#38BDF8"
+                              className="interactive-dot"
+                            />
+                          </svg>
+                          <div className="svg-scale-labels">
+                            <span>Fresh Harvest (36h left)</span>
+                            <span>Optimal Markdown (12h left)</span>
+                            <span>Target Zero-Waste (2h left)</span>
+                          </div>
+                        </div>
+
+                        <div className="stage-controls-bar">
+                          <div className="slider-row-wrap">
+                            <label>Hours Remaining Until Expiration: <strong>{storyPerishableHours} Hours</strong></label>
+                            <input
+                              type="range"
+                              min="2"
+                              max="36"
+                              step="1"
+                              value={storyPerishableHours}
+                              onChange={(e) => setStoryPerishableHours(parseInt(e.target.value))}
+                              className="apple-slider"
+                            />
+                          </div>
+                          <div className="stage-status-row">
+                            <span className="status-item">Recommended Markdown: <strong className="text-amber">-{storySigmoid.discountPct}%</strong></span>
+                            <span className="status-item">Salvage Margin: <strong>{storySigmoid.salvageRev}% of Base</strong></span>
+                            <span className="status-item">Dumpster Waste: <strong className="text-emerald">0% Landfill</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Chapter 3 Stage: Clarke-Wright VRP */}
+                    {activeStoryIdx === 2 && (
+                      <div className="stage-panel stage-vrp">
+                        <div className="stage-top-bar">
+                          <div className="stage-title-wrap">
+                            <Truck size={16} className="text-cyan" />
+                            <span>10-Minute VRP Fleet Batching vs 1-to-1 Dispatch</span>
+                          </div>
+                          <div className="vrp-toggle-group">
+                            <button
+                              onClick={() => setStoryVrpMode('unbatched')}
+                              className={`vrp-mode-btn ${storyVrpMode === 'unbatched' ? 'active' : ''}`}
+                            >
+                              Legacy (1-to-1)
+                            </button>
+                            <button
+                              onClick={() => setStoryVrpMode('batched')}
+                              className={`vrp-mode-btn ${storyVrpMode === 'batched' ? 'active' : ''}`}
+                            >
+                              Clarke-Wright
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="interactive-vrp-view">
+                          {storyVrpMode === 'unbatched' ? (
+                            <div className="vrp-mode-display danger-mode">
+                              <div className="vrp-mode-header">
+                                <span className="mode-badge-red">10 Unbatched Single Trips</span>
+                                <span className="mode-stat-alert">10 Riders • 34.2 km Total • 13.8 min Avg ETA</span>
+                              </div>
+                              <div className="vrp-trips-list">
+                                <div className="trip-row"><span className="rider-id">Rider #1</span><span>Hub ➔ 14th Main Rd (1.1 km • 6.4m)</span></div>
+                                <div className="trip-row"><span className="rider-id">Rider #2</span><span>Hub ➔ 27th Cross Rd (2.4 km • 11.2m SLA Breach)</span></div>
+                                <div className="trip-row"><span className="rider-id">Rider #3</span><span>Hub ➔ Sector 3 Apt (1.9 km • 9.8m)</span></div>
+                                <div className="trip-row"><span className="rider-id">Rider #4</span><span>Hub ➔ Outer Ring Rd (3.1 km • 14.5m SLA Breach)</span></div>
+                              </div>
+                              <div className="vrp-footer-danger">
+                                <span>High fleet fuel consumption • 2 out of 4 deliveries breached 10-minute SLA</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="vrp-mode-display success-mode">
+                              <div className="vrp-mode-header">
+                                <span className="mode-badge-emerald">Clarke-Wright 3-Drop Loop</span>
+                                <span className="mode-stat-success">4 Riders • 19.6 km Total • 8.2 min Avg ETA</span>
+                              </div>
+                              <div className="vrp-batched-loop">
+                                <div className="loop-step step-hub">
+                                  <span className="step-dot" />
+                                  <div className="step-text"><strong>Hub Staging & Picker Hand-off</strong><small>2.2 mins pack time</small></div>
+                                </div>
+                                <div className="loop-step">
+                                  <span className="step-dot active" />
+                                  <div className="step-text"><strong>Stop 1: 14th Main Rd</strong><small>1.1 km • 4.8 min ETA</small></div>
+                                </div>
+                                <div className="loop-step">
+                                  <span className="step-dot active" />
+                                  <div className="step-text"><strong>Stop 2: 17th Cross Rd</strong><small>1.6 km • 6.9 min ETA</small></div>
+                                </div>
+                                <div className="loop-step">
+                                  <span className="step-dot active" />
+                                  <div className="step-text"><strong>Stop 3: Sector 3 Complex</strong><small>2.2 km • 8.4 min ETA (SLA Met)</small></div>
+                                </div>
+                              </div>
+                              <div className="vrp-footer-success">
+                                <span>✓ -38.4% Rider Cost • 100% SLA Adherence • 0.32 kg CO₂ Saved</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="stage-controls-bar">
+                          <span className="text-secondary text-sm">
+                            Clarke-Wright bundles customers within 1.8km with savings metric <code>s(i, j) = d(0, i) + d(0, j) - d(i, j)</code>.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Chapter 4 Stage: Monsoon Surge Defense */}
+                    {activeStoryIdx === 3 && (
+                      <div className="stage-panel stage-monsoon">
+                        <div className="stage-top-bar">
+                          <div className="stage-title-wrap">
+                            <CloudRain size={16} className="text-cyan" />
+                            <span>Pre-Emptive Weather Surge Radar (Indiranagar 100ft Rd)</span>
+                          </div>
+                          <button
+                            onClick={() => setStoryMonsoonActive(!storyMonsoonActive)}
+                            className={`monsoon-toggle-btn ${storyMonsoonActive ? 'triggered' : ''}`}
+                          >
+                            <Radio size={14} />
+                            <span>{storyMonsoonActive ? 'Cloudburst Active (45mm/h)' : 'Simulate Monsoon Cloudburst'}</span>
+                          </button>
+                        </div>
+
+                        <div className="interactive-monsoon-view">
+                          {storyMonsoonActive ? (
+                            <div className="monsoon-triggered-state">
+                              <div className="alert-radar-banner">
+                                <span className="pulse-red" />
+                                <div>
+                                  <strong>Open-Meteo Cloudburst Detected (T-20 mins ahead of storm arrival)</strong>
+                                  <p>Autonomous weather playbook executing across Indiranagar & Domlur dark store nodes.</p>
+                                </div>
+                              </div>
+                              <div className="monsoon-actions-grid">
+                                <div className="action-card">
+                                  <span className="card-lbl">Dynamic Geofence</span>
+                                  <strong className="text-amber">Contracted from 2.5km ➔ 1.6km</strong>
+                                  <small>Eliminates waterlogged highway risks</small>
+                                </div>
+                                <div className="action-card">
+                                  <span className="card-lbl">Rider Rain Incentive</span>
+                                  <strong className="text-emerald">+₹35 / Delivered Order</strong>
+                                  <small>Zero rider log-offs • Fleet retention</small>
+                                </div>
+                                <div className="action-card">
+                                  <span className="card-lbl">Order Throttling</span>
+                                  <strong className="text-cyan">Max 30 items / batch</strong>
+                                  <small>Maintains 10-minute dispatch speed</small>
+                                </div>
+                                <div className="action-card">
+                                  <span className="card-lbl">Predicted SLA Breach</span>
+                                  <strong className="text-emerald">0.4% (vs 38.6% unmitigated)</strong>
+                                  <small>Customer satisfaction preserved</small>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="monsoon-idle-state">
+                              <CloudRain size={48} className="cloud-idle-icon" />
+                              <h4>Clear Skies • Open-Meteo Telemetry Idle</h4>
+                              <p>Click "Simulate Monsoon Cloudburst" above to trigger Darkstori's 20-minute pre-emptive surge defense system.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="stage-controls-bar">
+                          <span className="text-secondary text-sm">
+                            Temporal XGBoost forecasts monsoon precipitation lag features to prevent rider paralysis before rain starts.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3: INTERACTIVE LIVE CALCULATOR SANDBOX */}
       <section id="interactive-sim" className="apple-interactive-section">
         <div className="section-container">
           <div className="section-badge">
@@ -587,7 +1180,7 @@ export default function LandingPage() {
                       <span className="pill-indigo">SLA Compliant</span>
                     </div>
                     <div className="res-big-number">+42.7%</div>
-                    <p className="res-detail">Saved 14.6 km of delivery rider travel and eliminated 1.24 kg of CO2 in a single peak hour.</p>
+                    <p className="res-detail">Saved 14.6 km of delivery rider travel and eliminated 1.24 kg of CO₂ in a single peak hour.</p>
                   </div>
 
                   <div className="sim-metrics-grid">
@@ -655,7 +1248,7 @@ export default function LandingPage() {
               <p>Clarke-Wright Savings heuristic clusters pending orders into multi-drop rider routes that strictly preserve your 10-minute SLA promise.</p>
               <div className="bento-tags">
                 <span>Clarke-Wright Heuristic</span>
-                <span>CO2 Reduction</span>
+                <span>CO₂ Reduction</span>
               </div>
             </div>
 
@@ -777,6 +1370,291 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* SECTION 4: ENTERPRISE FAQ ACCORDION */}
+      <section id="faq" className="apple-faq-section">
+        <div className="section-container">
+          <div className="section-badge">
+            <HelpCircle size={14} />
+            <span>TECHNICAL DILIGENCE & FAQ</span>
+          </div>
+          <h2 className="section-title">Frequently Asked Questions</h2>
+          <p className="section-subtitle">
+            Deep dive into technical architecture, spatial algorithms, and enterprise integration protocols.
+          </p>
+
+          <div className="faq-accordion-list">
+            {FAQ_ITEMS.map((item, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div
+                  key={index}
+                  className={`faq-item-card ${isOpen ? 'open' : ''}`}
+                  onClick={() => setOpenFaq(isOpen ? -1 : index)}
+                >
+                  <div className="faq-question-row">
+                    <span className="faq-q-text">{item.question}</span>
+                    <ChevronDown size={18} className={`faq-chevron ${isOpen ? 'rotated' : ''}`} />
+                  </div>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="faq-answer-pane"
+                      >
+                        <p>{item.answer}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5: ENTERPRISE CONTACT & CONSULTATION SERVICE */}
+      <section id="contact" className="enterprise-contact-section">
+        <div className="section-container">
+          <div className="section-header-center">
+            <div className="section-badge">
+              <Mail size={14} />
+              <span>DIRECT ENTERPRISE CONSULTATION & PILOTS</span>
+            </div>
+            <h2 className="section-title">Partner with Darkstori Engineering</h2>
+            <p className="section-subtitle">
+              Request an architecture audit, discuss custom ERP integration, or book a 14-day production pilot for your dark store network.
+            </p>
+          </div>
+
+          <div className="contact-portal-grid">
+            {/* Left Card: Direct Contact & Author Profile */}
+            <div className="contact-info-card">
+              <div className="author-badge-header">
+                <div className="author-avatar-chip">AU</div>
+                <div>
+                  <h3 className="author-name">Aaditya Uniyal</h3>
+                  <p className="author-role">Founder & Lead Architect • Darkstori Q-Commerce AI</p>
+                </div>
+              </div>
+
+              <div className="direct-email-block">
+                <span className="direct-email-label">Official Engineering & Consultation Desk</span>
+                <div className="email-copy-bar">
+                  <span className="email-display">{AUTHOR_EMAIL}</span>
+                  <button
+                    onClick={handleCopyEmail}
+                    className="copy-email-btn"
+                    title="Copy Email to Clipboard"
+                  >
+                    {copiedEmail ? <Check size={16} className="text-emerald" /> : <Copy size={16} />}
+                    <span>{copiedEmail ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+                <div className="email-meta-note">
+                  <Clock size={13} />
+                  <span>Guaranteed 4-hour direct response for enterprise operators & network directors.</span>
+                </div>
+              </div>
+
+              <div className="consultation-services-list">
+                <h4>Available Consultation Services</h4>
+                <div className="service-bullet">
+                  <CheckCircle2 size={16} className="text-cyan" />
+                  <div>
+                    <strong>Greenfield Spatial Feasibility Audit</strong>
+                    <small>PostGIS demographic whitespace analysis for 10–100 candidate pin codes.</small>
+                  </div>
+                </div>
+                <div className="service-bullet">
+                  <CheckCircle2 size={16} className="text-cyan" />
+                  <div>
+                    <strong>Perishable Waste & Dynamic Pricing Assessment</strong>
+                    <small>Sigmoid decay calibration against your historical SKU scrap logs.</small>
+                  </div>
+                </div>
+                <div className="service-bullet">
+                  <CheckCircle2 size={16} className="text-cyan" />
+                  <div>
+                    <strong>Fleet VRP & Monsoon Resilience Stress-Testing</strong>
+                    <small>Simulate Clarke-Wright rider savings under historical peak rain conditions.</small>
+                  </div>
+                </div>
+                <div className="service-bullet">
+                  <CheckCircle2 size={16} className="text-cyan" />
+                  <div>
+                    <strong>Custom WMS / ERP API Integration</strong>
+                    <small>Seamless REST & PostgreSQL LISTEN/NOTIFY telemetry hooks into your stack.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="enterprise-trust-row">
+                <div className="trust-pill"><ShieldCheck size={14} /><span>SOC-2 Ready</span></div>
+                <div className="trust-pill"><FileCheck2 size={14} /><span>ISO 27001 Compliant</span></div>
+                <div className="trust-pill"><Zap size={14} /><span>99.99% Uptime SLA</span></div>
+              </div>
+            </div>
+
+            {/* Right Card: Interactive Consultation Request Form */}
+            <div className="contact-form-card">
+              {isSubmitted ? (
+                <div className="form-success-state">
+                  <div className="success-icon-wrap">
+                    <CheckCircle2 size={44} className="text-emerald" />
+                  </div>
+                  <h3>Consultation Request Received</h3>
+                  <p>
+                    Thank you. We have routed your details to Aaditya Uniyal (<span className="text-cyan">{AUTHOR_EMAIL}</span>).
+                    Our engineering team will review your dark store parameters and contact you within 4 hours.
+                  </p>
+                  <div className="success-action-row">
+                    <a
+                      href={`mailto:${AUTHOR_EMAIL}?subject=Darkstori%20Enterprise%20Follow-up%20(${contactCompany})`}
+                      className="hero-btn-primary"
+                    >
+                      <Mail size={16} />
+                      <span>Send Direct Email Now</span>
+                    </a>
+                    <button
+                      onClick={() => setIsSubmitted(false)}
+                      className="hero-btn-secondary"
+                    >
+                      <span>Submit Another Inquiry</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleContactSubmit} className="consultation-form">
+                  <h3 className="form-title">Request a Dark Store Network Pilot</h3>
+                  <p className="form-subtitle">Fill in your platform specifications to schedule an architectural deep-dive.</p>
+
+                  <div className="form-grid-2col">
+                    <div className="form-field">
+                      <label>Your Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Rahul Sharma"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        className="apple-input"
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Work Email *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="rahul@blinkit.com"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="apple-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-grid-2col">
+                    <div className="form-field">
+                      <label>Platform / Operator</label>
+                      <select
+                        value={contactCompany}
+                        onChange={(e) => setContactCompany(e.target.value)}
+                        className="apple-select"
+                      >
+                        <option value="Zepto">Zepto</option>
+                        <option value="Blinkit">Blinkit</option>
+                        <option value="Swiggy Instamart">Swiggy Instamart</option>
+                        <option value="BigBasket Now">BigBasket Now</option>
+                        <option value="Zomato Everyday">Zomato Everyday</option>
+                        <option value="Independent Q-Commerce">Independent Q-Commerce</option>
+                        <option value="Retail Brand / FMCG">Retail Brand / FMCG</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label>Dark Store Hub Count</label>
+                      <select
+                        value={contactHubs}
+                        onChange={(e) => setContactHubs(e.target.value)}
+                        className="apple-select"
+                      >
+                        <option value="1-10 Hubs">1–10 Hubs (Seed Phase)</option>
+                        <option value="10-50 Hubs">10–50 Hubs (Growth Phase)</option>
+                        <option value="50-200 Hubs">50–200 Hubs (Regional Scale)</option>
+                        <option value="200+ Hubs">200+ Hubs (National Metros)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-grid-2col">
+                    <div className="form-field">
+                      <label>Primary Focus Metro</label>
+                      <select
+                        value={contactCity}
+                        onChange={(e) => setContactCity(e.target.value)}
+                        className="apple-select"
+                      >
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Delhi-NCR">Delhi-NCR</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Multi-City Network">All Focus Metros</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label>Key Challenge to Solve</label>
+                      <select
+                        value={contactChallenge}
+                        onChange={(e) => setContactChallenge(e.target.value)}
+                        className="apple-select"
+                      >
+                        <option value="Greenfield Placement & Cannibalization">Greenfield Placement & Cannibalization</option>
+                        <option value="Perishable Inventory Salvage">Perishable Inventory Salvage (Sigmoid)</option>
+                        <option value="10-Min VRP Fleet Dispatch">10-Min VRP Fleet Dispatch</option>
+                        <option value="Monsoon & Weather Resilience">Monsoon & Weather Resilience</option>
+                        <option value="Full Prescriptive OS Integration">Full Prescriptive OS Integration</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Network Details & Specific Requirements</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Share current pain points, ERP tech stack, or target corridors for initial pilot..."
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      className="apple-textarea"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="form-submit-btn"
+                  >
+                    {isSubmitting ? (
+                      <span className="spinner-inline" />
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        <span>Dispatch Pilot Consultation Request</span>
+                      </>
+                    )}
+                  </button>
+                  <small className="form-privacy-note">
+                    Strict NDA honored. Direct communication via {AUTHOR_EMAIL}. No marketing spam.
+                  </small>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final Call to Action */}
       <section className="apple-final-cta">
         <div className="cta-box-glow">
@@ -806,7 +1684,12 @@ export default function LandingPage() {
               Darkstori<span className="saffron-dot">.</span>
             </div>
             <p>Enterprise Hyperlocal Quick Commerce Intelligence & Prescriptive Automation Platform.</p>
-            <small>© {new Date().getFullYear()} Darkstori Inc. All rights reserved.</small>
+            <div className="footer-contact-pill">
+              <Mail size={13} className="text-cyan" />
+              <span>Direct Engineering: </span>
+              <a href={`mailto:${AUTHOR_EMAIL}`} className="footer-email-link">{AUTHOR_EMAIL}</a>
+            </div>
+            <small>© {new Date().getFullYear()} Darkstori Inc. Designed & Engineered by Aaditya Uniyal. All rights reserved.</small>
           </div>
 
           <div className="footer-links-group">
@@ -826,9 +1709,10 @@ export default function LandingPage() {
           </div>
 
           <div className="footer-links-group">
-            <h4>Platform</h4>
+            <h4>Platform & Contact</h4>
+            <a href="#contact">Enterprise Pilot Consultation</a>
+            <a href="#faq">Architecture FAQ</a>
             <Link to="/login">Partner Portal</Link>
-            <Link to="/login?mode=register">Create Hub Account</Link>
             <Link to="/login?mode=demo">Instant Sandbox</Link>
           </div>
         </div>

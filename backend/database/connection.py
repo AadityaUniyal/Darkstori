@@ -42,8 +42,16 @@ def convert_to_async_url(url: str) -> str:
         parsed.fragment,
     ))
 
+def is_placeholder_db_url(url: str) -> bool:
+    if not url:
+        return True
+    return any(p in url for p in ["host:port", "username:password", "your_host", "example.com"])
+
 if settings.ENVIRONMENT == "testing":
     DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+elif is_placeholder_db_url(settings.DATABASE_URL) and settings.ENVIRONMENT != "production":
+    logger.warning("Placeholder DATABASE_URL detected; falling back to local SQLite: sqlite+aiosqlite:///darkstori.db")
+    DATABASE_URL = "sqlite+aiosqlite:///darkstori.db"
 else:
     DATABASE_URL = convert_to_async_url(settings.DATABASE_URL)
 

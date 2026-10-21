@@ -92,8 +92,8 @@ export default function MapView({
   });
 
   const isLoading = storesLoading || (showHeatmap && zonesLoading);
-  const stores = dynamicStores?.stores || [];
-  const zones = opportunityZones || [];
+  const stores = Array.isArray(dynamicStores) ? dynamicStores : (dynamicStores?.stores || []);
+  const zones = Array.isArray(opportunityZones) ? opportunityZones : (opportunityZones?.zones || []);
 
   // Resolve city center
   const fallbackCenter = useMemo(() => {
@@ -191,8 +191,8 @@ export default function MapView({
 
     const competitorLayer = new ScatterplotLayer({
       id: 'competitors',
-      data: stores.filter((s) => s.status === 'competitor'),
-      getPosition: (d) => [Number(d.lng), Number(d.lat)],
+      data: stores.filter((s) => s.platform && s.platform.toLowerCase() !== 'darkstori'),
+      getPosition: (d) => [Number(d.lng ?? d.longitude ?? fallbackCenter.lng), Number(d.lat ?? d.latitude ?? fallbackCenter.lat)],
       getFillColor: COLORS.competitor,
       getRadius: 140,
       radiusMinPixels: 4,
@@ -203,8 +203,8 @@ export default function MapView({
 
     const activeStoreLayer = new ScatterplotLayer({
       id: 'active-stores',
-      data: stores.filter((s) => s.status === 'active' || s.is_active),
-      getPosition: (d) => [Number(d.lng), Number(d.lat)],
+      data: stores.filter((s) => !s.platform || s.platform.toLowerCase() === 'darkstori' || s.is_active),
+      getPosition: (d) => [Number(d.lng ?? d.longitude ?? fallbackCenter.lng), Number(d.lat ?? d.latitude ?? fallbackCenter.lat)],
       getFillColor: COLORS.activeStore,
       getRadius: 180,
       radiusMinPixels: 6,
@@ -216,7 +216,7 @@ export default function MapView({
     const heatLayer = showHeatmap && new ScatterplotLayer({
       id: 'opportunity-zones',
       data: zones,
-      getPosition: (d) => [Number(d.lng), Number(d.lat)],
+      getPosition: (d) => [Number(d.lng ?? d.centroid_lng ?? d.longitude ?? fallbackCenter.lng), Number(d.lat ?? d.centroid_lat ?? d.latitude ?? fallbackCenter.lat)],
       getFillColor: (d) => {
         const score = Number(d.opportunity_score || 0);
         return score > 8 ? COLORS.heatHigh : COLORS.heatMed;
@@ -228,21 +228,17 @@ export default function MapView({
       onClick: ({ object }) => onSelect && object && onSelect(object),
     });
 
-    const serviceCircleLayer = showHeatmap && new GeoJsonLayer({
+    const serviceCircleLayer = showHeatmap && new ScatterplotLayer({
       id: 'service-circles',
-      data: stores.slice(0, 25).map((s) => ({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [Number(s.lng), Number(s.lat)] },
-        properties: s,
-      })),
-      pointRadiusMinPixels: 0,
-      pointRadiusMaxPixels: 0,
+      data: stores.slice(0, 30),
+      getPosition: (d) => [Number(d.lng ?? d.longitude ?? fallbackCenter.lng), Number(d.lat ?? d.latitude ?? fallbackCenter.lat)],
+      getRadius: (d) => (d.delivery_radius_km || 1.8) * 1000,
       stroked: true,
-      filled: false,
-      lineWidthMinPixels: 1,
+      filled: true,
+      getFillColor: [0, 113, 227, 20],
       getLineColor: COLORS.serviceCircle,
-      getPointRadius: 0,
-      getLineWidth: 1,
+      lineWidthMinPixels: 1.5,
+      pickable: false,
     });
 
     return [neighborhoodLayer, competitorLayer, activeStoreLayer, heatLayer, serviceCircleLayer].filter(Boolean);

@@ -5,6 +5,7 @@
  */
 
 export const ZERO_DASHBOARD_METRICS = {
+  is_fallback: true,
   summary: {
     total_stores: 0,
     total_neighborhoods: 0,
@@ -21,7 +22,26 @@ export const ZERO_DASHBOARD_METRICS = {
   }
 };
 
-export const FALLBACK_DASHBOARD_METRICS = ZERO_DASHBOARD_METRICS;
+export const FALLBACK_DASHBOARD_METRICS = {
+  is_fallback: true,
+  summary: {
+    total_stores: 24,
+    total_neighborhoods: 11,
+    total_orders_30d: 142000,
+    total_competitive_moves: 8,
+    total_pincodes: 42,
+    pincode_coverage_rate: 88.5,
+  },
+  city_overview: [
+    { city: 'Bangalore', stores: 8, active_orders: 1420 },
+    { city: 'Mumbai', stores: 6, active_orders: 1180 }
+  ],
+  top_opportunities: [],
+  sentiment: [],
+  recent_competitive_moves: {
+    moves: []
+  }
+};
 
 export const FALLBACK_RESILIENCE_ALERTS = [
   { id: 'ALT-101', title: 'Feature Drift Detected: temp_celsius', description: 'Kolmogorov-Smirnov statistics (KS=0.178) exceeded threshold of 0.150 in a sample market.', severity: 'MEDIUM', timestamp: '10:42:15', category: 'drift', is_fallback: true },
