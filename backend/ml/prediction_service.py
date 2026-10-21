@@ -44,7 +44,7 @@ class PredictionService:
             lag_date = (target_date - timedelta(days=lag_days)).date()
             q = text(
                 """
-                SELECT COUNT(*)::float8 AS order_count
+                SELECT CAST(COUNT(*) AS FLOAT) AS order_count
                 FROM orders_synthetic
                 WHERE neighborhood_id = :nid AND order_date = :ld
                 """

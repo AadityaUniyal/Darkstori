@@ -5,7 +5,7 @@ Uses Pydantic BaseSettings for validation and type safety.
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Union, Any
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = ""
 
     # CORS (override via env var as JSON array or comma-separated)
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: Union[List[str], str] = [
       "http://localhost:3000",
       "http://localhost:8501",
       "http://localhost:5173",
@@ -140,10 +140,15 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL")
     @classmethod
     def validate_database_url(cls, v, info):
-        """Ensure DATABASE_URL is set in non-test environments."""
+        """Ensure DATABASE_URL is set in non-test environments or defaults to local SQLite."""
         env = info.data.get("ENVIRONMENT", "development")
-        if env != "testing" and not v:
-            raise ValueError("DATABASE_URL must be set in the environment or .env file")
+        if not v:
+            if env == "production":
+                raise ValueError("DATABASE_URL must be set in production via environment or .env file")
+            if env == "testing":
+                return "sqlite+aiosqlite:///:memory:"
+            # Default development SQLite
+            return "sqlite+aiosqlite:///darkstori.db"
         return v
 
     @field_validator("ALLOWED_ORIGINS", "FOCUS_CITIES", mode="before")

@@ -35,19 +35,29 @@ router = APIRouter()
 
 
 @router.get("/dashboard/metrics")
-@cached_json("dashboard_metrics", ttl=15)
 async def get_dashboard_metrics(
+    city: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
     """Aggregate all critical KPIs, city details, top opportunity areas, sentiment and competitive moves."""
     # 1. Summary KPIs
     total_stores_q = select(func.count(DarkStore.id)).where(DarkStore.is_active.is_(True))
+    if city:
+        total_stores_q = total_stores_q.where(DarkStore.city == city)
+
     total_nbhds_q = select(func.count(Neighborhood.neighborhood_id))
-    
+    if city:
+        total_nbhds_q = total_nbhds_q.join(FocusCity, Neighborhood.city_id == FocusCity.city_id).where(FocusCity.city_name == city)
+
     since = date.today() - timedelta(days=30)
     total_orders_q = select(func.count(OrderSynthetic.id)).where(OrderSynthetic.order_date >= since)
+    if city:
+        total_orders_q = total_orders_q.where(OrderSynthetic.store_id.in_(select(DarkStore.id).where(DarkStore.city == city)))
+
     total_moves_q = select(func.count(CompetitiveMove.move_id))
+    if city:
+        total_moves_q = total_moves_q.where(CompetitiveMove.city == city)
 
     total_stores = (await db.execute(total_stores_q)).scalar() or 0
     total_nbhds = (await db.execute(total_nbhds_q)).scalar() or 0
@@ -57,6 +67,10 @@ async def get_dashboard_metrics(
     # 1.1 Pincode Coverage metrics
     total_pincodes_q = select(func.count(PincodeCoverage.id))
     served_pincodes_q = select(func.count(PincodeCoverage.id)).where(PincodeCoverage.coverage_score >= 40.0)
+    if city:
+        total_pincodes_q = total_pincodes_q.where(PincodeCoverage.city == city)
+        served_pincodes_q = served_pincodes_q.where(PincodeCoverage.city == city)
+
     total_pincodes = (await db.execute(total_pincodes_q)).scalar() or 0
     served_pincodes = (await db.execute(served_pincodes_q)).scalar() or 0
     pincode_coverage_rate = round((served_pincodes / total_pincodes * 100), 1) if total_pincodes > 0 else 0.0
@@ -85,11 +99,10 @@ async def get_dashboard_metrics(
         })
 
     # 3. Top Opportunities
-    opp_q = (
-        select(PlacementScore)
-        .order_by(PlacementScore.opportunity_score.desc())
-        .limit(6)
-    )
+    opp_q = select(PlacementScore)
+    if city:
+        opp_q = opp_q.where(PlacementScore.city == city)
+    opp_q = opp_q.order_by(PlacementScore.opportunity_score.desc()).limit(6)
     opp_rows = (await db.execute(opp_q)).scalars().all()
     top_opportunities = [
         {

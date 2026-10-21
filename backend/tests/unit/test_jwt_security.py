@@ -68,8 +68,11 @@ class TestJWTTokenCreationAndDecoding:
     def test_decode_tampered_token_raises_401(self):
         """Tampered JWT signature raises HTTP 401 Unauthorized."""
         token = create_access_token({"sub": "user@darkstori.in"})
-        # Modify the last character of the signature
-        tampered_token = token[:-1] + ("A" if token[-1] != "A" else "B")
+        parts = token.split(".")
+        sig = parts[2]
+        mid = len(sig) // 2
+        tampered_sig = sig[:mid] + ("X" if sig[mid] != "X" else "Y") + sig[mid + 1:]
+        tampered_token = f"{parts[0]}.{parts[1]}.{tampered_sig}"
         with pytest.raises(HTTPException) as excinfo:
             decode_token(tampered_token)
         assert excinfo.value.status_code == 401

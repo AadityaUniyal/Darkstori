@@ -6,7 +6,7 @@ ML tracking tables, hyperlocal intelligence tables, and auth tables.
 
 import os
 
-from sqlalchemy import JSON, Boolean, Column, Date, DateTime
+from sqlalchemy import JSON, Boolean, Column, Date, DateTime, text
 from sqlalchemy import (
     Float,
     ForeignKey,
@@ -304,7 +304,7 @@ class ApiKey(Base):
     key_prefix = Column(String(8), nullable=False)
     key_hash = Column(String(128), nullable=False)
     name = Column(String(100), server_default="default")
-    is_active = Column(Boolean, server_default=func.text("true"))
+    is_active = Column(Boolean, server_default=text("true"))
     last_used_at = Column(DateTime)
     expires_at = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
@@ -319,7 +319,7 @@ class RefreshToken(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     token_jti = Column(String(64), unique=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    revoked = Column(Boolean, server_default=func.text("false"))
+    revoked = Column(Boolean, server_default=text("false"))
     created_at = Column(DateTime, server_default=func.now())
 
     __table_args__ = (
@@ -363,12 +363,28 @@ class Neighborhood(Base):
             kwargs["neighborhood_id"] = kwargs.pop("id")
         if "density_score" in kwargs and "population_density" not in kwargs:
             kwargs["population_density"] = kwargs.pop("density_score")
+        if "lat" in kwargs and "latitude" not in kwargs:
+            kwargs["latitude"] = kwargs.pop("lat")
+        if "lng" in kwargs and "longitude" not in kwargs:
+            kwargs["longitude"] = kwargs.pop("lng")
+        if "centroid_lat" in kwargs and "latitude" not in kwargs:
+            kwargs["latitude"] = kwargs.get("centroid_lat")
+        if "centroid_lng" in kwargs and "longitude" not in kwargs:
+            kwargs["longitude"] = kwargs.get("centroid_lng")
+        if "latitude" in kwargs and "centroid_lat" not in kwargs:
+            kwargs["centroid_lat"] = kwargs.get("latitude")
+        if "longitude" in kwargs and "centroid_lng" not in kwargs:
+            kwargs["centroid_lng"] = kwargs.get("longitude")
         if "polygon_geojson" in kwargs:
             kwargs.pop("polygon_geojson")
         if "city" in kwargs and isinstance(kwargs["city"], str):
             kwargs.pop("city")
         super().__init__(**kwargs)
     pincode = Column(String(10))
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    centroid_lat = Column(Float, nullable=True)
+    centroid_lng = Column(Float, nullable=True)
     population = Column(Integer)
     avg_age = Column(Float)
     avg_household_income = Column(Float)
@@ -628,8 +644,8 @@ class DeliverySLAMetric(Base):
     avg_eta_min = Column(Float)
     sla_breach_pct = Column(Float)
     peak_eta_min = Column(Float)
-    orders_7d = Column(Integer, server_default=func.text("0"))
-    recorded_date = Column(Date, server_default=func.text("CURRENT_DATE"))
+    orders_7d = Column(Integer, server_default=text("0"))
+    recorded_date = Column(Date, server_default=text("CURRENT_DATE"))
     created_at = Column(DateTime, server_default=func.now())
 
     __table_args__ = (

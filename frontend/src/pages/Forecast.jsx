@@ -58,7 +58,7 @@ export default function Forecast() {
   const hasPrediction = !!forecastMutation.data;
   const predictionResult = forecastMutation.data;
 
-  // Generate 7-day trend based on active prediction
+  // Generate forecast projection trendline matching selected horizon
   const generateTrendData = () => {
     if (!predictionResult) return [];
     const val = predictionResult.prediction || 240;
@@ -67,13 +67,18 @@ export default function Forecast() {
 
     const dates = [];
     const baseDate = new Date(orderDate);
+    const horizon = Math.min(90, Math.max(7, Number(daysAhead) || 7));
     
-    // Create a 7-day forecast dataset centered on the chosen date
-    for (let i = -3; i <= 3; i++) {
+    // Project day-by-day across the full requested horizon
+    for (let i = 0; i < horizon; i++) {
       const d = new Date(baseDate);
       d.setDate(d.getDate() + i);
-      const mult = 1.0 + (Math.sin(i * 1.5) * 0.08) + (d.getDay() === 0 || d.getDay() === 6 ? 0.15 : 0);
-      const computedVal = val * mult;
+      const dayOfWeek = d.getDay(); // 0 is Sunday, 6 is Saturday
+      // Weekend demand surge pattern in Indian metros
+      const weekendMultiplier = dayOfWeek === 0 ? 1.24 : dayOfWeek === 6 ? 1.18 : dayOfWeek === 5 ? 1.10 : 1.0;
+      // Slight monthly growth drift (~0.05% per day)
+      const drift = 1.0 + (i * 0.001);
+      const computedVal = val * weekendMultiplier * drift;
 
       dates.push({
         date: d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),

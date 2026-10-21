@@ -34,9 +34,8 @@ router = APIRouter()
 
 from backend.core.security import verify_token
 
-@router.post("/seed-data")
-async def seed_database(db: AsyncSession = Depends(get_db), payload: dict = Depends(verify_token)):
-    """Seed the database with complete set of demo and analysis data."""
+async def run_seed_database(db: AsyncSession):
+    """Core seeding routine for cities, neighborhoods, stores, orders, and metrics."""
     try:
         logger.info("Starting database seeding...")
 
@@ -68,28 +67,28 @@ async def seed_database(db: AsyncSession = Depends(get_db), payload: dict = Depe
         db.add_all(cities)
         await db.commit()
 
-        # 3. Seed Neighborhoods
+        # 3. Seed Neighborhoods with Hyperlocal Coordinates
         nbhds = [
             # Bangalore (city_id 1)
-            Neighborhood(neighborhood_id=1, city_id=1, neighborhood_name="Koramangala", pincode="560034", population=150000, avg_age=28.5, avg_household_income=950000.0, working_professionals_pct=72.0, peak_order_hours={"18-21": 0.45, "08-11": 0.25}, preferred_categories={"Produce": 0.35, "Dairy": 0.25}, price_sensitivity="Low", total_stores=3, competition_intensity="High", market_potential_score=9.2, opportunity_rank=1, area_sqkm=5.5, population_density=27272.7),
-            Neighborhood(neighborhood_id=2, city_id=1, neighborhood_name="Indiranagar", pincode="560038", population=120000, avg_age=29.2, avg_household_income=1100000.0, working_professionals_pct=68.0, peak_order_hours={"18-21": 0.40, "08-11": 0.30}, preferred_categories={"Organic F&V": 0.38, "Gourmet": 0.22}, price_sensitivity="Low", total_stores=4, competition_intensity="High", market_potential_score=8.9, opportunity_rank=2, area_sqkm=4.8, population_density=25000.0),
-            Neighborhood(neighborhood_id=3, city_id=1, neighborhood_name="HSR Layout", pincode="560102", population=180000, avg_age=27.8, avg_household_income=850000.0, working_professionals_pct=75.0, peak_order_hours={"18-21": 0.50, "11-14": 0.20}, preferred_categories={"Snacks": 0.30, "Dairy": 0.28}, price_sensitivity="Medium", total_stores=3, competition_intensity="Medium", market_potential_score=8.2, opportunity_rank=3, area_sqkm=6.2, population_density=29032.2),
-            Neighborhood(neighborhood_id=4, city_id=1, neighborhood_name="Whitefield", pincode="560066", population=220000, avg_age=30.1, avg_household_income=1200000.0, working_professionals_pct=80.0, peak_order_hours={"18-21": 0.42, "08-11": 0.28}, preferred_categories={"Groceries": 0.40, "Personal Care": 0.20}, price_sensitivity="Low", total_stores=2, competition_intensity="Medium", market_potential_score=7.9, opportunity_rank=4, area_sqkm=12.0, population_density=18333.3),
+            Neighborhood(neighborhood_id=1, city_id=1, neighborhood_name="Koramangala", pincode="560034", latitude=12.9345, longitude=77.6266, centroid_lat=12.9345, centroid_lng=77.6266, population=150000, avg_age=28.5, avg_household_income=950000.0, working_professionals_pct=72.0, peak_order_hours={"18-21": 0.45, "08-11": 0.25}, preferred_categories={"Produce": 0.35, "Dairy": 0.25}, price_sensitivity="Low", total_stores=3, competition_intensity="High", market_potential_score=9.2, opportunity_rank=1, area_sqkm=5.5, population_density=27272.7),
+            Neighborhood(neighborhood_id=2, city_id=1, neighborhood_name="Indiranagar", pincode="560038", latitude=12.9719, longitude=77.6412, centroid_lat=12.9719, centroid_lng=77.6412, population=120000, avg_age=29.2, avg_household_income=1100000.0, working_professionals_pct=68.0, peak_order_hours={"18-21": 0.40, "08-11": 0.30}, preferred_categories={"Organic F&V": 0.38, "Gourmet": 0.22}, price_sensitivity="Low", total_stores=4, competition_intensity="High", market_potential_score=8.9, opportunity_rank=2, area_sqkm=4.8, population_density=25000.0),
+            Neighborhood(neighborhood_id=3, city_id=1, neighborhood_name="HSR Layout", pincode="560102", latitude=12.9103, longitude=77.6436, centroid_lat=12.9103, centroid_lng=77.6436, population=180000, avg_age=27.8, avg_household_income=850000.0, working_professionals_pct=75.0, peak_order_hours={"18-21": 0.50, "11-14": 0.20}, preferred_categories={"Snacks": 0.30, "Dairy": 0.28}, price_sensitivity="Medium", total_stores=3, competition_intensity="Medium", market_potential_score=8.2, opportunity_rank=3, area_sqkm=6.2, population_density=29032.2),
+            Neighborhood(neighborhood_id=4, city_id=1, neighborhood_name="Whitefield", pincode="560066", latitude=12.9698, longitude=77.7499, centroid_lat=12.9698, centroid_lng=77.7499, population=220000, avg_age=30.1, avg_household_income=1200000.0, working_professionals_pct=80.0, peak_order_hours={"18-21": 0.42, "08-11": 0.28}, preferred_categories={"Groceries": 0.40, "Personal Care": 0.20}, price_sensitivity="Low", total_stores=2, competition_intensity="Medium", market_potential_score=7.9, opportunity_rank=4, area_sqkm=12.0, population_density=18333.3),
             
             # Delhi (city_id 2)
-            Neighborhood(neighborhood_id=5, city_id=2, neighborhood_name="Saket", pincode="110017", population=140000, avg_age=31.0, avg_household_income=1200000.0, working_professionals_pct=60.0, peak_order_hours={"18-21": 0.45}, preferred_categories={"Produce": 0.35}, price_sensitivity="Low", total_stores=2, competition_intensity="Medium", market_potential_score=9.0, opportunity_rank=1, area_sqkm=5.0, population_density=28000.0),
-            Neighborhood(neighborhood_id=6, city_id=2, neighborhood_name="Connaught Place", pincode="110001", population=80000, avg_age=33.5, avg_household_income=1500000.0, working_professionals_pct=85.0, peak_order_hours={"12-15": 0.50}, preferred_categories={"Snacks": 0.40}, price_sensitivity="Low", total_stores=1, competition_intensity="Low", market_potential_score=7.1, opportunity_rank=2, area_sqkm=3.0, population_density=26666.7),
+            Neighborhood(neighborhood_id=5, city_id=2, neighborhood_name="Saket", pincode="110017", latitude=28.5244, longitude=77.2166, centroid_lat=28.5244, centroid_lng=77.2166, population=140000, avg_age=31.0, avg_household_income=1200000.0, working_professionals_pct=60.0, peak_order_hours={"18-21": 0.45}, preferred_categories={"Produce": 0.35}, price_sensitivity="Low", total_stores=2, competition_intensity="Medium", market_potential_score=9.0, opportunity_rank=1, area_sqkm=5.0, population_density=28000.0),
+            Neighborhood(neighborhood_id=6, city_id=2, neighborhood_name="Connaught Place", pincode="110001", latitude=28.6304, longitude=77.2177, centroid_lat=28.6304, centroid_lng=77.2177, population=80000, avg_age=33.5, avg_household_income=1500000.0, working_professionals_pct=85.0, peak_order_hours={"12-15": 0.50}, preferred_categories={"Snacks": 0.40}, price_sensitivity="Low", total_stores=1, competition_intensity="Low", market_potential_score=7.1, opportunity_rank=2, area_sqkm=3.0, population_density=26666.7),
             
             # Mumbai (city_id 3)
-            Neighborhood(neighborhood_id=7, city_id=3, neighborhood_name="Andheri West", pincode="400053", population=250000, avg_age=30.5, avg_household_income=1000000.0, working_professionals_pct=65.0, peak_order_hours={"18-21": 0.40}, preferred_categories={"Produce": 0.30}, price_sensitivity="Medium", total_stores=4, competition_intensity="High", market_potential_score=8.5, opportunity_rank=1, area_sqkm=7.5, population_density=33333.3),
-            Neighborhood(neighborhood_id=8, city_id=3, neighborhood_name="Bandra West", pincode="400050", population=160000, avg_age=31.2, avg_household_income=1400000.0, working_professionals_pct=70.0, peak_order_hours={"18-21": 0.42}, preferred_categories={"Organic F&V": 0.40}, price_sensitivity="Low", total_stores=3, competition_intensity="High", market_potential_score=8.0, opportunity_rank=2, area_sqkm=4.5, population_density=35555.6),
+            Neighborhood(neighborhood_id=7, city_id=3, neighborhood_name="Andheri West", pincode="400053", latitude=19.1293, longitude=72.8271, centroid_lat=19.1293, centroid_lng=72.8271, population=250000, avg_age=30.5, avg_household_income=1000000.0, working_professionals_pct=65.0, peak_order_hours={"18-21": 0.40}, preferred_categories={"Produce": 0.30}, price_sensitivity="Medium", total_stores=4, competition_intensity="High", market_potential_score=8.5, opportunity_rank=1, area_sqkm=7.5, population_density=33333.3),
+            Neighborhood(neighborhood_id=8, city_id=3, neighborhood_name="Bandra West", pincode="400050", latitude=19.0544, longitude=72.8402, centroid_lat=19.0544, centroid_lng=72.8402, population=160000, avg_age=31.2, avg_household_income=1400000.0, working_professionals_pct=70.0, peak_order_hours={"18-21": 0.42}, preferred_categories={"Organic F&V": 0.40}, price_sensitivity="Low", total_stores=3, competition_intensity="High", market_potential_score=8.0, opportunity_rank=2, area_sqkm=4.5, population_density=35555.6),
             
             # Hyderabad (city_id 4)
-            Neighborhood(neighborhood_id=9, city_id=4, neighborhood_name="Hitech City", pincode="500081", population=200000, avg_age=26.5, avg_household_income=900000.0, working_professionals_pct=80.0, peak_order_hours={"18-21": 0.50}, preferred_categories={"Dairy": 0.30}, price_sensitivity="Medium", total_stores=2, competition_intensity="Medium", market_potential_score=8.8, opportunity_rank=1, area_sqkm=8.0, population_density=25000.0),
-            Neighborhood(neighborhood_id=10, city_id=4, neighborhood_name="Gachibowli", pincode="500032", population=180000, avg_age=27.2, avg_household_income=880000.0, working_professionals_pct=78.0, peak_order_hours={"18-21": 0.48}, preferred_categories={"Produce": 0.32}, price_sensitivity="Medium", total_stores=2, competition_intensity="Medium", market_potential_score=8.0, opportunity_rank=2, area_sqkm=9.0, population_density=20000.0),
+            Neighborhood(neighborhood_id=9, city_id=4, neighborhood_name="Hitech City", pincode="500081", latitude=17.4474, longitude=78.3762, centroid_lat=17.4474, centroid_lng=78.3762, population=200000, avg_age=26.5, avg_household_income=900000.0, working_professionals_pct=80.0, peak_order_hours={"18-21": 0.50}, preferred_categories={"Dairy": 0.30}, price_sensitivity="Medium", total_stores=2, competition_intensity="Medium", market_potential_score=8.8, opportunity_rank=1, area_sqkm=8.0, population_density=25000.0),
+            Neighborhood(neighborhood_id=10, city_id=4, neighborhood_name="Gachibowli", pincode="500032", latitude=17.4401, longitude=78.3489, centroid_lat=17.4401, centroid_lng=78.3489, population=180000, avg_age=27.2, avg_household_income=880000.0, working_professionals_pct=78.0, peak_order_hours={"18-21": 0.48}, preferred_categories={"Produce": 0.32}, price_sensitivity="Medium", total_stores=2, competition_intensity="Medium", market_potential_score=8.0, opportunity_rank=2, area_sqkm=9.0, population_density=20000.0),
             
             # Pune (city_id 5)
-            Neighborhood(neighborhood_id=11, city_id=5, neighborhood_name="Koregaon Park", pincode="411001", population=90000, avg_age=29.0, avg_household_income=1050000.0, working_professionals_pct=75.0, peak_order_hours={"18-21": 0.42}, preferred_categories={"Gourmet": 0.35}, price_sensitivity="Low", total_stores=1, competition_intensity="Low", market_potential_score=7.4, opportunity_rank=1, area_sqkm=3.5, population_density=25714.3),
+            Neighborhood(neighborhood_id=11, city_id=5, neighborhood_name="Koregaon Park", pincode="411001", latitude=18.5362, longitude=73.8940, centroid_lat=18.5362, centroid_lng=73.8940, population=90000, avg_age=29.0, avg_household_income=1050000.0, working_professionals_pct=75.0, peak_order_hours={"18-21": 0.42}, preferred_categories={"Gourmet": 0.35}, price_sensitivity="Low", total_stores=1, competition_intensity="Low", market_potential_score=7.4, opportunity_rank=1, area_sqkm=3.5, population_density=25714.3),
         ]
         db.add_all(nbhds)
         await db.commit()
@@ -272,10 +271,18 @@ async def seed_database(db: AsyncSession = Depends(get_db), payload: dict = Depe
         db.add_all(metrics)
         await db.commit()
 
-        logger.info("✓ Seeding completed successfully")
+        logger.info("[OK] Seeding completed successfully")
         return {"success": True, "message": "Database seeded with complete analysis data."}
 
     except Exception as e:
         logger.error(f"Seeding failed: {e}")
         await db.rollback()
+        raise e
+
+@router.post("/seed-data")
+async def seed_database(db: AsyncSession = Depends(get_db), payload: dict = Depends(verify_token)):
+    """Seed the database with complete set of demo and analysis data."""
+    try:
+        return await run_seed_database(db)
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to seed database: {str(e)}")

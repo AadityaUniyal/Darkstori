@@ -77,10 +77,15 @@ class RedisRateLimiter:
         self._connected = False
 
     async def init_client(self):
-        """Lazy initialize Redis client connection."""
+        """Lazy initialize Redis client connection with fast timeout."""
         if self.client is None and REDIS_AVAILABLE:
             try:
-                self.client = redis.from_url(self.redis_url, decode_responses=True)
+                self.client = redis.from_url(
+                    self.redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=0.3,
+                    socket_timeout=0.3,
+                )
                 await self.client.ping()
                 self._connected = True
                 logger.info(f"Connected to Redis for rate limiting at {self.redis_url}")
@@ -147,15 +152,23 @@ class RateLimiter:
         self.key_prefix = key_prefix
         self.in_memory_limiter = InMemoryRateLimiter(requests_per_minute)
         self.redis_limiter = RedisRateLimiter(requests_per_minute, settings.REDIS_URL)
+        self._redis_failed = False
+        self._last_redis_check = 0.0
 
     async def check_rate_limit(self, request: Request) -> Tuple[bool, int]:
         """Check rate limit using Redis, falling back to in-memory on failure or missing dependency."""
-        if REDIS_AVAILABLE:
+        import time
+        now = time.time()
+        if REDIS_AVAILABLE and (not self._redis_failed or (now - self._last_redis_check > 60.0)):
             try:
-                return await self.redis_limiter.check_rate_limit(request, self.key_prefix)
+                res = await self.redis_limiter.check_rate_limit(request, self.key_prefix)
+                self._redis_failed = False
+                return res
             except HTTPException:
                 raise
             except Exception as e:
+                self._redis_failed = True
+                self._last_redis_check = now
                 logger.warning(f"Redis rate limiter check failed, falling back to in-memory: {e}")
 
         return await self.in_memory_limiter.check_rate_limit(request)

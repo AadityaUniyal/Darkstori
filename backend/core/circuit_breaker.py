@@ -30,6 +30,35 @@ class CircuitBreaker:
         self.failure_count = 0
         self.last_failure_time = 0.0
 
+    async def async_call(self, func, *args, **kwargs):
+        """Execute async coroutine directly within the current event loop."""
+        func_name = getattr(func, "__name__", str(func))
+        if self.state == CircuitState.OPEN:
+            if time.time() - self.last_failure_time >= self.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                logger.warning(f"CircuitBreaker({func_name}): HALF_OPEN - attempting recovery")
+            else:
+                raise CircuitBreakerOpenException(
+                    f"CircuitBreaker is OPEN. Call to {func_name} blocked."
+                )
+
+        try:
+            result = await func(*args, **kwargs)
+            if self.state == CircuitState.HALF_OPEN:
+                self.state = CircuitState.CLOSED
+                self.failure_count = 0
+                logger.info(f"CircuitBreaker({func_name}): CLOSED - recovered successfully")
+            return result
+        except Exception:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            if self.state == CircuitState.HALF_OPEN or self.failure_count >= self.failure_threshold:
+                self.state = CircuitState.OPEN
+                logger.error(
+                    f"CircuitBreaker({func_name}): OPEN - threshold reached ({self.failure_count} failures)"
+                )
+            raise
+
     def call(self, func, *args, **kwargs):
         """Execute callable (sync or async) with circuit breaker state management."""
         func_name = getattr(func, "__name__", str(func))

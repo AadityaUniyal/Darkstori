@@ -6,10 +6,10 @@ the workflow from proposal to approval.
 """
 
 import math
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +44,18 @@ class SimulationRequest(BaseModel):
     capex_override: Optional[float] = Field(default=None, description="Total initial capex/setup cost")
     delivery_cost_per_order: Optional[float] = Field(default=None, description="Avg logistics/delivery cost per order")
     routing_constraint_mins: Optional[float] = Field(default=15.0, description="Serviceability radius in minutes")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "sqft" in data and "store_size_sqft" not in data:
+                data["store_size_sqft"] = data["sqft"]
+            if isinstance(data.get("operating_hours"), (int, float)):
+                data["operating_hours"] = f"08:00-{int(data['operating_hours']):02d}:00"
+            if "investment_amount" not in data and "daily_capex_target" in data:
+                data["investment_amount"] = data["daily_capex_target"]
+        return data
 
 
 class SimulationResponse(BaseModel):

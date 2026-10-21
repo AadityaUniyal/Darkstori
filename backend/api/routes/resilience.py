@@ -276,16 +276,8 @@ async def verify_photo(
     batch.color_state = req.color_state
     batch.freshness_score = req.freshness_score
 
-    # Markdown pricing update
-    if batch.freshness_score < 0.4:
-        batch.discount_rate = 0.60
-    elif batch.freshness_score < 0.6:
-        batch.discount_rate = 0.40
-    elif batch.freshness_score < 0.8:
-        batch.discount_rate = 0.20
-    else:
-        batch.discount_rate = 0.0
-
+    # Continuous Dynamic Sigmoid markdown pricing update
+    batch.discount_rate = calculate_sigmoid_discount(batch.freshness_score)
     batch.current_price = round(batch.base_price * (1.0 - batch.discount_rate), 2)
 
     await db.commit()

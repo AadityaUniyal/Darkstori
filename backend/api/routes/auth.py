@@ -90,6 +90,13 @@ class UserOut(BaseModel):
     role: str
     is_active: bool
 
+
+class DemoLoginRequest(BaseModel):
+    role: str = "director"
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    persona_id: Optional[str] = None
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -169,6 +176,39 @@ async def login(credentials: UserLogin, request: Request, db: AsyncSession = Dep
         raise HTTPException(status_code=403, detail="Account is disabled")
     logger.info(f"User logged in: {credentials.email}")
     await log_audit_action(db, "USER_LOGIN", request=request, user_id=int(user.id))  # type: ignore
+    return await _make_token(user, db)
+
+
+@router.post("/demo-login", response_model=Token)
+async def demo_login(
+    request: Request,
+    req: Optional[DemoLoginRequest] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Authenticate or generate a sandbox demo persona with genuine signed tokens."""
+    req = req or DemoLoginRequest()
+    demo_email = req.email or f"{req.persona_id or req.role}@darkstori.demo"
+    result = await db.execute(select(User).where(User.email == demo_email))
+    user = result.scalar_one_or_none()
+    if not user:
+        user = User(
+            email=demo_email,
+            username=demo_email.split("@")[0],
+            full_name=req.full_name or f"Demo {req.role.capitalize()}",
+            hashed_password=hash_password("DemoPassword123!"),
+            role=req.role or "director",
+            is_active=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    elif user.role != req.role:
+        user.role = req.role
+        await db.commit()
+        await db.refresh(user)
+
+    logger.info(f"Demo persona logged in: {demo_email} (role: {user.role})")
+    await log_audit_action(db, "USER_DEMO_LOGIN", request=request, user_id=int(user.id))
     return await _make_token(user, db)
 
 

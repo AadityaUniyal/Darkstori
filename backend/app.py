@@ -91,6 +91,22 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("[OK] Database connected")
 
+    # Auto-seed baseline data if empty (e.g., fresh SQLite development environment)
+    if settings.ENVIRONMENT != "production":
+        try:
+            from backend.database.connection import AsyncSessionLocal
+            from backend.database.models.models import DarkStore
+            from sqlalchemy import select
+            async with AsyncSessionLocal() as init_session:
+                res = await init_session.execute(select(DarkStore).limit(1))
+                if not res.scalars().first():
+                    logger.info("Fresh database detected; executing automatic baseline seed...")
+                    from backend.api.routes.seed_data import run_seed_database
+                    await run_seed_database(init_session)
+                    logger.info("[OK] Baseline demo data seeded")
+        except Exception as seed_err:
+            logger.warning(f"Auto-seed notification: {seed_err}")
+
     # Start Real-time database listener if PostgreSQL
     from backend.database.connection import engine
     listener_task = None
@@ -402,6 +418,7 @@ app.include_router(recommendations.router, prefix="/api/v1/recommendations", tag
 
 # ── Analytics & Intelligence ───────────────────────────────────────────────────────
 app.include_router(analytics_advanced.router, prefix="/api/v1/analytics/advanced", tags=["Advanced Analytics"])
+app.include_router(analytics_advanced.router, prefix="/api/v1/dashboard", tags=["Dashboard Metrics Alias"])
 app.include_router(analytics_heatmap.router, prefix="/api/v1/analytics", tags=["Heatmap Analytics"])
 app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
 app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
