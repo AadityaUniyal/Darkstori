@@ -58,7 +58,10 @@ class MLflowServerManager:
             workers = self.config.server.workers
 
             # Ensure artifact directory exists
-            Path(artifact_root).mkdir(parents=True, exist_ok=True)
+            try:
+                Path(artifact_root).mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
 
             # Build command
             cmd = [
