@@ -226,3 +226,5 @@ backup/
 # Custom Local Artifacts & Test Logs
 .chrome-profile/
 .browser-*.png
+
+.vercel
