@@ -24,7 +24,7 @@ import WeatherRadarCard from '../components/WeatherRadarCard';
 import VrpDispatchCard from '../components/VrpDispatchCard';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { ZERO_DASHBOARD_METRICS } from '../constants/fallbacks';
+import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
 import QuickSetupWizard from '../components/QuickSetupWizard';
 import './Dashboard.css';
 
@@ -42,7 +42,7 @@ const PLATFORM_COLORS = {
   'Swiggy Genie': 'var(--peacock-500)',
 };
 
-const FALLBACK_METRICS = ZERO_DASHBOARD_METRICS;
+const FALLBACK_METRICS = FALLBACK_DASHBOARD_METRICS;
 
 export default function Dashboard() {
   const navigate = useNavigate();

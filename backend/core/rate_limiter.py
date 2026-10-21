@@ -144,6 +144,10 @@ class RedisRateLimiter:
         return True, remaining
 
 
+# Global circuit breaker for Redis availability across all limiters
+_global_redis_failed = False
+_global_last_check = 0.0
+
 class RateLimiter:
     """Unified rate limiter with Redis backend and InMemory fallback."""
 
@@ -152,23 +156,22 @@ class RateLimiter:
         self.key_prefix = key_prefix
         self.in_memory_limiter = InMemoryRateLimiter(requests_per_minute)
         self.redis_limiter = RedisRateLimiter(requests_per_minute, settings.REDIS_URL)
-        self._redis_failed = False
-        self._last_redis_check = 0.0
 
     async def check_rate_limit(self, request: Request) -> Tuple[bool, int]:
         """Check rate limit using Redis, falling back to in-memory on failure or missing dependency."""
+        global _global_redis_failed, _global_last_check
         import time
         now = time.time()
-        if REDIS_AVAILABLE and (not self._redis_failed or (now - self._last_redis_check > 60.0)):
+        if REDIS_AVAILABLE and (not _global_redis_failed or (now - _global_last_check > 300.0)):
             try:
                 res = await self.redis_limiter.check_rate_limit(request, self.key_prefix)
-                self._redis_failed = False
+                _global_redis_failed = False
                 return res
             except HTTPException:
                 raise
             except Exception as e:
-                self._redis_failed = True
-                self._last_redis_check = now
+                _global_redis_failed = True
+                _global_last_check = now
                 logger.warning(f"Redis rate limiter check failed, falling back to in-memory: {e}")
 
         return await self.in_memory_limiter.check_rate_limit(request)

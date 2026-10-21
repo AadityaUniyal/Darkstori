@@ -14,7 +14,7 @@ import { EmptyState } from '../components/ui/empty-state';
 import { FALLBACK_FORECAST_ZONES } from '../constants/fallbacks';
 
 export default function Forecast() {
-  const [selectedPincode, setSelectedPincode] = useState('000001');
+  const [selectedPincode, setSelectedPincode] = useState('560034');
   const [daysAhead, setDaysAhead] = useState('7'); // 7, 30, 90 days selector
   const [orderDate, setOrderDate] = useState(() => {
     const today = new Date();
@@ -38,7 +38,7 @@ export default function Forecast() {
 
   // Automatically trigger forecast when zones, pincode, date, or days change
   useEffect(() => {
-    const pCode = activeZone?.pincode || '000001';
+    const pCode = activeZone?.pincode || '560034';
     forecastMutation.mutate({
       pincode: pCode,
       order_date: orderDate,

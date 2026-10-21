@@ -168,7 +168,7 @@ class Settings(BaseSettings):
         return v
 
     model_config = {
-        "env_file": ".env",
+        "env_file": [str(PROJECT_ROOT / ".env"), ".env"],
         "case_sensitive": True,
         "extra": "ignore",
         "populate_by_name": True,

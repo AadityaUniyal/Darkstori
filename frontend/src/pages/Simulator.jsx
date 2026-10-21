@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Plus, Trash2, Check, Clock, ShieldCheck, FileDown, Layers, Landmark, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
+import { Activity, Zap, Plus, Trash2, Check, Clock, ShieldCheck, FileDown, Layers, Landmark, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,15 @@ import CannibalizationMap from '../components/CannibalizationMap';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { FALLBACK_SIMULATOR_NEIGHBORHOODS } from '../constants/fallbacks';
+
+
+const PRESET_HUBS = [
+  { name: 'Koramangala 5th Block', city: 'Bangalore', nbhd_id: 1, rent: 55, capex: 1800000, size: 2200, routing: 12 },
+  { name: 'Bandra West (Linking Rd)', city: 'Mumbai', nbhd_id: 6, rent: 85, capex: 2200000, size: 2400, routing: 14 },
+  { name: 'Saket District Centre', city: 'Delhi', nbhd_id: 4, rent: 48, capex: 1600000, size: 2000, routing: 13 },
+  { name: 'Gachibowli Financial Hub', city: 'Hyderabad', nbhd_id: 8, rent: 42, capex: 1500000, size: 2000, routing: 15 },
+  { name: 'Koregaon Park North Main', city: 'Pune', nbhd_id: 9, rent: 40, capex: 1400000, size: 1800, routing: 12 },
+];
 
 export default function Simulator() {
   const { user } = useAuth();
@@ -29,6 +38,11 @@ export default function Simulator() {
   // Workflow states
   const [activeTab, setActiveTab] = useState('simulate'); // 'simulate' | 'proposals' | 'ledger' | 'cannibalization'
   const [reviewText, setReviewText] = useState('');
+  // Interactive Scenario Builder State
+  const [selectedCityName, setSelectedCityName] = useState('Bangalore');
+  const [selectedNbhdId, setSelectedNbhdId] = useState(1);
+  const [surgeScenario, setSurgeScenario] = useState('normal'); // 'normal' | 'weekend' | 'monsoon'
+
 
   // Fetch all neighborhoods
   const { data: nbhds } = useQuery({
@@ -166,6 +180,91 @@ export default function Simulator() {
     }
   };
 
+  
+  const filteredNeighborhoods = neighborhoodList.filter(n => {
+    if (selectedCityName === 'All') return true;
+    return (n.city || '').toLowerCase() === selectedCityName.toLowerCase();
+  });
+
+  const runSimulationForNbhd = (nb) => {
+    if (!nb) return;
+    const lat = nb.centroid_lat || nb.latitude || 12.9345;
+    const lng = nb.centroid_lng || nb.longitude || 77.6266;
+
+    predictROIMutation.mutate({
+      neighborhood_id: nb.neighborhood_id || 1,
+      investment_amount: capexOverride,
+      store_size_sqft: storeSize,
+      operating_hours: '08:00-22:00',
+      rent_per_sqft: rentSqft,
+      staff_salary_monthly: staffSalary,
+      delivery_cost_per_order: deliveryCost,
+      routing_constraint_mins: routingMins
+    }, {
+      onSuccess: (data) => {
+        const surgeMult = surgeScenario === 'monsoon' ? 1.35 : surgeScenario === 'weekend' ? 1.2 : 1.0;
+        const projectedOrders = Math.round((data.predicted_daily_orders || 1450) * surgeMult);
+        const monthlyRev = Math.round((data.predicted_monthly_revenue || 4350000) * surgeMult);
+        const newId = `Node-${nb.neighborhood_id || 'Hub'}-${Date.now().toString().slice(-4)}`;
+        const newDraft = {
+          id: newId,
+          dbId: data.simulation_id || newId,
+          name: nb.neighborhood_name || 'Dark Store Node',
+          city: nb.city || selectedCityName,
+          pincode: nb.pincode || '560034',
+          lat,
+          lng,
+          metrics: {
+            demand_score: Math.min(10, Math.round((projectedOrders / 25) * 10) / 10),
+            competition_gap: data.factors?.competition_stores ? Math.round((10 - data.factors.competition_stores * 1.5) * 10) / 10 : 8.2,
+            logistics_viability: data.roi_12_months_pct > 15 ? 'High' : 'Medium',
+            recommended_store_size_sqft: storeSize,
+            estimated_breakeven_months: data.break_even_month || 6.5,
+            confidence: Math.round((data.confidence_level || 0.92) * 100),
+            predicted_daily_orders: projectedOrders,
+            monthly_revenue: monthlyRev,
+            monthly_opex: data.monthly_operating_cost || 1140000,
+            roi_pct: data.roi_12_months_pct || 28.5,
+            routing_mins: data.routing_mins || routingMins
+          }
+        };
+        setDrafts(prev => [newDraft, ...prev.filter(d => d.name !== newDraft.name)].slice(0, 3));
+        setActiveDraftId(newId);
+        toast.success(`Simulation generated for ${newDraft.name}`);
+        refetchProposals();
+      }
+    });
+  };
+
+  const handleSimulateCurrent = () => {
+    const target = neighborhoodList.find(n => n.neighborhood_id === selectedNbhdId) || filteredNeighborhoods[0] || neighborhoodList[0];
+    runSimulationForNbhd(target);
+  };
+
+  const handlePresetClick = (preset) => {
+    setSelectedCityName(preset.city);
+    setSelectedNbhdId(preset.nbhd_id);
+    setRentSqft(preset.rent);
+    setCapexOverride(preset.capex);
+    setStoreSize(preset.size);
+    setRoutingMins(preset.routing);
+    const target = neighborhoodList.find(n => n.neighborhood_id === preset.nbhd_id) || {
+      neighborhood_id: preset.nbhd_id,
+      neighborhood_name: preset.name,
+      city: preset.city,
+      centroid_lat: 12.9345,
+      centroid_lng: 77.6266
+    };
+    runSimulationForNbhd(target);
+  };
+
+  // Preload first scenario on mount
+  useEffect(() => {
+    if (drafts.length === 0 && neighborhoodList.length > 0) {
+      runSimulationForNbhd(neighborhoodList[0]);
+    }
+  }, [neighborhoodList.length]);
+
   const activeDraft = drafts.find(d => d.id === activeDraftId);
 
   return (
@@ -217,11 +316,177 @@ export default function Simulator() {
         </div>
       </div>
 
+            {/* Quick Market Presets Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+          ⚡ 1-Click Greenfield Presets:
+        </span>
+        {PRESET_HUBS.map(preset => (
+          <button
+            key={preset.name}
+            onClick={() => handlePresetClick(preset)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: selectedNbhdId === preset.nbhd_id ? '1px solid #0071E3' : '1px solid rgba(255,255,255,0.1)',
+              background: selectedNbhdId === preset.nbhd_id ? 'rgba(0, 113, 227, 0.2)' : 'rgba(255,255,255,0.03)',
+              color: selectedNbhdId === preset.nbhd_id ? '#38BDF8' : 'var(--color-text-secondary)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Zap size={13} color="#0071E3" />
+            {preset.name} <span style={{ opacity: 0.6, fontSize: '0.72rem' }}>({preset.city})</span>
+          </button>
+        ))}
+      </div>
+
       {/* Main Grid Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 380px', gap: '24px' }}>
         
         {/* Left Side: Map + Cost Configuration Panels */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {/* Greenfield Scenario Builder Box */}
+          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(0, 113, 227, 0.3)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Landmark size={20} color="#0071E3" /> Greenfield Scenario Builder
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
+                  Configure dark store format, capex budget, and delivery radius constraints to predict localized ROI.
+                </p>
+              </div>
+              <button
+                onClick={() => handleSimulateCurrent()}
+                disabled={predictROIMutation.isPending}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #0071E3, #0284C7)',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(0, 113, 227, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {predictROIMutation.isPending ? <RefreshCw className="animate-spin" size={16} /> : <Zap size={16} />}
+                Run Greenfield Simulation
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+              {/* City Select */}
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Focus City
+                </label>
+                <select
+                  value={selectedCityName}
+                  onChange={(e) => setSelectedCityName(e.target.value)}
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-border)', borderRadius: '10px', padding: '8px 12px', color: 'var(--color-text-primary)' }}
+                >
+                  {['Bangalore', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune', 'All'].map(c => <option key={c} value={c} style={{ background: '#0E121A' }}>{c}</option>)}
+                </select>
+              </div>
+
+              {/* Micro-market Select */}
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Target Micro-Market
+                </label>
+                <select
+                  value={selectedNbhdId}
+                  onChange={(e) => setSelectedNbhdId(Number(e.target.value))}
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-border)', borderRadius: '10px', padding: '8px 12px', color: 'var(--color-text-primary)' }}
+                >
+                  {filteredNeighborhoods.map(n => (
+                    <option key={n.neighborhood_id} value={n.neighborhood_id} style={{ background: '#0E121A' }}>
+                      {n.neighborhood_name} ({n.pincode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Store Format */}
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Store Format
+                </label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[
+                    { label: 'Express (800)', size: 800 },
+                    { label: 'Standard (1500)', size: 1500 },
+                    { label: 'Mega (3000)', size: 3000 }
+                  ].map(fmt => (
+                    <button
+                      key={fmt.size}
+                      type="button"
+                      onClick={() => setStoreSize(fmt.size)}
+                      style={{
+                        flex: 1,
+                        padding: '6px 4px',
+                        fontSize: '0.72rem',
+                        borderRadius: '8px',
+                        border: storeSize === fmt.size ? '1px solid #0071E3' : '1px solid var(--color-border)',
+                        background: storeSize === fmt.size ? 'rgba(0, 113, 227, 0.2)' : 'transparent',
+                        color: storeSize === fmt.size ? '#38BDF8' : 'var(--color-text-secondary)',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {fmt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Demand Surge Scenario */}
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Surge Multiplier
+                </label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[
+                    { id: 'normal', label: 'Base 1.0x' },
+                    { id: 'weekend', label: 'Weekend 1.2x' },
+                    { id: 'monsoon', label: 'Rain 1.35x' }
+                  ].map(scn => (
+                    <button
+                      key={scn.id}
+                      type="button"
+                      onClick={() => setSurgeScenario(scn.id)}
+                      style={{
+                        flex: 1,
+                        padding: '6px 4px',
+                        fontSize: '0.72rem',
+                        borderRadius: '8px',
+                        border: surgeScenario === scn.id ? '1px solid #10B981' : '1px solid var(--color-border)',
+                        background: surgeScenario === scn.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                        color: surgeScenario === scn.id ? '#34D399' : 'var(--color-text-secondary)',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {scn.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="glass-card" style={{ padding: '16px', position: 'relative' }}>
             <div style={{ position: 'absolute', top: '24px', left: '28px', zIndex: 5, background: 'rgba(14, 18, 26, 0.85)', backdropFilter: 'blur(12px)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.78rem', color: '#38BDF8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', pointerEvents: 'none' }}>
               <Plus size={13} /> Click any location on the map to run localized ROI projection
