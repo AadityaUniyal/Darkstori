@@ -7,8 +7,15 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import numpy as np
-import pandas as pd
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,7 +86,15 @@ class PredictionService:
                 )
                 use_fallback = True
 
-            dt = pd.to_datetime(request.order_date)
+            if isinstance(request.order_date, datetime):
+                dt = request.order_date
+            elif isinstance(request.order_date, str):
+                try:
+                    dt = datetime.fromisoformat(request.order_date.replace("Z", "+00:00"))
+                except Exception:
+                    dt = datetime.now()
+            else:
+                dt = datetime.now()
             
             # Fetch weather and holiday details concurrently
             is_holiday = is_india_holiday(dt)
@@ -93,8 +108,8 @@ class PredictionService:
             density = nbhd.get("population_density", 5000)
             avg_income = nbhd.get("avg_household_income", 400000)
             active_platforms = request.platform_count or nbhd.get("total_stores", 3)
-            day_of_week = dt.dayofweek
-            is_weekend = int(dt.dayofweek >= 5)
+            day_of_week = dt.weekday()
+            is_weekend = int(dt.weekday() >= 5)
 
             # Query actual lag features from backend.database if database session is present
             nbhd_id = nbhd.get("neighborhood_id")
