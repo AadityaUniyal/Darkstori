@@ -20,7 +20,9 @@ class FeatureCache:
             self.redis_client = redis.from_url(
                 settings.REDIS_URL, 
                 encoding="utf-8", 
-                decode_responses=True
+                decode_responses=True,
+                socket_connect_timeout=0.3,
+                socket_timeout=0.3,
             )
             # Ping to verify connection
             await self.redis_client.ping()

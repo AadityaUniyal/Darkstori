@@ -3,11 +3,12 @@ import { api } from '../services/api';
 
 const CityContext = createContext(null);
 
-const DEFAULT_CITY = 'Demo City';
+const DEFAULT_CITIES = ['Bangalore', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune'];
+const DEFAULT_CITY = 'Bangalore';
 
 export function CityProvider({ children }) {
   const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
-  const [cities, setCities] = useState([DEFAULT_CITY]);
+  const [cities, setCities] = useState(DEFAULT_CITIES);
 
   useEffect(() => {
     let mounted = true;
@@ -26,7 +27,7 @@ export function CityProvider({ children }) {
         }
       } catch {
         if (mounted) {
-          setCities([DEFAULT_CITY]);
+          setCities(DEFAULT_CITIES);
         }
       }
     };

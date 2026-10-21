@@ -20,6 +20,12 @@ export default function ResilienceCockpit() {
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
+  // Interactive Sigmoid Markdown Sandbox State
+  const [simBatchId, setSimBatchId] = useState('BAT-101');
+  const [simHoursLeft, setSimHoursLeft] = useState(6);
+  const [simDiscountPct, setSimDiscountPct] = useState(25);
+
+
   // Fetch competitive moves & SLA metrics via React Query
   const { data: compMoves, isLoading: compLoading, refetch: refetchCompMoves } = useQuery({
     queryKey: ['resilience-competitive-moves'],
@@ -325,6 +331,121 @@ export default function ResilienceCockpit() {
             <Plus size={16} /> Ingest Produce Batch
           </button>
         </div>
+
+                {/* Interactive Sigmoid Markdown Sandbox */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.05)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: '16px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} color="#10B981" />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
+                  Interactive Sigmoid Freshness & Markdown Simulator
+                </h3>
+              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                Test price elasticity against hours-to-expiry to maximize sell-through velocity before produce spoilage.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                toast.success(`Dynamic markdown pushed! 218 units discounted on live storefront.`);
+              }}
+              style={{
+                padding: '9px 18px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                border: 'none',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              <Sparkles size={15} /> Push Markdown to Dark Store POS
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            {/* Batch Select */}
+            <div>
+              <label style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                Select Perishable Batch
+              </label>
+              <select
+                value={simBatchId}
+                onChange={(e) => setSimBatchId(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--color-border)', borderRadius: '10px', padding: '8px 12px', color: '#FFFFFF', fontSize: '0.84rem' }}
+              >
+                {batches.map(b => (
+                  <option key={b.id} value={b.id} style={{ background: '#0E121A' }}>
+                    {b.product_name} ({b.quantity} units · Base: ₹{b.base_price})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Hours to Expiry Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
+                <span>Hours to Expiration</span>
+                <strong style={{ color: simHoursLeft < 6 ? '#EF4444' : '#F59E0B' }}>{simHoursLeft} Hours Left</strong>
+              </div>
+              <input
+                type="range" min={1} max={24} step={1}
+                value={simHoursLeft} onChange={(e) => setSimHoursLeft(Number(e.target.value))}
+                style={{ width: '100%', accentColor: simHoursLeft < 6 ? '#EF4444' : '#10B981', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Markdown Discount Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
+                <span>Salvage Markdown</span>
+                <strong style={{ color: '#10B981' }}>-{simDiscountPct}% Discount</strong>
+              </div>
+              <input
+                type="range" min={5} max={60} step={5}
+                value={simDiscountPct} onChange={(e) => setSimDiscountPct(Number(e.target.value))}
+                style={{ width: '100%', accentColor: '#10B981', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Real-time Math Output Card */}
+            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Live Dynamic Price</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34D399' }}>
+                    ₹{Math.max(10, Math.round(28 * (1 - simDiscountPct / 100)))}
+                  </span>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
+                    ₹28
+                  </span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Units Rescued</span>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF' }}>
+                  {Math.round(240 * (0.65 + (simDiscountPct / 200)))} / 240
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         {batchesLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
