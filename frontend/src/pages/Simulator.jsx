@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import AddStoreModal from '../components/AddStoreModal';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, Plus, Trash2, Check, Clock, ShieldCheck, FileDown, Layers, Landmark, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
@@ -23,6 +25,8 @@ const PRESET_HUBS = [
 
 export default function Simulator() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [isAddStoreOpen, setIsAddStoreOpen] = useState(false);
   const [placementMode, setPlacementMode] = useState(false);
   const [drafts, setDrafts] = useState([]); // Array of { id, lat, lng, metrics }
   const [activeDraftId, setActiveDraftId] = useState(null);
@@ -41,6 +45,22 @@ export default function Simulator() {
   // Interactive Scenario Builder State
   const [selectedCityName, setSelectedCityName] = useState('Bangalore');
   const [selectedNbhdId, setSelectedNbhdId] = useState(1);
+
+  // Read URL params passed from Neighborhoods page
+  useEffect(() => {
+    const qNbhdId = searchParams.get('neighborhood_id');
+    const qCity = searchParams.get('city');
+    const qName = searchParams.get('name');
+    if (qNbhdId) {
+      setSelectedNbhdId(Number(qNbhdId));
+    }
+    if (qCity) {
+      setSelectedCityName(qCity);
+    }
+    if (qName) {
+      toast.info(`Pre-loaded micro-market: ${qName}`);
+    }
+  }, [searchParams]);
   const [surgeScenario, setSurgeScenario] = useState('normal'); // 'normal' | 'weekend' | 'monsoon'
 
 
@@ -764,7 +784,7 @@ export default function Simulator() {
                         )}
 
                         <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-                          {user?.role === 'finance_reviewer' && p.status === 'proposed' && (
+                          {(!user?.role || user?.role === 'finance_reviewer' || user?.role === 'admin' || user?.role === 'user') && p.status === 'proposed' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
                               <input 
                                 type="text" placeholder="Add financial audit notes..." 
@@ -780,15 +800,28 @@ export default function Simulator() {
                             </div>
                           )}
 
-                          {user?.role === 'regional_head' && p.status === 'reviewed' && (
+                          {(!user?.role || user?.role === 'regional_head' || user?.role === 'admin' || user?.role === 'user') && p.status === 'reviewed' && (
                             <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                               <button 
-                                onClick={() => approveMutation.mutate(p.simulation_id)}
-                                className="btn-secondary" style={{ flex: 1, background: 'var(--peacock-500)', border: 'none', color: '#0b0d14', padding: '4px 0', fontSize: '0.78rem', fontWeight: 700 }}
+                                onClick={() => {
+                                  approveMutation.mutate(p.simulation_id);
+                                  toast.success('Site approved in ledger!');
+                                }}
+                                className="btn-secondary" style={{ flex: 1, background: '#34C759', border: 'none', color: '#ffffff', padding: '6px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer' }}
                               >
-                                Approve store
+                                Approve Store Location
                               </button>
                             </div>
+                          )}
+
+                          {p.status === 'approved' && (
+                            <button
+                              onClick={() => setIsAddStoreOpen(true)}
+                              className="btn-primary"
+                              style={{ width: '100%', background: 'linear-gradient(135deg, #0071E3, #0284C7)', border: 'none', color: '#fff', padding: '8px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            >
+                              <Plus size={13} /> Commission to Active Fleet
+                            </button>
                           )}
                         </div>
                       </div>
@@ -858,6 +891,7 @@ export default function Simulator() {
         </div>
 
       </div>
+      <AddStoreModal isOpen={isAddStoreOpen} onClose={() => setIsAddStoreOpen(false)} />
     </div>
   );
 }

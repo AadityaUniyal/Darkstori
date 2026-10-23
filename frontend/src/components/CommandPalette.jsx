@@ -95,6 +95,39 @@ export default function CommandPalette({ isOpen, onClose }) {
       }
     },
     {
+      id: 'act-ops-brief',
+      type: 'Action',
+      icon: Sparkles,
+      title: 'Export Executive Operations Brief (Memo & PDF)',
+      subtitle: 'Generate publication-grade C-Suite operational brief with financial ROI',
+      action: () => {
+        navigate('/dashboard');
+        toast.info('Opening Executive Operations Briefing...');
+      }
+    },
+    {
+      id: 'act-monsoon',
+      type: 'Action',
+      icon: Zap,
+      title: 'Activate Pre-Emptive Monsoon Geofence Protocol',
+      subtitle: 'Contract geofence radius to 1.6km and apply 1.4x rider surge payout',
+      action: () => {
+        toast.success('Pre-emptive Monsoon Protocol activated: Geofences contracted');
+        navigate('/dashboard');
+      }
+    },
+    {
+      id: 'act-rebalance',
+      type: 'Action',
+      icon: ArrowRight,
+      title: 'Trigger Inter-Hub Micro-Transfer Cross-Docking',
+      subtitle: 'Rebalance surplus milk and dairy SKUs across adjacent hubs (<= 3.5km)',
+      action: () => {
+        toast.success('Inter-hub runner dispatched: 50 units Amul Milk transferred');
+        navigate('/resilience');
+      }
+    },
+    {
       id: 'act-decay',
       type: 'Action',
       icon: Zap,

@@ -319,7 +319,7 @@ export default function Neighborhoods() {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate(`/simulator`)}
+                  onClick={() => navigate(`/simulator?neighborhood_id=${c.neighborhood_id}&name=${encodeURIComponent(c.neighborhood_name)}&city=${encodeURIComponent(c.city || activeCityName)}`)}
                   style={{
                     marginTop: '14px',
                     width: '100%',
@@ -444,7 +444,7 @@ export default function Neighborhoods() {
                   </button>
 
                   <button
-                    onClick={() => navigate(`/simulator`)}
+                    onClick={() => navigate(`/simulator?neighborhood_id=${n.neighborhood_id}&name=${encodeURIComponent(n.neighborhood_name)}&city=${encodeURIComponent(n.city || activeCityName)}`)}
                     style={{
                       flex: 1.2,
                       padding: '8px 0',

@@ -11,6 +11,7 @@ import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
+import PlaybookTestModal from '../components/PlaybookTestModal';
 import './Playbooks.css';
 
 const TRIGGER_ICONS = {
@@ -34,6 +35,7 @@ export default function Playbooks() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [expandedExec, setExpandedExec] = useState(null);
+  const [testingPlaybook, setTestingPlaybook] = useState(null);
 
   // Form state for creating a new playbook
   const [form, setForm] = useState({
@@ -360,6 +362,14 @@ export default function Playbooks() {
                   {pb.is_active ? <Pause size={15} /> : <Play size={15} />}
                 </button>
                 <button
+                  className="playbook-action-btn"
+                  style={{ color: '#38BDF8' }}
+                  onClick={() => setTestingPlaybook(pb)}
+                  title="Dry-Run Test"
+                >
+                  <TestTube size={15} />
+                </button>
+                <button
                   className="playbook-action-btn delete"
                   onClick={() => pb.id && deleteMutation.mutate(pb.id)}
                   title="Delete"
@@ -435,6 +445,11 @@ export default function Playbooks() {
           )}
         </div>
       </div>
+      <PlaybookTestModal
+        isOpen={!!testingPlaybook}
+        onClose={() => setTestingPlaybook(null)}
+        playbook={testingPlaybook}
+      />
     </div>
   );
 }
