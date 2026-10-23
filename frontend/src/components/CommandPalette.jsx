@@ -21,12 +21,14 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useCity } from '../context/CityContext';
+import { useRole } from '../context/RoleContext';
 import { toast } from 'sonner';
 import { api } from '../services/api';
 
 export default function CommandPalette({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { currentCity, setCity, cities } = useCity();
+  const { activeRole, setRole } = useRole();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
@@ -41,6 +43,44 @@ export default function CommandPalette({ isOpen, onClose }) {
   }, [isOpen]);
 
   const items = [
+    // Operational Lens Roles
+    {
+      id: 'role-exec',
+      type: 'Operational Lens',
+      icon: Compass,
+      title: 'Switch Lens: Executive (C-Suite)',
+      subtitle: 'Focus on Capital ROI, Network Health, and Avoided Spoilage Alpha',
+      action: () => {
+        setRole('executive');
+        navigate('/dashboard');
+        toast.success('Operational Lens switched to Executive');
+      }
+    },
+    {
+      id: 'role-gm',
+      type: 'Operational Lens',
+      icon: LayoutDashboard,
+      title: 'Switch Lens: Store GM (Operations)',
+      subtitle: 'Focus on Dark Store Floorplan, Bottlenecks, and Shelf Waves',
+      action: () => {
+        setRole('store-gm');
+        navigate('/dashboard');
+        toast.success('Operational Lens switched to Store GM');
+      }
+    },
+    {
+      id: 'role-fleet',
+      type: 'Operational Lens',
+      icon: Zap,
+      title: 'Switch Lens: Fleet Commander (Logistics)',
+      subtitle: 'Focus on Swarm Intercept Radar, VRP Dispatch, and Couriers',
+      action: () => {
+        setRole('fleet-commander');
+        navigate('/dashboard');
+        toast.success('Operational Lens switched to Fleet Commander');
+      }
+    },
+
     // Navigation
     { id: 'nav-exp', type: 'Navigation', icon: Compass, title: 'Expansion Cockpit', subtitle: 'Greenfield location finder & cannibalization simulation', action: () => navigate('/') },
     { id: 'nav-dash', type: 'Navigation', icon: LayoutDashboard, title: 'Operations Dashboard', subtitle: 'Live telemetry, rider SLA, and store capacity', action: () => navigate('/dashboard') },

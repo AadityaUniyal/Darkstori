@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useCity } from '../context/CityContext';
+import { useRole } from '../context/RoleContext';
 import LazyMapView from '../components/LazyMapView';
 import LiveTracker from '../components/LiveTracker';
 import CityPulse from '../components/CityPulse';
@@ -100,12 +101,23 @@ export default function Dashboard() {
   };
 
   const [activeSection, setActiveSection] = useState('opportunities'); // 'opportunities' | 'dispatch' | 'sla' | 'growth'
-  const [activePersona, setActivePersona] = useState('executive'); // 'executive' | 'store-gm' | 'fleet-commander'
+  const { activeRole, setRole: setGlobalRole } = useRole();
+  const [activePersona, setActivePersona] = useState(activeRole || 'executive');
+
+  useEffect(() => {
+    if (activeRole && activeRole !== activePersona) {
+      setActivePersona(activeRole);
+      if (activeRole === 'executive') setActiveSection('opportunities');
+      else if (activeRole === 'store-gm') setActiveSection('digital-twin');
+      else if (activeRole === 'fleet-commander') setActiveSection('war-room');
+    }
+  }, [activeRole]);
   const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
   const [currentAiExplanation, setCurrentAiExplanation] = useState(null);
 
   const handlePersonaChange = (personaId) => {
     setActivePersona(personaId);
+    setGlobalRole(personaId);
     if (personaId === 'executive') {
       setActiveSection('opportunities');
     } else if (personaId === 'store-gm') {

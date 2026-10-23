@@ -28,6 +28,7 @@ import CommandPalette from './components/CommandPalette';
 import OperationsPulse from './components/OperationsPulse';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
+import { RoleProvider } from './context/RoleContext';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from 'sonner';
 
@@ -161,13 +162,15 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <CityProvider>
-            <AuthProvider>
+            <RoleProvider>
+              <AuthProvider>
               <LiveSocketListener />
               <Toaster position="top-right" richColors />
               <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AppContent />
               </Router>
-            </AuthProvider>
+              </AuthProvider>
+            </RoleProvider>
           </CityProvider>
         </ErrorBoundary>
       </QueryClientProvider>
