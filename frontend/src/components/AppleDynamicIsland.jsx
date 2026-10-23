@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, CheckCircle2, ChevronRight, HelpCircle, ArrowRight,
@@ -9,15 +9,40 @@ import { toast } from 'sonner';
 export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isActionExecuted, setIsActionExecuted] = useState(false);
+  const audioCtxRef = useRef(null);
+
+  const playChime = (freq1 = 587.33, freq2 = 880.0) => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(freq1, now);
+      osc.frequency.exponentialRampToValueAtTime(freq2, now + 0.12);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    } catch {
+      // Audio autoplay safe fallback
+    }
+  };
 
   const handleExecute = (e) => {
     e.stopPropagation();
     setIsActionExecuted(true);
+    playChime(587.33, 880.0);
     if (audioFeedback) audioFeedback('success');
     toast.success("Autonomous Transshipment Authorized: EV Cargo Van #EV-4 dispatched!");
     setTimeout(() => {
       setIsExpanded(false);
-    }, 1500);
+    }, 1600);
   };
 
   return (
@@ -33,6 +58,7 @@ export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }
         transition={{ type: 'spring', stiffness: 500, damping: 38 }}
         onClick={() => {
           setIsExpanded(!isExpanded);
+          playChime(440.0, 659.25);
           if (audioFeedback) audioFeedback('tactical');
         }}
         style={{
@@ -47,7 +73,7 @@ export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }
             : '0 8px 24px rgba(0, 0, 0, 0.35)',
           cursor: 'pointer',
           color: '#FFFFFF',
-          maxWidth: isExpanded ? '640px' : '440px',
+          maxWidth: isExpanded ? '640px' : '460px',
           width: '100%',
           overflow: 'hidden'
         }}
@@ -180,12 +206,15 @@ export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }
                 <span>Why this Decision?</span>
               </button>
 
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={handleExecute}
                 disabled={isActionExecuted}
                 style={{
-                  background: isActionExecuted ? 'rgba(34, 197, 94, 0.25)' : 'linear-gradient(135deg, #0071E3, #A855F7)',
-                  border: `1px solid ${isActionExecuted ? '#22C55E' : 'transparent'}`,
+                  background: isActionExecuted
+                    ? 'rgba(34, 197, 94, 0.25)'
+                    : 'linear-gradient(135deg, #0071E3, #A855F7)',
+                  border: `1px solid ${isActionExecuted ? '#22C55E' : 'rgba(255, 255, 255, 0.15)'}`,
                   borderRadius: '12px',
                   padding: '8px 18px',
                   color: '#FFFFFF',
@@ -195,12 +224,24 @@ export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  boxShadow: '0 4px 14px rgba(0, 113, 227, 0.35)'
+                  boxShadow: isActionExecuted
+                    ? '0 0 16px rgba(34, 197, 94, 0.4)'
+                    : '0 4px 14px rgba(0, 113, 227, 0.35)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
               >
-                <CheckCircle2 size={14} />
-                <span>{isActionExecuted ? "Authorized & En Route" : "Authorize 1-Click Dispatch"}</span>
-              </button>
+                {isActionExecuted ? (
+                  <>
+                    <ShieldCheck size={16} color="#4ADE80" />
+                    <span style={{ color: '#4ADE80' }}>Dispatched & Active</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} />
+                    <span>Authorize 1-Click Dispatch</span>
+                  </>
+                )}
+              </motion.button>
             </div>
           </motion.div>
         )}
