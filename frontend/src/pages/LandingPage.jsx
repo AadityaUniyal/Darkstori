@@ -1512,7 +1512,9 @@ export default function LandingPage() {
                   </p>
                   <div className="success-action-row">
                     <a
-                      href={`mailto:${AUTHOR_EMAIL}?subject=Darkstori%20Enterprise%20Follow-up%20(${contactCompany})`}
+                      href={`mailto:${encodeURIComponent(AUTHOR_EMAIL)}?subject=${encodeURIComponent(
+                        `Darkstori Enterprise Follow-up (${contactCompany})`
+                      )}`}
                       className="hero-btn-primary"
                     >
                       <Mail size={16} />

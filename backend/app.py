@@ -334,8 +334,9 @@ async def readiness_check():
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         health_status["components"]["database"] = "healthy"
-    except Exception as e:
-        health_status["components"]["database"] = f"unhealthy: {str(e)}"
+    except Exception:
+        logger.error("Database health check failed", exc_info=True)
+        health_status["components"]["database"] = "unhealthy"
         health_status["status"] = "degraded"
 
     # Check MLflow
@@ -347,8 +348,9 @@ async def readiness_check():
                 resp = await hc.get(f"{mlflow_config.tracking_uri}/health")
             mlflow_healthy = resp.status_code == 200
             health_status["components"]["mlflow"] = "healthy" if mlflow_healthy else "unhealthy"
-        except Exception as e:
-            health_status["components"]["mlflow"] = f"unhealthy: {str(e)}"
+        except Exception:
+            logger.error("MLflow health check failed", exc_info=True)
+            health_status["components"]["mlflow"] = "unhealthy"
     else:
         health_status["components"]["mlflow"] = "disabled"
         mlflow_healthy = True # Assume healthy if disabled
@@ -364,9 +366,11 @@ async def readiness_check():
             )
             health_status["components"]["model"] = "healthy" if model_version else "no production model"
         except asyncio.TimeoutError:
-            health_status["components"]["model"] = "unavailable: MLflow timeout"
-        except Exception as e:
-            health_status["components"]["model"] = f"unavailable: {str(e)}"
+            logger.warning("MLflow model registry timeout")
+            health_status["components"]["model"] = "unavailable"
+        except Exception:
+            logger.error("Model registry check failed", exc_info=True)
+            health_status["components"]["model"] = "unavailable"
     else:
         health_status["components"]["model"] = "skipped"
 
@@ -378,7 +382,8 @@ async def readiness_check():
         if not redis_is_ready:
             health_status["status"] = "degraded"
     except Exception:
-        health_status["components"]["redis"] = "unhealthy: connection error"
+        logger.error("Redis health check failed", exc_info=True)
+        health_status["components"]["redis"] = "unhealthy"
         health_status["status"] = "degraded"
 
     return health_status
