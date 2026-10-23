@@ -25,6 +25,8 @@ import PrivateRoute from './components/PrivateRoute';
 import RangoliLoader from './components/RangoliLoader';
 import LiveSocketListener from './components/LiveSocketListener';
 import CommandPalette from './components/CommandPalette';
+import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import { useRole } from './context/RoleContext';
 import OperationsPulse from './components/OperationsPulse';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
@@ -76,12 +78,26 @@ function AppContent() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/auth';
   const isLandingPage = location.pathname === '/' || location.pathname === '/welcome';
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const { setRole } = useRole();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setCommandPaletteOpen((prev) => !prev);
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '1') {
+        e.preventDefault();
+        setRole('executive');
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '2') {
+        e.preventDefault();
+        setRole('store-gm');
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '3') {
+        e.preventDefault();
+        setRole('fleet-commander');
+      } else if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        e.preventDefault();
+        setShortcutsOpen((prev) => !prev);
       }
     };
     const handleCustomOpen = () => setCommandPaletteOpen(true);
@@ -126,6 +142,7 @@ function AppContent() {
     <div className="app">
       <Navbar />
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <OperationsPulse />
       <div className="app-container">
         <Sidebar />
