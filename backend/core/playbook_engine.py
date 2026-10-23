@@ -248,7 +248,7 @@ async def execute_action(
         lng = event_data.get("longitude") or event_data.get("lng")
         radius = float(action_config.get("radius_km", 3.0))
         logger.info(
-            f"[PLAYBOOK] Cannibalization analysis queued at ({lat}, {lng}) r={radius}km"
+            f"[PLAYBOOK] Cannibalization analysis queued for event r={radius}km"
         )
         return {
             "action": "run_cannibalization",
