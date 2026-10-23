@@ -32,6 +32,9 @@ import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import ConformalSlaVisualizer from '../components/ConformalSlaVisualizer';
 import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
 import GodsEyeWarRoom from '../components/GodsEyeWarRoom';
+import ApplePersonaSelector from '../components/ApplePersonaSelector';
+import AppleDynamicIsland from '../components/AppleDynamicIsland';
+import ExplainableAiModal from '../components/ExplainableAiModal';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -97,6 +100,20 @@ export default function Dashboard() {
   };
 
   const [activeSection, setActiveSection] = useState('opportunities'); // 'opportunities' | 'dispatch' | 'sla' | 'growth'
+  const [activePersona, setActivePersona] = useState('executive'); // 'executive' | 'store-gm' | 'fleet-commander'
+  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
+  const [currentAiExplanation, setCurrentAiExplanation] = useState(null);
+
+  const handlePersonaChange = (personaId) => {
+    setActivePersona(personaId);
+    if (personaId === 'executive') {
+      setActiveSection('opportunities');
+    } else if (personaId === 'store-gm') {
+      setActiveSection('digital-twin');
+    } else if (personaId === 'fleet-commander') {
+      setActiveSection('war-room');
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -128,6 +145,24 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Apple Dynamic Island Floating Activity Capsule */}
+      <AppleDynamicIsland
+        onOpenExplainModal={() => {
+          setCurrentAiExplanation({
+            title: "Autonomous Inter-Hub Micro-Transshipment",
+            category: "Autonomous Multi-Hub Grid",
+            sku_name: "Farm Fresh Milk + Artisanal Sourdough (50 Units)",
+            location: "Koramangala 4th Block Hub ➔ Indiranagar 100ft Road Hub",
+            observation: "Indiranagar inventory depleted to 4 units under weekend demand spike. Koramangala holds 50 units with 6-hour spoilage hazard.",
+            math_engine: "Decentralized Stochastic Dynamic Transshipment Flow. EV Cargo distance: 4.2 km. Dispatch duration: 15.4 min.",
+            statistical_guarantee: "Conformal SLA confidence remains at 99.2% post-transshipment.",
+            economic_impact: "Protects ₹4,500 GMV, eradicates ₹2,800 spoilage loss, net alpha: +₹5,850.",
+            action_label: "Confirm EV Cargo Van #EV-4 Dispatch"
+          });
+          setIsExplainModalOpen(true);
+        }}
+      />
+
       {/* Header */}
       <motion.div
         className="dash-header"
@@ -147,6 +182,14 @@ export default function Dashboard() {
 
       {/* Enterprise Quantified ROI & Value Briefing */}
       <ExecutiveRoiBanner selectedCity={selectedCity} metrics={displayMetrics} />
+
+      {/* Apple Persona Lens Switcher */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+        <ApplePersonaSelector
+          activePersona={activePersona}
+          onSelectPersona={handlePersonaChange}
+        />
+      </div>
 
       {/* Quick Setup Onboarding for New Accounts or Zero-Stores */}
       {isCleanZeroState && (
@@ -544,6 +587,15 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      {/* Explainable AI Inspector Modal */}
+      <ExplainableAiModal
+        isOpen={isExplainModalOpen}
+        onClose={() => setIsExplainModalOpen(false)}
+        decision={currentAiExplanation}
+        onConfirmAction={() => {
+          // Handled via toast
+        }}
+      />
     </div>
   );
 }
