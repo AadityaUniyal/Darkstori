@@ -11,6 +11,7 @@ import api from '../services/api';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import AddBatchModal from '../components/AddBatchModal';
+import InterHubTransferCard from '../components/InterHubTransferCard';
 import { FALLBACK_RESILIENCE_ALERTS } from '../constants/fallbacks';
 
 export default function ResilienceCockpit() {
@@ -575,6 +576,9 @@ export default function ResilienceCockpit() {
           </div>
         )}
       </div>
+
+      {/* Inter-Hub Cross-Docking & Inventory Rebalancing */}
+      <InterHubTransferCard />
 
       <AddBatchModal
         isOpen={isBatchModalOpen}
