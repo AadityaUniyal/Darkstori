@@ -31,6 +31,7 @@ import AutonomousActionHub from '../components/AutonomousActionHub';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import ConformalSlaVisualizer from '../components/ConformalSlaVisualizer';
 import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
+import GodsEyeWarRoom from '../components/GodsEyeWarRoom';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -292,6 +293,22 @@ export default function Dashboard() {
             Digital Twin Brain
           </button>
           <button
+            onClick={() => setActiveSection('war-room')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'war-room' ? 'linear-gradient(135deg, #A855F7, #EC4899)' : 'transparent',
+              color: activeSection === 'war-room' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            God's Eye War Room
+          </button>
+          <button
             onClick={() => setActiveSection('growth')}
             style={{
               padding: '8px 18px',
@@ -485,6 +502,11 @@ export default function Dashboard() {
         {/* Section 5: Neuro-Symbolic Anticipatory Dark Store Digital Twin */}
         {activeSection === 'digital-twin' && (
           <DarkStoreDigitalTwin />
+        )}
+
+        {/* Section 6: God's Eye Autonomous Grid War Room */}
+        {activeSection === 'war-room' && (
+          <GodsEyeWarRoom />
         )}
 
         {/* Section 4: Growth & Customer Lifecycle */}
