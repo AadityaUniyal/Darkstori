@@ -26,6 +26,9 @@ import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
 import QuickSetupWizard from '../components/QuickSetupWizard';
+import ExecutiveRoiBanner from '../components/ExecutiveRoiBanner';
+import AutonomousActionHub from '../components/AutonomousActionHub';
+import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -139,6 +142,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* Enterprise Quantified ROI & Value Briefing */}
+      <ExecutiveRoiBanner selectedCity={selectedCity} metrics={displayMetrics} />
+
       {/* Quick Setup Onboarding for New Accounts or Zero-Stores */}
       {isCleanZeroState && (
         <QuickSetupWizard
@@ -183,6 +189,9 @@ export default function Dashboard() {
           />
         </StaggerChildren>
       )}
+
+      {/* Autonomous Prescriptive Actions Command Center */}
+      <AutonomousActionHub selectedCity={selectedCity} />
 
       {/* ROW 2: Map + City Pulse (60/40 Split) */}
       <div className="dash-map-row" style={{ marginBottom: '24px' }}>
@@ -425,9 +434,12 @@ export default function Dashboard() {
 
         {/* Section 2: Weather Radar & Dispatch */}
         {activeSection === 'dispatch' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-            <WeatherRadarCard storeId={activeStoreId} />
-            <VrpDispatchCard storeId={activeStoreId} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <DarkStorePipelineMonitor storeName={stores[0]?.name || `${selectedCity} Primary Hub`} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+              <WeatherRadarCard storeId={activeStoreId} />
+              <VrpDispatchCard storeId={activeStoreId} />
+            </div>
           </div>
         )}
 
