@@ -29,6 +29,7 @@ import QuickSetupWizard from '../components/QuickSetupWizard';
 import ExecutiveRoiBanner from '../components/ExecutiveRoiBanner';
 import AutonomousActionHub from '../components/AutonomousActionHub';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
+import ConformalSlaVisualizer from '../components/ConformalSlaVisualizer';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -445,7 +446,9 @@ export default function Dashboard() {
 
         {/* Section 3: SLA Monitor */}
         {activeSection === 'sla' && (
-          <AnimatedCard as="section" className="dash-pulse-section">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <ConformalSlaVisualizer />
+            <AnimatedCard as="section" className="dash-pulse-section">
             <div className="section-header" style={{ marginBottom: '16px' }}>
               <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div className="section-header-icon" style={{ background: 'rgba(0, 113, 227, 0.15)', color: '#0071E3', padding: '8px', borderRadius: '10px' }}>
@@ -458,7 +461,8 @@ export default function Dashboard() {
               </div>
             </div>
             <SLAHeatmap />
-          </AnimatedCard>
+            </AnimatedCard>
+          </div>
         )}
 
         {/* Section 4: Growth & Customer Lifecycle */}
