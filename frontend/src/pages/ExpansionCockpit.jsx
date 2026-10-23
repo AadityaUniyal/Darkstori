@@ -91,7 +91,10 @@ export default function ExpansionCockpit() {
 
   const approveMutation = useMutation({
     mutationFn: (simulationId) => api.approveExpansionDecision(simulationId),
-    onSuccess: () => refetchLedger(),
+    onSuccess: () => {
+      refetchLedger();
+      toast.success('Site approved in Decision Ledger! Ready for provisioning.');
+    },
   });
 
   const activeOpportunity = selectedOpportunity || opportunities[0] || null;
@@ -421,6 +424,26 @@ export default function ExpansionCockpit() {
                       <span>Coverage +{row.coverage_gain_pct}%</span>
                       <span>Cannibalization {row.cannibalization_risk_pct}%</span>
                       <span>Capex ₹{Number(row.capex || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => setIsAddStoreOpen(true)}
+                        style={{
+                          background: 'linear-gradient(135deg, #0071E3, #0284C7)',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '0.76rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <Plus size={12} /> Commission to Active Fleet
+                      </button>
                     </div>
                   </div>
                 ))

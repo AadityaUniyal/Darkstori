@@ -9,6 +9,7 @@ export default function VrpDispatchCard({ storeId = null }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [ordersCount, setOrdersCount] = useState(8);
+  const [dispatchedBatches, setDispatchedBatches] = useState({});
 
   const runVrpOptimization = async () => {
     setLoading(true);
@@ -137,6 +138,28 @@ export default function VrpDispatchCard({ storeId = null }) {
                   )}
                 </React.Fragment>
               ))}
+            </div>
+
+            {/* Operational Dispatch CTA */}
+            <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between text-xs">
+              <span className="text-[11px] text-muted-foreground">
+                {dispatchedBatches[batch.batch_id] ? 'Transit initiated · Live GPS Tracking' : 'Batch staged at rider bay'}
+              </span>
+              {dispatchedBatches[batch.batch_id] ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-semibold">
+                  <CheckCircle2 size={12} /> DISPATCHED · ETA {batch.total_route_duration_mins}m
+                </span>
+              ) : (
+                <button
+                  onClick={() => {
+                    setDispatchedBatches(prev => ({ ...prev, [batch.batch_id]: true }));
+                    toast.success(`Rider ${batch.rider_id} dispatched for Batch #${batch.batch_id} (${batch.orders_count} stops)`);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm active:scale-95"
+                >
+                  <Navigation size={12} /> Dispatch Rider ({batch.rider_id})
+                </button>
+              )}
             </div>
           </div>
         ))}
