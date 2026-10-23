@@ -364,3 +364,60 @@ async def evaluate_conformal_sla(
         weather_multiplier=req.weather_multiplier,
         anticipatory_prepick_enabled=req.anticipatory_prepick_enabled,
     )
+
+
+# ── Neuro-Symbolic Dark Store Digital Twin & Hawkes Point Process Endpoints ──
+
+class DwellEvent(BaseModel):
+    category: str
+    sku: Optional[str] = None
+    dwell_sec: float = 2.0
+
+
+class NeuroSymbolicSimulationRequest(BaseModel):
+    dwell_events: List[DwellEvent] = []
+    traffic_congestion: float = 1.2
+    rain_mm: float = 15.0
+    alpha: float = 0.05
+
+
+@router.post("/neuro-symbolic-simulate")
+async def simulate_neuro_symbolic_darkstore(
+    req: NeuroSymbolicSimulationRequest,
+    payload: dict = Depends(verify_token),
+):
+    """
+    Executes real-time Neuro-Symbolic Closed-Loop Dark Store Simulation:
+    1. Hawkes Multivariate Point Process for Anticipatory Basket Intent
+    2. Locally-Adaptive Conformal Quantile Regression (CQR)
+    3. Dark Store Digital Twin Picker Kinematics & Staging Bay Handoff
+    4. Head-to-Head Benchmark: Traditional Q-Commerce vs Darkstori Apex
+    """
+    from backend.ml.neuro_symbolic_engine import (
+        hawkes_engine,
+        digital_twin_engine,
+    )
+
+    dwell_dicts = [e.model_dump() for e in req.dwell_events]
+    if not dwell_dicts:
+        # Default scenario: Customer lingering on Dairy & Bakery
+        dwell_dicts = [
+            {"category": "dairy", "sku": "Amul Gold Milk 500ml", "dwell_sec": 3.2},
+            {"category": "bakery", "sku": "Zero Maida Bread", "dwell_sec": 2.1},
+        ]
+
+    # Compute Hawkes basket mutual excitation
+    predicted_basket = hawkes_engine.compute_basket_probabilities(dwell_dicts)
+
+    # Run full Digital Twin closed loop
+    simulation_result = digital_twin_engine.simulate_digital_twin_lifecycle(
+        predicted_items=predicted_basket,
+        dwell_seconds=sum(e["dwell_sec"] for e in dwell_dicts),
+        traffic_congestion=req.traffic_congestion,
+        rain_mm=req.rain_mm,
+    )
+
+    return {
+        "hawkes_predicted_basket": predicted_basket,
+        **simulation_result
+    }
