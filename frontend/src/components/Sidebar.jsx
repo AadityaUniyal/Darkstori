@@ -15,11 +15,13 @@ import {
   Calendar,
   Workflow
 } from 'lucide-react';
+import { useRole } from '../context/RoleContext';
 import './Sidebar.css';
 
 const Sidebar = memo(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const { activeRole } = useRole();
 
   useEffect(() => {
     const handleResize = () => {
@@ -99,6 +101,16 @@ const Sidebar = memo(() => {
   return (
     <aside className={`flex flex-col bg-[#07090E]/85 backdrop-blur-md border-r border-border h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
       <nav className="flex-1 py-4 flex flex-col gap-6 overflow-y-auto scrollbar-thin">
+        {!isCollapsed && (
+          <div className="px-5 pb-3 border-b border-border/30">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Operational Lens</span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30">
+                {activeRole === 'executive' ? 'Executive' : activeRole === 'store-gm' ? 'Store GM' : 'Fleet Cmd'}
+              </span>
+            </div>
+          </div>
+        )}
         {menuGroups.map((group, idx) => (
           <div key={idx} className="flex flex-col gap-1">
             {!isCollapsed ? (
