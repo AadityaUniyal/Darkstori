@@ -27,6 +27,7 @@ from backend.api.routes import (
     mood_score,
     expansion,
     geo,
+    autonomous_grid,
 )
 import asyncio
 import socketio
@@ -422,6 +423,7 @@ app.include_router(analytics_advanced.router, prefix="/api/v1/analytics/advanced
 app.include_router(analytics_advanced.router, prefix="/api/v1/dashboard", tags=["Dashboard Metrics Alias"])
 app.include_router(analytics_heatmap.router, prefix="/api/v1/analytics", tags=["Heatmap Analytics"])
 app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
+app.include_router(autonomous_grid.router, prefix="/api/v1/autonomous-grid", tags=["Autonomous Grid and War Room"])
 app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
 app.include_router(economics.router, prefix="/api/v1/economics", tags=["Unit Economics"])
 app.include_router(events.router, prefix="/api/v1/events", tags=["Local Events"])
