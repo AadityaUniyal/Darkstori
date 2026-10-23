@@ -30,6 +30,7 @@ import ExecutiveRoiBanner from '../components/ExecutiveRoiBanner';
 import AutonomousActionHub from '../components/AutonomousActionHub';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import ConformalSlaVisualizer from '../components/ConformalSlaVisualizer';
+import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
 import './Dashboard.css';
 
 const IMPACT_COLORS = {
@@ -275,6 +276,22 @@ export default function Dashboard() {
             Service Level SLAs
           </button>
           <button
+            onClick={() => setActiveSection('digital-twin')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeSection === 'digital-twin' ? 'linear-gradient(135deg, #0071E3, #A855F7)' : 'transparent',
+              color: activeSection === 'digital-twin' ? '#FFFFFF' : 'var(--color-text-secondary)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Digital Twin Brain
+          </button>
+          <button
             onClick={() => setActiveSection('growth')}
             style={{
               padding: '8px 18px',
@@ -463,6 +480,11 @@ export default function Dashboard() {
             <SLAHeatmap />
             </AnimatedCard>
           </div>
+        )}
+
+        {/* Section 5: Neuro-Symbolic Anticipatory Dark Store Digital Twin */}
+        {activeSection === 'digital-twin' && (
+          <DarkStoreDigitalTwin />
         )}
 
         {/* Section 4: Growth & Customer Lifecycle */}
