@@ -122,7 +122,7 @@ graph TD
 ## ⚡ Deep-Tech Prescriptive Engines
 
 ### 1. Locally-Adaptive Conformal Quantile Regression (CQR)
-Traditional point estimators degrade during rainstorms or gridlock. Darkstori computes non-conformity calibration scores $s_i = \max(q_{\alpha/2}(x_i) - y_i, y_i - q_{1-\alpha/2}(x_i))$ over held-out calibration samples, dynamically scaled by local heteroscedastic factors $\sigma(x) = 1.0 + 0.45 \cdot \text{is\_raining} + 0.35 \cdot (\text{traffic\_idx} - 1.0)$. This provides a finite-sample mathematical guarantee that $95\%$ of deliveries will physically arrive within the predicted window.
+Traditional point estimators degrade during rainstorms or gridlock. Darkstori computes non-conformity calibration scores $s_i = \max(q_{\alpha/2}(x_i) - y_i, y_i - q_{1-\alpha/2}(x_i))$ over held-out calibration samples, dynamically scaled by local heteroscedastic factors $\sigma(x) = 1.0 + 0.45 \cdot \mathbb{I}_{\text{rain}} + 0.35 \cdot (\text{Traffic}_{\text{idx}} - 1.0)$ (where $\mathbb{I}_{\text{rain}} \in \{0, 1\}$ and $\text{Traffic}_{\text{idx}} \ge 1.0$). This provides a finite-sample mathematical guarantee that $95\%$ of deliveries will physically arrive within the predicted window.
 
 ### 2. Multivariate Hawkes Basket Mutual-Excitation Point Process
 Real-time customer dwell times ($0\text{s} - 90\text{s}$) across categories trigger self-excitation and cross-excitation across complementary SKUs (Milk $\to$ Espresso Beans; Bread $\to$ Butter):
