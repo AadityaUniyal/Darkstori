@@ -4,14 +4,14 @@
 
 [![Live Production URL](https://img.shields.io/badge/Live%20Platform-https%3A%2F%2Fdarkstori.vercel.app-0071E3?style=for-the-badge&logo=vercel&logoColor=white)](https://darkstori.vercel.app)
 [![CI Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-34C759?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/AadityaUniyal/Darkstori/actions)
-[![Test Suite](https://img.shields.io/badge/Total%20Tests-72%20Passed%20(100%25)-34C759?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/AadityaUniyal/Darkstori)
+[![Test Suite](https://img.shields.io/badge/Total%20Tests-72%20Passed--100%25-34C759?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/AadityaUniyal/Darkstori)
 [![CodeQL Security](https://img.shields.io/badge/CodeQL-0%20Alerts%20Clean-0071E3?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AadityaUniyal/Darkstori/security)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React 18](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
 [![PostGIS](https://img.shields.io/badge/PostgreSQL-PostGIS-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net)
 
-**[Explore Live Platform](https://darkstori.vercel.app)** • **[Interactive Tour](https://darkstori.vercel.app)** • **[API Documentation](https://darkstori.vercel.app/docs)** • **[Focus Metros: BLR • BOM • DEL • HYD • PNQ](https://darkstori.vercel.app)**
+**[Explore Live Platform](https://darkstori.vercel.app)** • **[Interactive Tour](https://darkstori.vercel.app/#interactive-sim)** • **[API Documentation](https://darkstori.vercel.app/api/docs)** • **[Focus Metros: BLR • BOM • DEL • HYD • PNQ](https://darkstori.vercel.app/#metros)**
 
 </div>
 
@@ -41,7 +41,7 @@ In the high-velocity domain of **10-minute quick commerce**, legacy business int
 | **In-Store Picker Walk Distance** | $193.6\text{ m}$ per 100 orders (Erratic zigzag) | **$112.9\text{ m}$** per 100 orders (Golden Loop) | **$-41.7\%$ Transit Fatigue** |
 | **Avg Pick & Pack Duration** | $147.1\text{ s}$ | **$84.2\text{ s}$** (Pre-staged at Bay C3) | **$-42.8\%$ Speedup** |
 | **Perishable Spoilage Salvage Rate** | $34.2\%$ (Dump-run write-offs) | **$94.6\%$** (Dynamic Sigmoid + Transshipments) | **$+60.4\%$ Salvaged Margin** |
-| **Mid-Journey Traffic Recovery** | Full depot return ($14-18\text{ min}$) | En-Route Swarm Intercept ($30\text{s}$ handoff) | **$7.6\text{m}$ Saved En Route** |
+| **Mid-Journey Traffic Recovery** | Full depot return ($14-18\text{ min}$) | En-Route Swarm Intercept ($30\text{s}$ handoff) | **$7.6\text{ min}$ Saved En Route** |
 | **Statistical SLA Guarantee** | Point estimates (Fails in rain) | Distribution-free **$95\%$ Conformal Coverage** | **Zero Distribution Shift Failure** |
 
 ---
@@ -74,18 +74,18 @@ graph TD
         UI["Apple Cupertino Obsidian Canvas"]
         DynamicIsland["Apple Dynamic Island (Live Activity Capsule)"]
         PersonaLens["Operational Persona Lens (Exec / GM / Fleet)"]
-        WarRoom["God's Eye War Room & Digital Twin"]
+        WarRoom["Gods Eye War Room and Digital Twin"]
         MapEngine["MapLibre GL + deck.gl (WebGL 60fps)"]
         AudioSynth["Web Audio API Telemetry Synthesizer"]
-        RoleContext["RoleContext & Reactive Invalidation Engine"]
+        RoleContext["RoleContext and Reactive Invalidation Engine"]
     end
 
     subgraph API ["FastAPI High-Performance Gateway"]
-        AuthMiddleware["JWT Authentication & RBAC"]
+        AuthMiddleware["JWT Authentication and RBAC"]
         RateLimiter["Redis Sliding-Window Token Limiter"]
-        AutonomousGrid["Autonomous Grid & War Room Router"]
-        SLARouter["Conformal Prediction & SLA Router"]
-        ResilienceRouter["Sigmoid Resilience & Markdown Router"]
+        AutonomousGrid["Autonomous Grid and War Room Router"]
+        SLARouter["Conformal Prediction and SLA Router"]
+        ResilienceRouter["Sigmoid Resilience and Markdown Router"]
         SimulatorRouter["Store Greenfield Simulator Router"]
     end
 
@@ -99,12 +99,12 @@ graph TD
         ClarkeWright["Clarke-Wright Capacitated VRP Optimizer"]
     end
 
-    subgraph DataTier ["Persistence & Storage Tier"]
+    subgraph DataTier ["Persistence and Storage Tier"]
         Postgres["Neon PostgreSQL with PostGIS"]
         StockLedger["StockLedger (Double-Entry Debit/Credit)"]
         AuditLog["AuditLog (Immutable Telemetry Trace)"]
         StoreLayout["StoreLayout (Golden Zone Shelf Coordinates)"]
-        Redis["Redis Cache & Pub/Sub"]
+        Redis["Redis Cache and Pub/Sub"]
     end
 
     UI --> DynamicIsland
@@ -127,7 +127,7 @@ Traditional point estimators degrade during rainstorms or gridlock. Darkstori co
 ### 2. Multivariate Hawkes Basket Mutual-Excitation Point Process
 Real-time customer dwell times ($0\text{s} - 90\text{s}$) across categories trigger self-excitation and cross-excitation across complementary SKUs (Milk $\to$ Espresso Beans; Bread $\to$ Butter):
 $$\lambda_j(t) = \mu_j + 1.8 \cdot \text{dwell} \cdot e^{-\beta \Delta t} + \sum_{i \in \text{Basket}} \alpha_{ij} \cdot e^{-\beta (t - t_i)}$$
-When confidence crosses $\tau \ge 0.75$, picker bot kinematics autonomously pre-stage items at Staging Bay C3 **before** the customer taps "Place Order", compressing in-store latency by $1.8\text{m}$.
+When confidence crosses $\tau \ge 0.75$, picker bot kinematics autonomously pre-stage items at Staging Bay C3 **before** the customer taps "Place Order", compressing in-store latency by $1.8\text{ min}$.
 
 ### 3. Thermodynamic Micro-Warehouse Re-Slotting
 Computes an affinity matrix $A_{ij}$ from co-purchase frequencies and evaluates aggregate picker transit distance:
@@ -203,8 +203,10 @@ npm run build
 ## 🌐 Production Deployment
 
 * **Frontend:** Deployed on **Vercel Edge Network** with dynamic client-side routing.
-* **Backend:** Hosted on **Neon Serverless PostgreSQL (PostGIS enabled)** with auto-scaling connection pooling.
+* **Backend:** Serverless Python ASGI on **Vercel Serverless Functions** (`/api`), powered by **FastAPI**.
+* **Database:** Hosted on **Neon Serverless PostgreSQL (PostGIS enabled)** with auto-scaling connection pooling.
 * **Live Production URL:** [https://darkstori.vercel.app](https://darkstori.vercel.app)
+* **Interactive API Docs:** [https://darkstori.vercel.app/api/docs](https://darkstori.vercel.app/api/docs)
 
 ---
 
