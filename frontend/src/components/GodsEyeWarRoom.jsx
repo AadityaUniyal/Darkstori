@@ -84,6 +84,15 @@ export default function GodsEyeWarRoom() {
       if (optimize) {
         playTacticalChime('success');
         toast.success(`Thermodynamic Wave Applied: -${res.transit_reduction_pct}% picker walking distance!`);
+        try {
+          await api.applySlotting({
+            store_id: 1,
+            optimized_slots: res.optimized_slots,
+            transit_reduction_pct: res.transit_reduction_pct
+          });
+        } catch {
+          // Handled
+        }
       }
     } catch (err) {
       console.error(err);

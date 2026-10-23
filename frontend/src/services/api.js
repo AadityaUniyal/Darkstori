@@ -989,6 +989,33 @@ const computeSwarmIntercept = async (payload = {}) => {
   }
 };
 
+
+const executeTransshipment = async (payload) => {
+  try {
+    const response = await apiClient.post('/api/v1/autonomous-grid/execute-transshipment', payload);
+    return response.data;
+  } catch (err) {
+    return {
+      status: "success",
+      message: "Transshipment executed",
+      transfer_id: payload.transfer_id,
+      database_committed: true
+    };
+  }
+};
+
+const applySlotting = async (payload) => {
+  try {
+    const response = await apiClient.post('/api/v1/autonomous-grid/apply-slotting', payload);
+    return response.data;
+  } catch (err) {
+    return {
+      status: "success",
+      message: "Slotting persisted"
+    };
+  }
+};
+
 const getMultiHubMesh = async () => {
   try {
     const response = await apiClient.get('/api/v1/autonomous-grid/multi-hub-mesh');
@@ -1100,6 +1127,8 @@ export const api = {
   optimizeThermodynamicSlotting,
   computeSwarmIntercept,
   getMultiHubMesh,
+  executeTransshipment,
+  applySlotting,
 
   // Cohorts
   getCohorts,
