@@ -2,10 +2,10 @@
 
 <div align="center">
 
-[![Live Production URL](https://img.shields.io/badge/Live%20Platform-https%3A%2F%2Fdarkstori.vercel.app-0071E3?style=for-the-badge&logo=vercel&logoColor=white)](https://darkstori.vercel.app)
+[![Live Production URL](https://img.shields.io/badge/Live%20Platform-https%3A%2F%2Fdarkstori.vercel.app-FF9F1C?style=for-the-badge&logo=vercel&logoColor=white)](https://darkstori.vercel.app)
 [![CI Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-34C759?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/AadityaUniyal/Darkstori/actions)
 [![Test Suite](https://img.shields.io/badge/Total%20Tests-72%20Passed--100%25-34C759?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/AadityaUniyal/Darkstori)
-[![CodeQL Security](https://img.shields.io/badge/CodeQL-0%20Alerts%20Clean-0071E3?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AadityaUniyal/Darkstori/security)
+[![CodeQL Security](https://img.shields.io/badge/CodeQL-0%20Alerts%20Clean-FF9F1C?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AadityaUniyal/Darkstori/security)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React 18](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)

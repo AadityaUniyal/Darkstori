@@ -51,7 +51,7 @@ export default function DarkStoreDigitalTwin() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#0071E3] to-purple-600 text-white shadow-lg shadow-[#0071E3]/25 border border-white/10">
+          <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#FF9F1C] to-purple-600 text-white shadow-lg shadow-[#FF9F1C]/25 border border-white/10">
             <Eye size={22} className="animate-pulse" />
           </div>
           <div>
@@ -59,7 +59,7 @@ export default function DarkStoreDigitalTwin() {
               <h2 className="text-base sm:text-lg font-bold text-white font-display tracking-tight">
                 Neuro-Symbolic Anticipatory Dark Store Brain
               </h2>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-[#0071E3]/20 to-purple-500/20 text-[#38BDF8] border border-[#0071E3]/30 font-bold">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-[#FF9F1C]/20 to-purple-500/20 text-[#38BDF8] border border-[#FF9F1C]/30 font-bold">
                 GOD'S EYE DIGITAL TWIN
               </span>
             </div>
@@ -104,7 +104,7 @@ export default function DarkStoreDigitalTwin() {
                     onClick={() => setSelectedCategory(item.id)}
                     className={`p-2 rounded-lg text-left text-xs transition-all border ${
                       selectedCategory === item.id
-                        ? 'bg-[#0071E3]/20 border-[#0071E3] text-white shadow-sm'
+                        ? 'bg-[#FF9F1C]/20 border-[#FF9F1C] text-white shadow-sm'
                         : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
                     }`}
                   >
@@ -128,7 +128,7 @@ export default function DarkStoreDigitalTwin() {
                 step="0.5"
                 value={dwellSec}
                 onChange={(e) => setDwellSec(Number(e.target.value))}
-                className="w-full accent-[#0071E3] h-1.5 bg-white/10 rounded-lg cursor-pointer"
+                className="w-full accent-[#FF9F1C] h-1.5 bg-white/10 rounded-lg cursor-pointer"
               />
             </div>
 
@@ -181,7 +181,7 @@ export default function DarkStoreDigitalTwin() {
                   </div>
                   <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${item.prepick_triggered ? 'bg-emerald-400' : 'bg-[#0071E3]'}`}
+                      className={`h-full rounded-full transition-all duration-300 ${item.prepick_triggered ? 'bg-emerald-400' : 'bg-[#FF9F1C]'}`}
                       style={{ width: `${item.prepick_confidence_pct}%` }}
                     />
                   </div>
@@ -208,7 +208,7 @@ export default function DarkStoreDigitalTwin() {
               {/* 4 Physical Aisles */}
               <div className="grid grid-cols-4 gap-2 h-44 text-center">
                 {[
-                  { name: 'Aisle 1', cat: 'Dairy', color: '#0071E3' },
+                  { name: 'Aisle 1', cat: 'Dairy', color: '#FF9F1C' },
                   { name: 'Aisle 2', cat: 'Bakery', color: '#A855F7' },
                   { name: 'Aisle 3', cat: 'Produce', color: '#10B981' },
                   { name: 'Aisle 4', cat: 'Beverages', color: '#F59E0B' },

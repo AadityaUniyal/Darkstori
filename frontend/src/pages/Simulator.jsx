@@ -295,7 +295,7 @@ export default function Simulator() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Activity color="#0071E3" size={32} /> Hyperlocal Store Simulator
+            <Activity color="#FF9F1C" size={32} /> Hyperlocal Store Simulator
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
             Configure localized unit economics, evaluate route serviceability, and execute approval workflows.
@@ -316,7 +316,7 @@ export default function Simulator() {
             onClick={() => setPlacementMode(!placementMode)}
             className="btn-primary"
             style={{
-              background: placementMode ? '#34C759' : '#0071E3',
+              background: placementMode ? '#34C759' : '#FF9F1C',
               color: '#FFFFFF',
               border: 'none',
               padding: '10px 18px',
@@ -348,7 +348,7 @@ export default function Simulator() {
             style={{
               padding: '6px 14px',
               borderRadius: '20px',
-              border: selectedNbhdId === preset.nbhd_id ? '1px solid #0071E3' : '1px solid rgba(255,255,255,0.1)',
+              border: selectedNbhdId === preset.nbhd_id ? '1px solid #FF9F1C' : '1px solid rgba(255,255,255,0.1)',
               background: selectedNbhdId === preset.nbhd_id ? 'rgba(0, 113, 227, 0.2)' : 'rgba(255,255,255,0.03)',
               color: selectedNbhdId === preset.nbhd_id ? '#38BDF8' : 'var(--color-text-secondary)',
               fontSize: '0.8rem',
@@ -361,7 +361,7 @@ export default function Simulator() {
               transition: 'all 0.2s ease'
             }}
           >
-            <Zap size={13} color="#0071E3" />
+            <Zap size={13} color="#FF9F1C" />
             {preset.name} <span style={{ opacity: 0.6, fontSize: '0.72rem' }}>({preset.city})</span>
           </button>
         ))}
@@ -377,7 +377,7 @@ export default function Simulator() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Landmark size={20} color="#0071E3" /> Greenfield Scenario Builder
+                  <Landmark size={20} color="#FF9F1C" /> Greenfield Scenario Builder
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
                   Configure dark store format, capex budget, and delivery radius constraints to predict localized ROI.
@@ -389,7 +389,7 @@ export default function Simulator() {
                 style={{
                   padding: '10px 20px',
                   borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #0071E3, #0284C7)',
+                  background: 'linear-gradient(135deg, #FF9F1C, #0284C7)',
                   border: 'none',
                   color: '#FFFFFF',
                   fontWeight: 700,
@@ -459,7 +459,7 @@ export default function Simulator() {
                         padding: '6px 4px',
                         fontSize: '0.72rem',
                         borderRadius: '8px',
-                        border: storeSize === fmt.size ? '1px solid #0071E3' : '1px solid var(--color-border)',
+                        border: storeSize === fmt.size ? '1px solid #FF9F1C' : '1px solid var(--color-border)',
                         background: storeSize === fmt.size ? 'rgba(0, 113, 227, 0.2)' : 'transparent',
                         color: storeSize === fmt.size ? '#38BDF8' : 'var(--color-text-secondary)',
                         fontWeight: 600,
@@ -522,7 +522,7 @@ export default function Simulator() {
           {/* Configuration Cost Panel */}
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Landmark size={18} color="#0071E3" /> Grounded Cost & Serviceability Settings
+              <Landmark size={18} color="#FF9F1C" /> Grounded Cost & Serviceability Settings
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
@@ -534,7 +534,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={200000} max={5000000} step={50000}
                   value={capexOverride} onChange={(e) => setCapexOverride(Number(e.target.value))}
-                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+                  style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
                 />
               </div>
 
@@ -546,7 +546,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={20} max={180} step={2}
                   value={rentSqft} onChange={(e) => setRentSqft(Number(e.target.value))}
-                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+                  style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
                 />
               </div>
 
@@ -558,7 +558,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={15000} max={55000} step={1000}
                   value={staffSalary} onChange={(e) => setStaffSalary(Number(e.target.value))}
-                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+                  style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
                 />
               </div>
 
@@ -570,7 +570,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={10} max={45} step={1}
                   value={deliveryCost} onChange={(e) => setDeliveryCost(Number(e.target.value))}
-                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+                  style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
                 />
               </div>
 
@@ -582,7 +582,7 @@ export default function Simulator() {
                 <input 
                   type="range" min={500} max={5000} step={100}
                   value={storeSize} onChange={(e) => setStoreSize(Number(e.target.value))}
-                  style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+                  style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
                 />
               </div>
 
@@ -610,7 +610,7 @@ export default function Simulator() {
               style={{
                 flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
                 border: 'none', borderRadius: '8px',
-                background: activeTab === 'simulate' ? '#0071E3' : 'transparent',
+                background: activeTab === 'simulate' ? '#FF9F1C' : 'transparent',
                 color: activeTab === 'simulate' ? '#FFFFFF' : 'var(--color-text-secondary)',
                 transition: 'all 0.2s ease'
               }}
@@ -622,7 +622,7 @@ export default function Simulator() {
               style={{
                 flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
                 border: 'none', borderRadius: '8px',
-                background: activeTab === 'proposals' ? '#0071E3' : 'transparent',
+                background: activeTab === 'proposals' ? '#FF9F1C' : 'transparent',
                 color: activeTab === 'proposals' ? '#FFFFFF' : 'var(--color-text-secondary)',
                 transition: 'all 0.2s ease'
               }}
@@ -634,7 +634,7 @@ export default function Simulator() {
               style={{
                 flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
                 border: 'none', borderRadius: '8px',
-                background: activeTab === 'ledger' ? '#0071E3' : 'transparent',
+                background: activeTab === 'ledger' ? '#FF9F1C' : 'transparent',
                 color: activeTab === 'ledger' ? '#FFFFFF' : 'var(--color-text-secondary)',
                 transition: 'all 0.2s ease'
               }}
@@ -646,7 +646,7 @@ export default function Simulator() {
               style={{
                 flex: 1, padding: '8px 0', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600,
                 border: 'none', borderRadius: '8px',
-                background: activeTab === 'cannibalization' ? '#0071E3' : 'transparent',
+                background: activeTab === 'cannibalization' ? '#FF9F1C' : 'transparent',
                 color: activeTab === 'cannibalization' ? '#FFFFFF' : 'var(--color-text-secondary)',
                 transition: 'all 0.2s ease'
               }}
@@ -673,7 +673,7 @@ export default function Simulator() {
                           onClick={() => setActiveDraftId(d.id)}
                           style={{
                             flex: 1, padding: '6px 0', fontSize: '0.74rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
-                            background: activeDraftId === d.id ? '#0071E3' : 'transparent',
+                            background: activeDraftId === d.id ? '#FF9F1C' : 'transparent',
                             color: activeDraftId === d.id ? '#FFFFFF' : 'var(--color-text-secondary)',
                             fontWeight: 600
                           }}
@@ -722,7 +722,7 @@ export default function Simulator() {
                         {(!user?.role || user.role === 'expansion_lead' || user.role === 'admin') && (
                           <button 
                             onClick={() => proposeMutation.mutate(activeDraft.dbId)}
-                            className="btn-primary" style={{ width: '100%', background: '#0071E3', color: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, padding: '10px 0', borderRadius: '10px', cursor: 'pointer' }}
+                            className="btn-primary" style={{ width: '100%', background: '#FF9F1C', color: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, padding: '10px 0', borderRadius: '10px', cursor: 'pointer' }}
                           >
                             <Check size={14} /> Propose Location
                           </button>
@@ -818,7 +818,7 @@ export default function Simulator() {
                             <button
                               onClick={() => setIsAddStoreOpen(true)}
                               className="btn-primary"
-                              style={{ width: '100%', background: 'linear-gradient(135deg, #0071E3, #0284C7)', border: 'none', color: '#fff', padding: '8px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                              style={{ width: '100%', background: 'linear-gradient(135deg, #FF9F1C, #0284C7)', border: 'none', color: '#fff', padding: '8px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                             >
                               <Plus size={13} /> Commission to Active Fleet
                             </button>

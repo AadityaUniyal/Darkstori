@@ -696,7 +696,7 @@
 }
 
 .stage-nav-pill-active {
-  background: #0071E3 !important;
+  background: #FF9F1C !important;
   color: #FFFFFF !important;
   box-shadow: 0 2px 8px rgba(0, 113, 227, 0.35);
 }
@@ -708,7 +708,7 @@
 }
 
 .stage-nav-pill-twin {
-  background: linear-gradient(135deg, #0071E3, #6366F1) !important;
+  background: linear-gradient(135deg, #FF9F1C, #6366F1) !important;
   color: #FFFFFF !important;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
 }
@@ -730,7 +730,7 @@
 }
 
 .stage-action-pill-active {
-  border-color: #0071E3;
+  border-color: #FF9F1C;
   background: rgba(0, 113, 227, 0.15);
   color: #38BDF8;
 }
@@ -853,7 +853,7 @@
 }
 
 .drawer-tab-btn-active {
-  background: #0071E3;
+  background: #FF9F1C;
   color: #FFFFFF;
   box-shadow: 0 2px 6px rgba(0, 113, 227, 0.35);
 }

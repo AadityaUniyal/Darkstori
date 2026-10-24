@@ -44,7 +44,7 @@ export default function ConformalSlaVisualizer() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#0071E3]/25 to-purple-600/25 text-[#38BDF8] border border-[#0071E3]/30 shadow-lg shadow-[#0071E3]/10">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#FF9F1C]/25 to-purple-600/25 text-[#38BDF8] border border-[#FF9F1C]/30 shadow-lg shadow-[#FF9F1C]/10">
             <Cpu size={22} />
           </div>
           <div>
@@ -98,7 +98,7 @@ export default function ConformalSlaVisualizer() {
                 onClick={() => setAlpha(opt.val)}
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold font-mono transition-all ${
                   alpha === opt.val
-                    ? 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/25'
+                    ? 'bg-[#FF9F1C] text-white shadow-md shadow-[#FF9F1C]/25'
                     : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                 }`}
               >

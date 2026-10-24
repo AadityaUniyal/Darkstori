@@ -205,7 +205,7 @@ export default function Dashboard() {
             <span className="kpi-sub-val">empirical finite-sample</span>
           </div>
           <div className="kpi-footer">
-            <span className="kpi-indicator bg-[#0071E3]" />
+            <span className="kpi-indicator bg-[#FF9F1C]" />
             <span>Heteroscedastic scale estimation</span>
           </div>
         </div>

@@ -259,11 +259,11 @@ export default function ResilienceCockpit() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                 <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Weather Sensitivity Calibration</span>
-                <span style={{ fontFamily: 'var(--font-mono)', color: '#0071E3', fontWeight: 700 }}>Optimal</span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: '#FF9F1C', fontWeight: 700 }}>Optimal</span>
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Auto-Surge Threshold: Active</div>
               <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', marginTop: '4px' }}>
-                <div style={{ height: '100%', width: '85%', background: '#0071E3' }} />
+                <div style={{ height: '100%', width: '85%', background: '#FF9F1C' }} />
               </div>
             </div>
 
@@ -289,7 +289,7 @@ export default function ResilienceCockpit() {
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: '#FF9F1C' }} />
                 <span>In-App Operations Dashboard</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
@@ -297,11 +297,11 @@ export default function ResilienceCockpit() {
                 <span style={{ color: '#34C759', fontWeight: 600 }}>Manager WhatsApp Instant Dispatch</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" style={{ accentColor: '#FF9F1C' }} />
                 <span>SMS Alert Broadcast</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: '#FF9F1C' }} />
                 <span>Executive Daily Digest (Email)</span>
               </label>
             </div>

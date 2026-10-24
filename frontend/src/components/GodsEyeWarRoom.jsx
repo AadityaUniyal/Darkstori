@@ -26,6 +26,18 @@ export default function GodsEyeWarRoom() {
   // Mode C: Multi-Hub Self-Healing Mesh
   const [meshData, setMeshData] = useState(null);
   const [meshLoading, setMeshLoading] = useState(false);
+  const [dispatchedTransfers, setDispatchedTransfers] = useState({});
+
+  const handleDispatchTransfer = async (tr) => {
+    try {
+      playTacticalChime('success');
+      setDispatchedTransfers(prev => ({ ...prev, [tr.transfer_id]: true }));
+      await api.executeTransshipment(tr);
+      toast.success('EV Van Dispatched! Double-entry ledger recorded in StockLedger & AuditLog.');
+    } catch (e) {
+      toast.error('Transshipment dispatch failed');
+    }
+  };
 
   // Web Audio Context for tactile feedback without audio files
   const audioCtxRef = useRef(null);
@@ -237,7 +249,7 @@ export default function GodsEyeWarRoom() {
                     playTacticalChime('tactical');
                   }}
                   style={{
-                    background: isActive ? 'linear-gradient(135deg, #0071E3, #A855F7)' : 'transparent',
+                    background: isActive ? 'linear-gradient(135deg, #FF9F1C, #A855F7)' : 'transparent',
                     color: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.65)',
                     border: 'none',
                     borderRadius: '8px',
@@ -284,7 +296,7 @@ export default function GodsEyeWarRoom() {
                   onClick={() => fetchSlottingData(!isSlottingOptimized)}
                   disabled={slottingLoading}
                   style={{
-                    background: isSlottingOptimized ? 'rgba(34, 197, 94, 0.2)' : 'linear-gradient(135deg, #0071E3, #A855F7)',
+                    background: isSlottingOptimized ? 'rgba(34, 197, 94, 0.2)' : 'linear-gradient(135deg, #FF9F1C, #A855F7)',
                     border: `1px solid ${isSlottingOptimized ? '#22C55E' : 'transparent'}`,
                     color: '#FFFFFF',
                     borderRadius: '10px',
@@ -763,13 +775,45 @@ export default function GodsEyeWarRoom() {
                   ))}
                 </div>
 
-                <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                    EV Route Cost: <span style={{ color: '#EF4444' }}>₹{tr.ev_logistics_cost_inr}</span>
+                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.5)' }}>EV Route Cost: ₹{tr.ev_logistics_cost_inr}</span>
+                    <span style={{ fontSize: '0.84rem', color: '#10B981', fontWeight: 700 }}>Net Alpha: +₹{tr.net_economic_gain_inr}</span>
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#22C55E', fontWeight: 700 }}>
-                    Net Gain: +₹{tr.net_economic_gain_inr}
-                  </div>
+                  
+                  <button
+                    onClick={() => handleDispatchTransfer(tr)}
+                    disabled={dispatchedTransfers[tr.transfer_id]}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: dispatchedTransfers[tr.transfer_id] ? 'default' : 'pointer',
+                      background: dispatchedTransfers[tr.transfer_id]
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : 'linear-gradient(135deg, #FF9F1C, #FF6B00)',
+                      color: dispatchedTransfers[tr.transfer_id] ? '#10B981' : '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: dispatchedTransfers[tr.transfer_id] ? 'none' : '0 4px 14px rgba(255,159,28,0.35)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {dispatchedTransfers[tr.transfer_id] ? (
+                      <>
+                        <CheckCircle2 size={13} />
+                        <span>EV En-Route</span>
+                      </>
+                    ) : (
+                      <>
+                        <Truck size={13} />
+                        <span>Dispatch EV Cargo</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

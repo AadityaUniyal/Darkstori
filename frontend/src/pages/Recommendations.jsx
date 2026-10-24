@@ -436,7 +436,7 @@ export default function Recommendations() {
           {/* ENTERPRISE INTEGRATION */}
           <div className="glass-card no-print" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
-              <Terminal color="#0071E3" size={20} />
+              <Terminal color="#FF9F1C" size={20} />
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>Enterprise OMS & WMS Integration</h2>
             </div>
             
@@ -451,7 +451,7 @@ export default function Recommendations() {
               </div>
               <div style={{ background: '#141A24', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <span style={{ fontSize: '0.74rem', color: '#86868B', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>ERP Connection</span>
-                <span style={{ color: '#0071E3', fontSize: '0.94rem', fontWeight: 700 }}>Connected</span>
+                <span style={{ color: '#FF9F1C', fontSize: '0.94rem', fontWeight: 700 }}>Connected</span>
               </div>
             </div>
           </div>

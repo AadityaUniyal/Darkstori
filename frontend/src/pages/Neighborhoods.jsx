@@ -118,7 +118,7 @@ export default function Neighborhoods() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Compass color="#0071E3" size={32} /> Hyperlocal Micro-Market Intelligence
+            <Compass color="#FF9F1C" size={32} /> Hyperlocal Micro-Market Intelligence
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
             Filter, search, and evaluate micro-market demographics, consumer price sensitivity, and expansion opportunity scores across India.
@@ -126,7 +126,7 @@ export default function Neighborhoods() {
         </div>
 
         {selectedForCompare.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0, 113, 227, 0.15)', border: '1px solid #0071E3', padding: '8px 16px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0, 113, 227, 0.15)', border: '1px solid #FF9F1C', padding: '8px 16px', borderRadius: '12px' }}>
             <Scale size={16} color="#38BDF8" />
             <span style={{ fontSize: '0.84rem', color: '#FFFFFF', fontWeight: 600 }}>
               Comparing ({selectedForCompare.length}/2): {selectedForCompare.map(c => c.neighborhood_name).join(' vs ')}
@@ -170,8 +170,8 @@ export default function Neighborhoods() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: '20px',
-                  background: activeCityName === cityName ? '#0071E3' : 'rgba(255, 255, 255, 0.04)',
-                  border: activeCityName === cityName ? '1px solid #0071E3' : '1px solid var(--color-border)',
+                  background: activeCityName === cityName ? '#FF9F1C' : 'rgba(255, 255, 255, 0.04)',
+                  border: activeCityName === cityName ? '1px solid #FF9F1C' : '1px solid var(--color-border)',
                   color: activeCityName === cityName ? '#FFFFFF' : 'var(--color-text-secondary)',
                   fontWeight: 600,
                   fontSize: '0.82rem',
@@ -196,7 +196,7 @@ export default function Neighborhoods() {
             <input
               type="range" min={7.0} max={9.6} step={0.1}
               value={minScore} onChange={(e) => setMinScore(Number(e.target.value))}
-              style={{ accentColor: '#0071E3', cursor: 'pointer' }}
+              style={{ accentColor: '#FF9F1C', cursor: 'pointer' }}
             />
           </div>
 
@@ -264,7 +264,7 @@ export default function Neighborhoods() {
           className="glass-card"
           style={{
             background: 'rgba(14, 18, 26, 0.95)',
-            border: '1px solid #0071E3',
+            border: '1px solid #FF9F1C',
             borderRadius: '16px',
             padding: '20px',
             boxShadow: '0 8px 32px rgba(0, 113, 227, 0.25)'
@@ -272,7 +272,7 @@ export default function Neighborhoods() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Scale size={20} color="#0071E3" />
+              <Scale size={20} color="#FF9F1C" />
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF' }}>
                 Head-to-Head Micro-Market Comparison
               </h3>
@@ -325,7 +325,7 @@ export default function Neighborhoods() {
                     width: '100%',
                     padding: '8px 0',
                     borderRadius: '8px',
-                    background: '#0071E3',
+                    background: '#FF9F1C',
                     border: 'none',
                     color: '#FFFFFF',
                     fontWeight: 700,
@@ -373,7 +373,7 @@ export default function Neighborhoods() {
                   flexDirection: 'column',
                   gap: '14px',
                   alignSelf: 'start',
-                  border: isComparing ? '1px solid #0071E3' : '1px solid var(--color-border)',
+                  border: isComparing ? '1px solid #FF9F1C' : '1px solid var(--color-border)',
                   background: isComparing ? 'rgba(0, 113, 227, 0.08)' : 'var(--color-surface)',
                   padding: '20px',
                   borderRadius: '16px',
@@ -428,8 +428,8 @@ export default function Neighborhoods() {
                       flex: 1,
                       padding: '8px 0',
                       borderRadius: '8px',
-                      border: isComparing ? '1px solid #0071E3' : '1px solid var(--color-border)',
-                      background: isComparing ? '#0071E3' : 'rgba(255,255,255,0.04)',
+                      border: isComparing ? '1px solid #FF9F1C' : '1px solid var(--color-border)',
+                      background: isComparing ? '#FF9F1C' : 'rgba(255,255,255,0.04)',
                       color: isComparing ? '#FFFFFF' : 'var(--color-text-secondary)',
                       fontSize: '0.78rem',
                       fontWeight: 600,
@@ -450,7 +450,7 @@ export default function Neighborhoods() {
                       padding: '8px 0',
                       borderRadius: '8px',
                       border: 'none',
-                      background: 'linear-gradient(135deg, #0071E3, #0284C7)',
+                      background: 'linear-gradient(135deg, #FF9F1C, #0284C7)',
                       color: '#FFFFFF',
                       fontSize: '0.78rem',
                       fontWeight: 700,

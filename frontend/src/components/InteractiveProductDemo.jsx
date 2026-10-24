@@ -29,7 +29,7 @@ const DEMO_CHAPTERS = [
     title: 'PostGIS Greenfield Scouting & Cannibalization Defense',
     description: 'Autonomous spatial clustering identifies unserved demand clusters while safeguarding your existing dark stores against revenue cannibalization.',
     icon: MapPin,
-    accent: '#0071E3',
+    accent: '#FF9F1C',
     stats: [
       { label: 'Demand Density', value: '4,850 orders/km²' },
       { label: 'Whitespace Index', value: '94.2/100' },
@@ -43,7 +43,7 @@ const DEMO_CHAPTERS = [
     title: 'Dynamic Sigmoid Perishable Markdown Engine',
     description: 'Replaces blunt 50% loss discounts with continuous mathematical decay curves, clearing 100% of fresh inventory right at optimal consumer willingness-to-pay.',
     icon: DollarSign,
-    accent: '#34C759',
+    accent: '#10B981',
     stats: [
       { label: 'Waste Target', value: '0% Landfill' },
       { label: 'Revenue Salvaged', value: '₹1.84L / month' },
@@ -57,7 +57,7 @@ const DEMO_CHAPTERS = [
     title: 'Clarke-Wright 10-Minute VRP Fleet Batching',
     description: 'Intelligent multi-drop clustering bundles proximate deliveries within a 1.8km radius without breaching the stringent 10-minute consumer SLA.',
     icon: Truck,
-    accent: '#38BDF8',
+    accent: '#7C3AED',
     stats: [
       { label: 'Average ETA', value: '7.8 mins' },
       { label: 'Riders Saved', value: '-38% Fleet Cost' },
@@ -71,7 +71,7 @@ const DEMO_CHAPTERS = [
     title: 'Pre-emptive Weather & Surge Playbook Execution',
     description: 'Real-time telemetry detects monsoon rain downpours 20 minutes before impact, automatically shrinking delivery geofences and scaling rider surge incentives.',
     icon: CloudRain,
-    accent: '#FF9500',
+    accent: '#EF4444',
     stats: [
       { label: 'Surge Lead Time', value: '22 mins' },
       { label: 'SLA Breach Rate', value: '< 0.6%' },
@@ -154,17 +154,23 @@ export default function InteractiveProductDemo({ isOpen, onClose }) {
         {/* Top Apple-Style Header Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#07090E]/60 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#0071E3]/20 border border-[#0071E3]/40 flex items-center justify-center text-[#38BDF8]">
-              <Cpu size={16} />
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+              style={{ background: `${currentChapter.accent}25`, border: `1px solid ${currentChapter.accent}50`, color: currentChapter.accent }}
+            >
+              <currentChapter.icon size={16} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-white tracking-tight">Darkstori Live Product Tour</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#0071E3]/15 text-[#38BDF8] text-[10px] font-semibold uppercase tracking-wider border border-[#0071E3]/25">
-                  Interactive Demo
+                <span className="text-sm font-bold text-white tracking-tight">Darkstori Quick-Commerce Engine</span>
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ background: `${currentChapter.accent}20`, color: currentChapter.accent, border: `1px solid ${currentChapter.accent}40` }}
+                >
+                  {currentChapter.badge}
                 </span>
               </div>
-              <p className="text-xs text-[#86868B]">Sub-10-minute predictive & prescriptive engines in action</p>
+              <p className="text-xs text-[#86868B]">10-minute dark store precision • India Metros (Bengaluru / Mumbai / Delhi)</p>
             </div>
           </div>
 
@@ -269,9 +275,10 @@ export default function InteractiveProductDemo({ isOpen, onClose }) {
 
               <button
                 onClick={handleLaunchCockpit}
-                className="px-4 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0A84FF] text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-[#0071E3]/25 transition-all"
+                style={{ background: currentChapter.accent }}
+                className="px-4 py-2 rounded-xl text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg transition-all hover:brightness-110"
               >
-                <span>Try In Cockpit</span>
+                <span>Launch in Cockpit</span>
                 <ArrowRight size={14} />
               </button>
             </div>

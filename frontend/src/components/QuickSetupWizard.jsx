@@ -55,11 +55,11 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
   return (
     <>
       <div className="w-full bg-[#0E121A]/80 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-2xl mb-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#0071E3]/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF9F1C]/8 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#0071E3]/10 border border-[#0071E3]/20 text-[#38BDF8] text-xs font-semibold uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FF9F1C]/10 border border-[#FF9F1C]/20 text-[#38BDF8] text-xs font-semibold uppercase tracking-wider mb-2">
               <Sparkles size={13} />
               <span>Hub Setup & Onboarding</span>
             </div>
@@ -78,7 +78,7 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
             </div>
             <div className="w-44 h-2 rounded-full bg-white/5 overflow-hidden border border-white/10">
               <div
-                className="h-full bg-gradient-to-r from-[#0071E3] to-[#38BDF8] transition-all duration-500 rounded-full"
+                className="h-full bg-gradient-to-r from-[#FF9F1C] to-[#38BDF8] transition-all duration-500 rounded-full"
                 style={{ width: `${Math.max(5, progressPercent)}%` }}
               />
             </div>
@@ -92,13 +92,13 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
             onClick={() => setIsStoreModalOpen(true)}
             className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
               isStoreDone
-                ? 'bg-[#0071E3]/10 border-[#0071E3]/30 text-white'
-                : 'bg-[#141A24]/60 border-white/10 hover:border-[#0071E3]/40 hover:bg-[#141A24]'
+                ? 'bg-[#FF9F1C]/10 border-[#FF9F1C]/30 text-white'
+                : 'bg-[#141A24]/60 border-white/10 hover:border-[#FF9F1C]/40 hover:bg-[#141A24]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#0071E3]/15 text-[#38BDF8] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#FF9F1C]/15 text-[#38BDF8] flex items-center justify-center">
                   <Building2 size={16} />
                 </div>
                 {isStoreDone ? (
@@ -123,13 +123,13 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
             onClick={() => setIsBatchModalOpen(true)}
             className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
               isBatchDone
-                ? 'bg-[#0071E3]/10 border-[#0071E3]/30 text-white'
-                : 'bg-[#141A24]/60 border-white/10 hover:border-[#0071E3]/40 hover:bg-[#141A24]'
+                ? 'bg-[#FF9F1C]/10 border-[#FF9F1C]/30 text-white'
+                : 'bg-[#141A24]/60 border-white/10 hover:border-[#FF9F1C]/40 hover:bg-[#141A24]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#0071E3]/15 text-[#38BDF8] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#FF9F1C]/15 text-[#38BDF8] flex items-center justify-center">
                   <Leaf size={16} />
                 </div>
                 {isBatchDone ? (
@@ -152,11 +152,11 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
           {/* Step 3 */}
           <div
             onClick={() => navigate('/cockpit')}
-            className="p-4 rounded-xl border bg-[#141A24]/60 border-white/10 hover:border-[#0071E3]/40 hover:bg-[#141A24] transition-all cursor-pointer flex flex-col justify-between"
+            className="p-4 rounded-xl border bg-[#141A24]/60 border-white/10 hover:border-[#FF9F1C]/40 hover:bg-[#141A24] transition-all cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#0071E3]/15 text-[#38BDF8] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#FF9F1C]/15 text-[#38BDF8] flex items-center justify-center">
                   <Compass size={16} />
                 </div>
                 <Circle size={18} className="text-white/30" />
@@ -177,13 +177,13 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
             onClick={() => navigate('/playbooks')}
             className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
               isPlaybookDone
-                ? 'bg-[#0071E3]/10 border-[#0071E3]/30 text-white'
-                : 'bg-[#141A24]/60 border-white/10 hover:border-[#0071E3]/40 hover:bg-[#141A24]'
+                ? 'bg-[#FF9F1C]/10 border-[#FF9F1C]/30 text-white'
+                : 'bg-[#141A24]/60 border-white/10 hover:border-[#FF9F1C]/40 hover:bg-[#141A24]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#0071E3]/15 text-[#38BDF8] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#FF9F1C]/15 text-[#38BDF8] flex items-center justify-center">
                   <Workflow size={16} />
                 </div>
                 {isPlaybookDone ? (
@@ -214,7 +214,7 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
           <button
             onClick={() => seedMutation.mutate()}
             disabled={seedMutation.isPending}
-            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-[#0071E3]/20 hover:border-[#0071E3]/30 text-white font-semibold flex items-center gap-2 transition-all shadow-sm"
+            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-[#FF9F1C]/20 hover:border-[#FF9F1C]/30 text-white font-semibold flex items-center gap-2 transition-all shadow-sm"
           >
             {seedMutation.isPending ? (
               <>

@@ -279,7 +279,7 @@ export default function ExplainableAiModal({ isOpen, onClose, decision, onConfir
                 onClose();
               }}
               style={{
-                background: 'linear-gradient(135deg, #0071E3, #A855F7)',
+                background: 'linear-gradient(135deg, #FF9F1C, #A855F7)',
                 border: 'none',
                 borderRadius: '12px',
                 padding: '10px 22px',

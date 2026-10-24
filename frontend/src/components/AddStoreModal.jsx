@@ -85,7 +85,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
       >
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#38BDF8]">
+            <div className="w-9 h-9 rounded-xl bg-[#FF9F1C]/15 border border-[#FF9F1C]/30 flex items-center justify-center text-[#38BDF8]">
               <Building2 size={18} />
             </div>
             <div>
@@ -171,7 +171,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
                 step="0.0001"
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
               />
             </div>
             <div>
@@ -181,7 +181,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
                 step="0.0001"
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
                 type="number"
                 value={storageSqft}
                 onChange={(e) => setStorageSqft(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
               />
             </div>
             <div>
@@ -202,7 +202,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
                 type="number"
                 value={dailyCapacity}
                 onChange={(e) => setDailyCapacity(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
               />
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-5 py-2 rounded-xl bg-[#0071E3] text-white font-semibold text-xs shadow-lg shadow-[#0071E3]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[#FF9F1C] text-white font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
             >
               {createMutation.isPending ? (
                 <>
