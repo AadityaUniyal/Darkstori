@@ -272,19 +272,13 @@ export default function LandingPage() {
         <div className="apple-nav-container">
           <Link to="/" className="apple-brand-logo">
             <span className="brand-title">Darkstori</span>
-            <span className="brand-dot">.</span>
-            <span className="brand-pill">3.0 OS</span>
           </Link>
 
           <nav className="apple-nav-links">
-            <a href="#crisis">The 10-Min Crisis</a>
-            <a href="#story">Scrollytelling Story</a>
-            <a href="#interactive-sim">Live Simulators</a>
-            <a href="#pillars">Core Engines</a>
-            <a href="#comparison">Compare</a>
+            <a href="#crisis">The Problem</a>
+            <a href="#story">How Darkstori Simplifies It</a>
             <a href="#metros">Metros</a>
-            <a href="#faq">FAQ</a>
-            <a href="#contact" className="nav-link-highlight">Consulting & Pilots</a>
+            <a href="#contact" className="nav-link-highlight">Architecture Pilot</a>
           </nav>
 
           <div className="apple-nav-actions">
@@ -350,7 +344,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="hero-subtext-description"
           >
-            Quick commerce is a war of seconds and wafer-thin margins where 78% of dark stores bleed capital. Traditional dashboards only tell you what broke yesterday. <strong>Darkstori 3.0</strong> is the prescriptive AI operating system that automates location scouting, dynamic markdown pricing decay, rider multi-drop routing, and weather defense across India's premier metros.
+            Quick commerce is a war of seconds and wafer-thin margins where 78% of dark stores bleed capital. Traditional dashboards only tell you what broke yesterday. <strong>Darkstori</strong> is the prescriptive AI operating system that automates location scouting, dynamic markdown pricing decay, rider multi-drop routing, and weather defense across India's premier metros.
           </motion.p>
 
           <motion.div
@@ -1672,7 +1666,7 @@ export default function LandingPage() {
         <div className="footer-content">
           <div className="footer-brand">
             <div className="brand-wordmark">
-              Darkstori<span className="saffron-dot">.</span>
+              Darkstori
             </div>
             <p>Enterprise Hyperlocal Quick Commerce Intelligence & Prescriptive Automation Platform.</p>
             <div className="footer-contact-pill">

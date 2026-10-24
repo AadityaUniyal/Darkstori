@@ -398,8 +398,8 @@ export default function Dashboard() {
                       <div key={s.platform} className="flex flex-col gap-1">
                         <div className="flex justify-between text-xs">
                           <span className="text-white/80 font-medium">{s.platform}</span>
-                          <span className={`font-mono font-semibold ${s.avg_sentiment > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                            {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
+                          <span className={`font-mono font-semibold ${(s?.avg_sentiment || 0) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {(s?.avg_sentiment || 0) > 0 ? '+' : ''}{Number(s?.avg_sentiment || 0).toFixed(2)}
                           </span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
