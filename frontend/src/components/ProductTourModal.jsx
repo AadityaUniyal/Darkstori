@@ -79,12 +79,14 @@ export default function ProductTourModal() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    // Check if tour was already completed
-    const completed = localStorage.getItem('darkstori_tour_completed');
-    if (!completed) {
-      // Auto open for first-time visitors with a gentle delay
-      const timer = setTimeout(() => setIsOpen(true), 1200);
-      return () => clearTimeout(timer);
+    try {
+      const completed = localStorage.getItem('darkstori_tour_completed');
+      if (!completed) {
+        const timer = setTimeout(() => setIsOpen(true), 1200);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      // LocalStorage access restricted in private mode
     }
   }, []);
 
@@ -98,7 +100,11 @@ export default function ProductTourModal() {
   }, []);
 
   const handleSkipOrComplete = () => {
-    localStorage.setItem('darkstori_tour_completed', 'true');
+    try {
+      localStorage.setItem('darkstori_tour_completed', 'true');
+    } catch (e) {
+      // Ignore storage errors
+    }
     setIsOpen(false);
   };
 

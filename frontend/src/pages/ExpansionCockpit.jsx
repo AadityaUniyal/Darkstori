@@ -97,19 +97,21 @@ export default function ExpansionCockpit() {
     },
   });
 
-  const activeOpportunity = selectedOpportunity || opportunities[0] || null;
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+  const safeLedger = Array.isArray(ledger) ? ledger : [];
+  const activeOpportunity = selectedOpportunity || safeOpportunities[0] || null;
   const activeSimulation = activeOpportunity?.simulation;
   const analysisCenter = locationAnalysis ? [locationAnalysis.lat, locationAnalysis.lng] : [20.0, 77.0];
 
   const mapNeighborhoods = useMemo(
     () =>
-      opportunities.map((o) => ({
+      safeOpportunities.map((o) => ({
         neighborhood_id: o.neighborhood_id,
         neighborhood_name: o.neighborhood_name,
         city: o.city,
         opportunity_score: o.opportunity_score,
       })),
-    [opportunities]
+    [safeOpportunities]
   );
 
   const handleResolveLocation = async () => {
@@ -261,7 +263,7 @@ export default function ExpansionCockpit() {
                 {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-[60px] w-full rounded-2xl" />)}
               </div>
             ) : (
-              opportunities.slice(0, 4).map((opp, idx) => (
+              safeOpportunities.slice(0, 4).map((opp, idx) => (
                 <button
                   key={`${opp.neighborhood_id}-${idx}`}
                   onClick={() => setSelectedOpportunity(opp)}
@@ -404,10 +406,10 @@ export default function ExpansionCockpit() {
                 <div style={{ display: 'grid', gap: 10 }}>
                   {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[72px] w-full rounded-2xl" />)}
                 </div>
-              ) : ledger.length === 0 ? (
+              ) : safeLedger.length === 0 ? (
                 <EmptyState title="Ledger is empty" description="Simulate and approve a site to start building the decision trail." />
               ) : (
-                ledger.map((row) => (
+                safeLedger.map((row) => (
                   <div key={row.id} style={{ padding: 12, borderRadius: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
                       <div>
