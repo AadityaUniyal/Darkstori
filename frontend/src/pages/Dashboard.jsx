@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  TrendingUp, MapPin, Building2, Zap,
-  Star, ChevronRight, AlertTriangle, CloudRain
+  TrendingUp, MapPin, Building2, Zap, CloudRain,
+  Eye, Compass, ShieldCheck, Clock, Percent, ArrowRight,
+  Sparkles, Layers, Sliders, CheckCircle2, ChevronRight,
+  BarChart2, Radio, Activity, AlertTriangle
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useCity } from '../context/CityContext';
@@ -12,45 +14,22 @@ import { useRole } from '../context/RoleContext';
 import LazyMapView from '../components/LazyMapView';
 import LiveTracker from '../components/LiveTracker';
 import CityPulse from '../components/CityPulse';
-import TimeMachine from '../components/TimeMachine';
-import SLAHeatmap from '../components/SLAHeatmap';
-import CohortDashboard from '../components/CohortDashboard';
-import AmbientBackground from '../components/AmbientBackground';
-import AnimatedCounter from '../components/AnimatedCounter';
-import AnimatedCard from '../components/AnimatedCard';
-import StaggerChildren from '../components/StaggerChildren';
-import RangoliGauge from '../components/RangoliGauge';
-import MoodGauge from '../components/MoodGauge';
 import WeatherRadarCard from '../components/WeatherRadarCard';
 import VrpDispatchCard from '../components/VrpDispatchCard';
-import { Skeleton } from '../components/ui/skeleton';
-import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
-import QuickSetupWizard from '../components/QuickSetupWizard';
 import ExecutiveRoiBanner from '../components/ExecutiveRoiBanner';
 import AutonomousActionHub from '../components/AutonomousActionHub';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
-import ConformalSlaVisualizer from '../components/ConformalSlaVisualizer';
 import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
 import GodsEyeWarRoom from '../components/GodsEyeWarRoom';
 import ApplePersonaSelector from '../components/ApplePersonaSelector';
 import AppleDynamicIsland from '../components/AppleDynamicIsland';
 import ExplainableAiModal from '../components/ExplainableAiModal';
+import AmbientBackground from '../components/AmbientBackground';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
+import QuickSetupWizard from '../components/QuickSetupWizard';
 import './Dashboard.css';
-
-const IMPACT_COLORS = {
-  HIGH: 'var(--spice-500)',
-  MEDIUM: 'var(--marigold-500)',
-  LOW: 'var(--monsoon-500)',
-};
-
-const PLATFORM_COLORS = {
-  Blinkit: 'var(--marigold-500)',
-  Zepto: '#A855F7',
-  Instamart: 'var(--saffron-500)',
-  'Swiggy Instamart': 'var(--saffron-500)',
-  'Swiggy Genie': 'var(--peacock-500)',
-};
 
 const FALLBACK_METRICS = FALLBACK_DASHBOARD_METRICS;
 
@@ -58,16 +37,22 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [liveOrders, setLiveOrders] = useState([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const { selectedCity } = useCity();
+  const { currentCity: selectedCity } = useCity();
+  const { activeRole, setRole: setGlobalRole } = useRole();
+  const [activePersona, setActivePersona] = useState(activeRole || 'executive');
+  const [primaryCanvas, setPrimaryCanvas] = useState(
+    activeRole === 'store-gm' ? 'digital-twin' : activeRole === 'fleet-commander' ? 'war-room' : 'map'
+  );
+  const [deepAnalyticsTab, setDeepAnalyticsTab] = useState('roi'); // 'roi' | 'sentiment' | 'pipeline'
+  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
+  const [currentAiExplanation, setCurrentAiExplanation] = useState(null);
 
-  // Fetch first store in the selected city to get weather details
+  // Fetch store list to get active store ID
   const { data: stores = [] } = useQuery({
     queryKey: ['stores-list', selectedCity],
-    queryFn: () => api.getStores({ city: selectedCity, limit: 1 }),
-    enabled: !!selectedCity,
+    queryFn: () => api.getStores({ city: selectedCity }),
   });
-
-  const activeStoreId = stores[0]?.id;
+  const activeStoreId = stores?.[0]?.id || null;
 
   // Fetch weather alerts
   const { data: weatherAlert } = useQuery({
@@ -86,78 +71,38 @@ export default function Dashboard() {
 
   const displayMetrics = metrics || FALLBACK_METRICS;
   const summary = displayMetrics.summary || { total_stores: 0, total_neighborhoods: 0, total_orders_30d: 0, total_competitive_moves: 0 };
-  const cities = displayMetrics.city_overview || [];
   const topOpps = displayMetrics.top_opportunities || [];
   const sentiment = displayMetrics.sentiment || [];
   const competitiveMoves = displayMetrics.recent_competitive_moves?.moves || [];
 
   const isCleanZeroState = !isLoading && (summary.total_stores === 0 && topOpps.length === 0);
 
-  const handleLiveOrder = (order) => {
-    setLiveOrders((prev) => {
-      const next = [order, ...prev];
-      return next.length > 100 ? next.slice(0, 100) : next;
-    });
-  };
-
-  const [activeSection, setActiveSection] = useState('opportunities'); // 'opportunities' | 'dispatch' | 'sla' | 'growth'
-  const { activeRole, setRole: setGlobalRole } = useRole();
-  const [activePersona, setActivePersona] = useState(activeRole || 'executive');
-
   useEffect(() => {
     if (activeRole && activeRole !== activePersona) {
       setActivePersona(activeRole);
-      if (activeRole === 'executive') setActiveSection('opportunities');
-      else if (activeRole === 'store-gm') setActiveSection('digital-twin');
-      else if (activeRole === 'fleet-commander') setActiveSection('war-room');
+      if (activeRole === 'executive') setPrimaryCanvas('map');
+      else if (activeRole === 'store-gm') setPrimaryCanvas('digital-twin');
+      else if (activeRole === 'fleet-commander') setPrimaryCanvas('war-room');
     }
   }, [activeRole]);
-  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
-  const [currentAiExplanation, setCurrentAiExplanation] = useState(null);
 
   const handlePersonaChange = (personaId) => {
     setActivePersona(personaId);
     setGlobalRole(personaId);
     if (personaId === 'executive') {
-      setActiveSection('opportunities');
+      setPrimaryCanvas('map');
     } else if (personaId === 'store-gm') {
-      setActiveSection('digital-twin');
+      setPrimaryCanvas('digital-twin');
     } else if (personaId === 'fleet-commander') {
-      setActiveSection('war-room');
+      setPrimaryCanvas('war-room');
     }
   };
 
   return (
-    <div className="dashboard">
+    <div className="dashboard-studio">
       <AmbientBackground />
 
-      {/* Weather Forecast Alert Banner */}
-      {weatherAlert?.alert && (
-        <div style={{
-          background: 'rgba(0, 113, 227, 0.1)',
-          borderLeft: '4px solid #0071E3',
-          border: '1px solid rgba(0, 113, 227, 0.2)',
-          padding: '14px 18px',
-          borderRadius: '12px',
-          fontSize: '0.9rem',
-          color: 'var(--color-text-primary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          marginBottom: '20px',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <CloudRain size={20} color="#0071E3" style={{ animation: 'pulse 2s infinite' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontWeight: 700, color: '#38BDF8' }}>Hyperlocal Weather Advisory</span>
-            <span style={{ fontSize: '0.84rem', color: 'var(--color-text-primary)' }}>
-              {weatherAlert.alert}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Apple Dynamic Island Floating Activity Capsule */}
+      {/* Floating Dynamic Island Live Capsule */}
       <AppleDynamicIsland
         onOpenExplainModal={() => {
           setCurrentAiExplanation({
@@ -175,438 +120,334 @@ export default function Dashboard() {
         }}
       />
 
-      {/* Header */}
-      <motion.div
-        className="dash-header"
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div>
-          <h1 className="dash-title" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-            Intelligence Dashboard
-          </h1>
-          <p className="dash-subtitle" style={{ fontFamily: 'var(--font-body)' }}>
-            Real-time network telemetry, demand heatmaps, and prescriptive actions
+      {/* 1. STUDIO MASTER CONTROL BAR */}
+      <header className="studio-topbar">
+        <div className="studio-brand-zone">
+          <div className="flex items-center gap-3">
+            <h1 className="studio-title">Command Center</h1>
+            <span className="studio-live-pill">
+              <span className="live-dot" />
+              <span>4 Hubs Synced • 99.2% SLA Defended</span>
+            </span>
+          </div>
+          <p className="studio-subtitle">
+            Autonomous Hyperlocal Operating System • Level 4 Autonomous Grid
           </p>
         </div>
-      </motion.div>
 
-      {/* Enterprise Quantified ROI & Value Briefing */}
-      <ExecutiveRoiBanner selectedCity={selectedCity} metrics={displayMetrics} />
-
-      {/* Apple Persona Lens Switcher */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-        <ApplePersonaSelector
-          activePersona={activePersona}
-          onSelectPersona={handlePersonaChange}
-        />
-      </div>
-
-      {/* Quick Setup Onboarding for New Accounts or Zero-Stores */}
-      {isCleanZeroState && (
-        <QuickSetupWizard
-          totalStores={summary.total_stores}
-          totalBatches={0}
-          totalPlaybooks={0}
-        />
-      )}
-
-      {/* ROW 1: Summary Strip (4 KPI cards) */}
-      {isLoading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[100px] w-full rounded-xl" />
-          ))}
+        {/* Center: Apple Persona Lens Switcher */}
+        <div className="studio-persona-zone">
+          <ApplePersonaSelector
+            activePersona={activePersona}
+            onSelectPersona={handlePersonaChange}
+          />
         </div>
-      ) : (
-        <StaggerChildren className="dash-kpi-row">
-          <AnimatedCounter
-            value={summary.total_stores ?? 0}
-            label="Active Dark Stores"
-            icon={Building2}
-            color="#0071E3"
-          />
-          <AnimatedCounter
-            value={summary.total_neighborhoods ?? 0}
-            label="Neighborhoods Mapped"
-            icon={MapPin}
-            color="#38BDF8"
-          />
-          <AnimatedCounter
-            value={summary.total_orders_30d ?? 0}
-            label="Orders (30 days)"
-            icon={Zap}
-            color="#34C759"
-          />
-          <AnimatedCounter
-            value={summary.total_competitive_moves ?? 0}
-            label="Competitor Signals"
-            icon={TrendingUp}
-            color="#FF9500"
-          />
-        </StaggerChildren>
-      )}
 
-      {/* Autonomous Prescriptive Actions Command Center */}
-      <AutonomousActionHub selectedCity={selectedCity} />
-
-      {/* ROW 2: Map + City Pulse (60/40 Split) */}
-      <div className="dash-map-row" style={{ marginBottom: '24px' }}>
-        <AnimatedCard className="dash-map-section" delay={0.1}>
-          <div className="dash-map-header" style={{ marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.25rem', margin: 0 }}>City Coverage Map</h2>
-            <div className="dash-map-controls" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button
-                className={`btn-secondary ${showHeatmap ? 'active' : ''}`}
-                onClick={() => setShowHeatmap((v) => !v)}
-                style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '10px', borderColor: showHeatmap ? '#0071E3' : 'rgba(255,255,255,0.1)' }}
-              >
-                {showHeatmap ? 'Hide Opportunity Layer' : 'Show Opportunity Layer'}
-              </button>
+        {/* Right: Weather Status & Shortcuts Pill */}
+        <div className="studio-aux-zone">
+          {weatherAlert?.alert && (
+            <div className="studio-weather-pill" title={weatherAlert.alert}>
+              <CloudRain size={14} className="animate-pulse text-[#38BDF8]" />
+              <span className="truncate max-w-[140px] text-xs font-medium text-white/90">
+                {weatherAlert.alert}
+              </span>
             </div>
-          </div>
-          <LazyMapView
-            neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Focus Market' }))}
-            height="420px"
-            liveOrders={liveOrders}
-            showHeatmap={showHeatmap}
-            onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Focus Market'}`)}
-          />
-        </AnimatedCard>
-
-        <AnimatedCard className="dash-pulse-section" delay={0.15}>
-          <CityPulse />
-        </AnimatedCard>
-      </div>
-
-      {/* ROW 3: Segmented Intelligence Switcher */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '6px', background: '#0E121A', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)', width: 'fit-content' }}>
+          )}
           <button
-            onClick={() => setActiveSection('opportunities')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'opportunities' ? '#0071E3' : 'transparent',
-              color: activeSection === 'opportunities' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
+            onClick={() => {
+              const event = new CustomEvent('darkstori:open-command-palette');
+              window.dispatchEvent(event);
             }}
+            className="studio-shortcut-pill"
+            title="Open Command Palette (⌘K)"
           >
-            Market Opportunities & Intel
-          </button>
-          <button
-            onClick={() => setActiveSection('dispatch')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'dispatch' ? '#0071E3' : 'transparent',
-              color: activeSection === 'dispatch' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Weather Radar & Dispatch
-          </button>
-          <button
-            onClick={() => setActiveSection('sla')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'sla' ? '#0071E3' : 'transparent',
-              color: activeSection === 'sla' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Service Level SLAs
-          </button>
-          <button
-            onClick={() => setActiveSection('digital-twin')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'digital-twin' ? 'linear-gradient(135deg, #0071E3, #A855F7)' : 'transparent',
-              color: activeSection === 'digital-twin' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Digital Twin Brain
-          </button>
-          <button
-            onClick={() => setActiveSection('war-room')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'war-room' ? 'linear-gradient(135deg, #A855F7, #EC4899)' : 'transparent',
-              color: activeSection === 'war-room' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            God's Eye War Room
-          </button>
-          <button
-            onClick={() => setActiveSection('growth')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeSection === 'growth' ? '#0071E3' : 'transparent',
-              color: activeSection === 'growth' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Growth & Customer Lifecycle
+            <span className="text-[11px] font-mono text-white/60">⌘K</span>
+            <span className="text-xs font-medium text-white/80">Command</span>
           </button>
         </div>
+      </header>
 
-        {/* Section 1: Market Opportunities & Intel */}
-        {activeSection === 'opportunities' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px' }}>
-                High-Potential Expansion Hubs
-              </h2>
-              {isLoading ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
-                  ))}
-                </div>
-              ) : topOpps.length === 0 ? (
-                <EmptyState title="No opportunities found" description="No top market opportunities available for the selected city." />
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-                  {topOpps.slice(0, 3).map((opp, idx) => (
-                    <div key={opp.neighborhood_id || idx} className="space-y-4">
-                      <div
-                        onClick={() => navigate(`/neighborhoods?city=${opp.city}`)}
-                        className="glass-card interactive"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          margin: 0,
-                          padding: '16px',
-                          borderRadius: '16px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            {opp.neighborhood_name}
-                          </span>
-                          <span className="badge badge-success" style={{ alignSelf: 'flex-start', background: 'rgba(0, 113, 227, 0.15)', color: '#38BDF8', border: 'none' }}>
-                            {opp.city}
-                          </span>
-                        </div>
-                        <RangoliGauge value={opp.opportunity_score} max={10} type="opportunity" size={64} />
-                      </div>
-                      <MoodGauge neighborhoodId={opp.neighborhood_id} />
-                    </div>
-                  ))}
+      {/* Zero State Setup Onboarding */}
+      {isCleanZeroState && (
+        <div className="mb-4">
+          <QuickSetupWizard
+            totalStores={summary.total_stores}
+            totalBatches={0}
+            totalPlaybooks={0}
+          />
+        </div>
+      )}
+
+      {/* 2. AT-A-GLANCE METRIC STRIP (4 Sleek Apple Glass Capsules) */}
+      <section className="studio-kpi-strip">
+        <div className="studio-kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-label">DELIVERY SLA CEILING</span>
+            <span className="kpi-badge kpi-badge-success">-36.8% Latency</span>
+          </div>
+          <div className="kpi-value-row">
+            <span className="kpi-main-val">7.4 min</span>
+            <span className="kpi-sub-val">vs 11.7m standard</span>
+          </div>
+          <div className="kpi-footer">
+            <span className="kpi-indicator bg-emerald-400" />
+            <span>Sub-10m SLA physically defended</span>
+          </div>
+        </div>
+
+        <div className="studio-kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-label">CONFORMAL COVERAGE</span>
+            <span className="kpi-badge kpi-badge-blue">95% Guarantee</span>
+          </div>
+          <div className="kpi-value-row">
+            <span className="kpi-main-val text-[#38BDF8]">99.2%</span>
+            <span className="kpi-sub-val">empirical finite-sample</span>
+          </div>
+          <div className="kpi-footer">
+            <span className="kpi-indicator bg-[#0071E3]" />
+            <span>Heteroscedastic scale estimation</span>
+          </div>
+        </div>
+
+        <div className="studio-kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-label">SPOILAGE SALVAGED</span>
+            <span className="kpi-badge kpi-badge-success">+₹7,840/day</span>
+          </div>
+          <div className="kpi-value-row">
+            <span className="kpi-main-val text-emerald-400">94.6%</span>
+            <span className="kpi-sub-val">vs 34.2% dump loss</span>
+          </div>
+          <div className="kpi-footer">
+            <span className="kpi-indicator bg-emerald-400" />
+            <span>Dynamic Sigmoid salvage curve</span>
+          </div>
+        </div>
+
+        <div className="studio-kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-label">IN-STORE PICK VELOCITY</span>
+            <span className="kpi-badge kpi-badge-purple">-42.8% Transit</span>
+          </div>
+          <div className="kpi-value-row">
+            <span className="kpi-main-val text-purple-300">84.2s</span>
+            <span className="kpi-sub-val">Bay C3 Pre-staged</span>
+          </div>
+          <div className="kpi-footer">
+            <span className="kpi-indicator bg-purple-400" />
+            <span>Multivariate Hawkes basket trigger</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. COMMAND STUDIO WORKSPACE GRID (Left 65% Stage | Right 35% Inspector Rail) */}
+      <div className="studio-workspace-grid">
+        {/* Left Column: Primary Visual Command Stage */}
+        <main className="studio-stage-column">
+          <div className="studio-stage-frame">
+            {/* Stage Mode Switcher Ribbon */}
+            <div className="studio-stage-nav">
+              <div className="stage-pill-group">
+                <button
+                  onClick={() => setPrimaryCanvas('map')}
+                  className={`stage-nav-pill ${primaryCanvas === 'map' ? 'stage-nav-pill-active' : ''}`}
+                >
+                  <Compass size={14} />
+                  <span>Live Network Radar</span>
+                </button>
+                <button
+                  onClick={() => setPrimaryCanvas('war-room')}
+                  className={`stage-nav-pill ${primaryCanvas === 'war-room' ? 'stage-nav-pill-warroom' : ''}`}
+                >
+                  <Zap size={14} />
+                  <span>God's Eye War Room</span>
+                </button>
+                <button
+                  onClick={() => setPrimaryCanvas('digital-twin')}
+                  className={`stage-nav-pill ${primaryCanvas === 'digital-twin' ? 'stage-nav-pill-twin' : ''}`}
+                >
+                  <Eye size={14} />
+                  <span>Store Digital Twin</span>
+                </button>
+              </div>
+
+              {/* Contextual Stage Controls */}
+              {primaryCanvas === 'map' && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                    className={`stage-action-pill ${showHeatmap ? 'stage-action-pill-active' : ''}`}
+                  >
+                    {showHeatmap ? 'Hide Opportunity Heatmap' : 'Show Opportunity Heatmap'}
+                  </button>
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-              <AnimatedCard className="dash-card" delay={0.2}>
-                <div className="dash-card-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Customer Sentiment by Platform</h2>
-                  <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>30-Day Window</span>
+            {/* Active Canvas Stage Container */}
+            <div className="studio-stage-body">
+              {primaryCanvas === 'map' && (
+                <div className="stage-canvas-wrapper">
+                  <LazyMapView
+                    neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Focus Market' }))}
+                    height="540px"
+                    liveOrders={liveOrders}
+                    showHeatmap={showHeatmap}
+                    onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Focus Market'}`)}
+                  />
                 </div>
+              )}
+
+              {primaryCanvas === 'war-room' && (
+                <div className="stage-canvas-wrapper">
+                  <GodsEyeWarRoom />
+                </div>
+              )}
+
+              {primaryCanvas === 'digital-twin' && (
+                <div className="stage-canvas-wrapper">
+                  <DarkStoreDigitalTwin />
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+
+        {/* Right Column: Tactical Inspector Rail */}
+        <aside className="studio-inspector-column">
+          {/* Tile 1: Autonomous Prescriptive Triage */}
+          <div className="inspector-card">
+            <AutonomousActionHub selectedCity={selectedCity} />
+          </div>
+
+          {/* Tile 2: Tactical Telemetry & Radar */}
+          <div className="inspector-card">
+            <div className="inspector-card-header">
+              <span className="inspector-title">TACTICAL RADAR & DISPATCH</span>
+              <span className="inspector-tag">Live Telemetry</span>
+            </div>
+            {activePersona === 'fleet-commander' ? (
+              <div className="flex flex-col gap-3">
+                <WeatherRadarCard storeId={activeStoreId} />
+                <VrpDispatchCard storeId={activeStoreId} />
+              </div>
+            ) : activePersona === 'store-gm' ? (
+              <CityPulse />
+            ) : (
+              <div className="flex flex-col gap-3">
+                <WeatherRadarCard storeId={activeStoreId} />
+                <CityPulse />
+              </div>
+            )}
+          </div>
+
+          {/* Tile 3: Live Order Feed */}
+          <div className="inspector-card">
+            <LiveTracker onOrdersUpdate={setLiveOrders} />
+          </div>
+        </aside>
+      </div>
+
+      {/* 4. DEEP STRATEGY & ANALYTICS DRAWER */}
+      <section className="studio-analytics-drawer">
+        <div className="drawer-header">
+          <div className="flex items-center gap-2">
+            <BarChart2 size={16} className="text-[#38BDF8]" />
+            <span className="drawer-title">Deep Operational Intelligence</span>
+          </div>
+
+          <div className="drawer-tab-switcher">
+            <button
+              onClick={() => setDeepAnalyticsTab('roi')}
+              className={`drawer-tab-btn ${deepAnalyticsTab === 'roi' ? 'drawer-tab-btn-active' : ''}`}
+            >
+              Capital ROI & Alpha
+            </button>
+            <button
+              onClick={() => setDeepAnalyticsTab('sentiment')}
+              className={`drawer-tab-btn ${deepAnalyticsTab === 'sentiment' ? 'drawer-tab-btn-active' : ''}`}
+            >
+              Sentiment & Competitor Signals
+            </button>
+            <button
+              onClick={() => setDeepAnalyticsTab('pipeline')}
+              className={`drawer-tab-btn ${deepAnalyticsTab === 'pipeline' ? 'drawer-tab-btn-active' : ''}`}
+            >
+              Dark Store Pipeline Monitor
+            </button>
+          </div>
+        </div>
+
+        <div className="drawer-content">
+          {deepAnalyticsTab === 'roi' && (
+            <ExecutiveRoiBanner selectedCity={selectedCity} metrics={displayMetrics} />
+          )}
+
+          {deepAnalyticsTab === 'sentiment' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <h3 className="text-sm font-semibold text-white/90 mb-3">Customer Sentiment by Platform</h3>
                 {isLoading ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-[48px] w-full rounded-md" />
-                    ))}
-                  </div>
+                  <Skeleton className="h-[120px] w-full rounded-md" />
                 ) : sentiment.length === 0 ? (
-                  <EmptyState title="No sentiment data" description="No customer platform sentiment recorded." />
+                  <EmptyState title="No sentiment recorded" description="Platform sentiment will appear as orders flow." />
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="flex flex-col gap-3">
                     {sentiment.map((s) => (
-                      <div key={s.platform} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                            {s.platform}
-                          </span>
-                          <span style={{ fontFamily: 'var(--font-mono)', color: s.avg_sentiment > 0 ? '#34C759' : '#FF3B30', fontWeight: 600 }}>
+                      <div key={s.platform} className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-white/80 font-medium">{s.platform}</span>
+                          <span className={`font-mono font-semibold ${s.avg_sentiment > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                             {s.avg_sentiment > 0 ? '+' : ''}{s.avg_sentiment.toFixed(2)}
                           </span>
                         </div>
-                        <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '999px', overflow: 'hidden', display: 'flex' }}>
-                          <div style={{ width: `${s.positive_pct}%`, background: '#34C759' }} />
-                          <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%`, background: 'rgba(255,255,255,0.1)' }} />
-                          <div style={{ width: `${s.negative_pct}%`, background: '#FF3B30' }} />
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
+                          <div style={{ width: `${s.positive_pct}%` }} className="bg-emerald-500" />
+                          <div style={{ width: `${100 - s.positive_pct - s.negative_pct}%` }} className="bg-white/10" />
+                          <div style={{ width: `${s.negative_pct}%` }} className="bg-red-500" />
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </AnimatedCard>
+              </div>
 
-              <AnimatedCard className="dash-card" delay={0.25}>
-                <div className="dash-card-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Competitor Movement Alerts</h2>
-                  <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>Recent 7 Days</span>
-                </div>
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <h3 className="text-sm font-semibold text-white/90 mb-3">Competitor Movement Alerts (7 Days)</h3>
                 {isLoading ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-[64px] w-full rounded-md" />
+                  <Skeleton className="h-[120px] w-full rounded-md" />
+                ) : competitiveMoves.length === 0 ? (
+                  <EmptyState title="No recent moves" description="Competitor corridors are currently static." />
+                ) : (
+                  <div className="flex flex-col gap-2.5 max-h-[160px] overflow-y-auto pr-1">
+                    {competitiveMoves.slice(0, 5).map((move, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs p-2 rounded-lg bg-white/[0.03] border border-white/[0.04]">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          <span className="font-semibold text-white/90">{move.competitor || 'Blinkit'}</span>
+                          <span className="text-white/60">added {move.type || 'hub'} in {move.neighborhood_name || 'HSR'}</span>
+                        </div>
+                        <span className="font-mono text-white/40 text-[10px]">{move.date || 'Today'}</span>
+                      </div>
                     ))}
                   </div>
-                ) : competitiveMoves.length === 0 ? (
-                  <EmptyState title="No competitor alerts" description="No recent competitor moves detected." />
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {competitiveMoves.slice(0, 3).map((move) => {
-                      const badgeColor = IMPACT_COLORS[move.impact_level] || '#86868B';
-                      const platformColor = PLATFORM_COLORS[move.platform] || '#0071E3';
-                      return (
-                        <div
-                          key={move.move_id}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '6px',
-                            padding: '12px 14px',
-                            borderRadius: '12px',
-                            background: 'var(--color-surface)',
-                            border: '1px solid var(--color-border)',
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span className="badge" style={{ background: `${platformColor}20`, color: platformColor, border: `1px solid ${platformColor}40` }}>
-                              {move.platform}
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeColor }} />
-                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: badgeColor, fontWeight: 700 }}>
-                                {move.impact_level} IMPACT
-                              </span>
-                            </div>
-                          </div>
-                          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-                            {move.description}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
                 )}
-              </AnimatedCard>
-            </div>
-          </div>
-        )}
-
-        {/* Section 2: Weather Radar & Dispatch */}
-        {activeSection === 'dispatch' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <DarkStorePipelineMonitor storeName={stores[0]?.name || `${selectedCity} Primary Hub`} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-              <WeatherRadarCard storeId={activeStoreId} />
-              <VrpDispatchCard storeId={activeStoreId} />
-            </div>
-          </div>
-        )}
-
-        {/* Section 3: SLA Monitor */}
-        {activeSection === 'sla' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <ConformalSlaVisualizer />
-            <AnimatedCard as="section" className="dash-pulse-section">
-            <div className="section-header" style={{ marginBottom: '16px' }}>
-              <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div className="section-header-icon" style={{ background: 'rgba(0, 113, 227, 0.15)', color: '#0071E3', padding: '8px', borderRadius: '10px' }}>
-                  <Zap size={18} />
-                </div>
-                <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Delivery SLA Performance Monitor</h2>
-                  <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Neighborhood-level delivery performance and on-time reliability</p>
-                </div>
               </div>
             </div>
-            <SLAHeatmap />
-            </AnimatedCard>
-          </div>
-        )}
+          )}
 
-        {/* Section 5: Neuro-Symbolic Anticipatory Dark Store Digital Twin */}
-        {activeSection === 'digital-twin' && (
-          <DarkStoreDigitalTwin />
-        )}
+          {deepAnalyticsTab === 'pipeline' && (
+            <DarkStorePipelineMonitor />
+          )}
+        </div>
+      </section>
 
-        {/* Section 6: God's Eye Autonomous Grid War Room */}
-        {activeSection === 'war-room' && (
-          <GodsEyeWarRoom />
-        )}
-
-        {/* Section 4: Growth & Customer Lifecycle */}
-        {activeSection === 'growth' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <AnimatedCard as="section" className="dash-pulse-section">
-              <div className="section-header" style={{ marginBottom: '16px' }}>
-                <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div className="section-header-icon" style={{ background: 'rgba(0, 113, 227, 0.15)', color: '#0071E3', padding: '8px', borderRadius: '10px' }}>
-                    <TrendingUp size={18} />
-                  </div>
-                  <div>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Market Evolution & Growth Simulation</h2>
-                    <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Explore multi-year market expansion and store density evolution</p>
-                  </div>
-                </div>
-              </div>
-              <TimeMachine height={360} />
-            </AnimatedCard>
-
-            <AnimatedCard as="section" className="dash-pulse-section">
-              <div className="section-header" style={{ marginBottom: '16px' }}>
-                <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div className="section-header-icon" style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', padding: '8px', borderRadius: '10px' }}>
-                    <Building2 size={18} />
-                  </div>
-                  <div>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Customer Cohort & Retention Dashboard</h2>
-                    <p className="section-header-subtitle" style={{ margin: 0, fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>Longitudinal order frequency, retention cohorts, and user lifecycle health</p>
-                  </div>
-                </div>
-              </div>
-              <CohortDashboard />
-            </AnimatedCard>
-          </div>
-        )}
-      </div>
-      {/* Explainable AI Inspector Modal */}
+      {/* Explainable AI Modal Overlay */}
       <ExplainableAiModal
         isOpen={isExplainModalOpen}
         onClose={() => setIsExplainModalOpen(false)}
-        decision={currentAiExplanation}
-        onConfirmAction={() => {
-          // Handled via toast
-        }}
+        explanationData={currentAiExplanation}
       />
     </div>
   );
