@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Sparkles,
   Calendar,
-  Workflow
+  Workflow,
+  Radio
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import './Sidebar.css';
@@ -33,7 +34,6 @@ const Sidebar = memo(() => {
       }
     };
     window.addEventListener('resize', handleResize);
-    // Initial call
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -80,17 +80,19 @@ const Sidebar = memo(() => {
 
   if (isMobile) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 h-[60px] bg-[#07090E]/95 backdrop-blur-md border-t border-border flex justify-around items-center z-[1000] pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 h-[64px] bg-[#07090E]/95 backdrop-blur-xl border-t border-white/[0.08] flex justify-around items-center z-[1000] pb-safe px-2">
         {mobileRoutes.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             end={item.path === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium flex-1 text-center transition-colors ${isActive ? 'text-[#0071E3]' : 'text-muted-foreground hover:text-foreground'}`
+              `flex flex-col items-center gap-1 text-[10px] font-semibold flex-1 text-center py-1 transition-all rounded-xl ${
+                isActive ? 'text-[#38BDF8] bg-[#0071E3]/15' : 'text-white/50 hover:text-white'
+              }`
             }
           >
-            <item.icon size={20} strokeWidth={isActive ? 2 : 1.75} />
+            <item.icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -99,26 +101,27 @@ const Sidebar = memo(() => {
   }
 
   return (
-    <aside className={`flex flex-col bg-[#07090E]/85 backdrop-blur-md border-r border-border h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
-      <nav className="flex-1 py-4 flex flex-col gap-6 overflow-y-auto scrollbar-thin">
+    <aside className={`flex flex-col bg-[#07090E]/90 backdrop-blur-2xl border-r border-white/[0.08] h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[244px]'}`}>
+      <nav className="flex-1 py-3 flex flex-col gap-4 overflow-y-auto scrollbar-thin">
         {!isCollapsed && (
-          <div className="px-5 pb-3 border-b border-border/30">
+          <div className="mx-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Operational Lens</span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30">
+              <span className="text-[10px] font-bold tracking-wider text-white/40 uppercase">OPERATIONAL LENS</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30">
                 {activeRole === 'executive' ? 'Executive' : activeRole === 'store-gm' ? 'Store GM' : 'Fleet Cmd'}
               </span>
             </div>
           </div>
         )}
+
         {menuGroups.map((group, idx) => (
-          <div key={idx} className="flex flex-col gap-1">
+          <div key={idx} className="flex flex-col gap-0.5">
             {!isCollapsed ? (
-              <div className="px-5 text-[12px] font-semibold text-muted-foreground tracking-wider mb-1">
+              <div className="px-4 text-[10px] font-bold text-white/35 uppercase tracking-wider mb-1 mt-1">
                 {group.title}
               </div>
             ) : (
-              <div className="h-4 border-b border-border/20 mx-4 mb-2 mt-1"></div>
+              <div className="h-px bg-white/[0.06] mx-4 mb-2 mt-1"></div>
             )}
             
             {group.items.map((item) => (
@@ -128,15 +131,15 @@ const Sidebar = memo(() => {
                 end={item.path === '/'}
                 title={isCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `relative flex items-center gap-3 px-5 py-2.5 transition-all duration-200 text-[13px] font-medium border-l-[3px] ${
+                  `relative flex items-center gap-3 mx-2.5 px-3 py-2 rounded-xl transition-all duration-200 text-[12.5px] font-medium ${
                     isActive 
-                      ? 'bg-[#0071E3]/12 text-[#38BDF8] border-[#0071E3] font-semibold' 
-                      : 'text-muted-foreground border-transparent hover:bg-surface hover:text-foreground'
+                      ? 'bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30 font-semibold shadow-[0_0_12px_rgba(0,113,227,0.15)]' 
+                      : 'text-white/60 border border-transparent hover:bg-white/[0.04] hover:text-white'
                   }`
                 }
               >
-                <div className="relative flex items-center justify-center">
-                  <item.icon size={18} strokeWidth={1.75} />
+                <div className="relative flex items-center justify-center flex-shrink-0">
+                  <item.icon size={17} strokeWidth={1.8} />
                 </div>
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
               </NavLink>
@@ -148,11 +151,11 @@ const Sidebar = memo(() => {
       {/* Collapse Toggle Button at the bottom */}
       {windowWidth >= 1024 && (
         <button
-          className="w-full py-4 border-t border-border flex items-center justify-center text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
+          className="w-full py-3 border-t border-white/[0.08] flex items-center justify-center text-white/50 hover:bg-white/[0.04] hover:text-white transition-colors"
           onClick={() => setIsCollapsed(!isCollapsed)}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
         </button>
       )}
     </aside>
