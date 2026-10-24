@@ -26,7 +26,7 @@ export default function Neighborhoods() {
   const [selectedForCompare, setSelectedForCompare] = useState([]); // array of up to 2 items
 
   useEffect(() => {
-    if (selectedCity && selectedCity !== 'Demo City') {
+    if (selectedCity) {
       setActiveCityName(selectedCity);
     }
   }, [selectedCity]);

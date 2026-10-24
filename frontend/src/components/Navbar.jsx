@@ -47,14 +47,14 @@ const Navbar = memo(() => {
           <>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
-              className="flex md:w-52 items-center justify-center md:justify-between bg-transparent md:bg-card/50 hover:bg-accent/40 md:border border-transparent md:border-border rounded-lg md:px-3 py-1.5 md:mr-2 cursor-pointer transition-all text-left group"
-              title="Search"
+              className="flex md:w-56 items-center justify-center md:justify-between bg-card/60 hover:bg-card hover:border-amber-500/40 border border-border/80 rounded-full md:px-3.5 py-1.5 md:mr-2 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_12px_rgba(255,159,28,0.12)]"
+              title="Search corridors, metrics, actions (⌘K)"
             >
               <div className="flex items-center gap-2">
-                <Search className="text-muted-foreground group-hover:text-foreground transition-colors w-[18px] h-[18px] md:w-[14px] md:h-[14px]" />
+                <Search className="text-muted-foreground group-hover:text-amber-500 transition-colors w-[18px] h-[18px] md:w-[14px] md:h-[14px]" />
                 <span className="hidden md:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">Search & actions...</span>
               </div>
-              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary/80 text-muted-foreground border border-border/50">⌘K</kbd>
+              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-secondary/80 text-muted-foreground border border-border/50 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">⌘K</kbd>
             </button>
             
             <CitySelector />
@@ -129,11 +129,11 @@ const Navbar = memo(() => {
                   </div>
                   <div className="user-dropdown-divider" />
                   <div className="px-4 py-2">
-                    <label className="text-[0.75rem] text-muted-foreground block mb-1">Switch Role (Demo):</label>
+                    <label className="text-[0.75rem] text-muted-foreground block mb-1">Operational Role:</label>
                     <select
                       value={user?.role || 'admin'}
                       onChange={(e) => setRole(e.target.value)}
-                      className="w-full bg-surface border border-border text-foreground rounded px-2 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full bg-surface border border-border text-foreground rounded px-2 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
                     >
                       <option value="admin">Admin</option>
                       <option value="expansion_lead">Expansion Lead</option>
@@ -141,6 +141,17 @@ const Navbar = memo(() => {
                       <option value="regional_head">Regional Head</option>
                     </select>
                   </div>
+                  <div className="user-dropdown-divider" />
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
+                    }}
+                    className="user-dropdown-item w-full text-left flex items-center justify-between"
+                  >
+                    <span>Product Tour</span>
+                    <span className="text-[10px] text-amber-500 font-mono">Guide</span>
+                  </button>
                   <div className="user-dropdown-divider" />
                   <button
                     className="user-dropdown-item"

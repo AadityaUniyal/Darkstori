@@ -43,7 +43,6 @@ import {
 import { toast } from 'sonner';
 import KineticScrambleHeadline from '../components/KineticScrambleHeadline';
 import AmbientBackground from '../components/AmbientBackground';
-import InteractiveProductDemo from '../components/InteractiveProductDemo';
 import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
 
@@ -196,7 +195,6 @@ export default function LandingPage() {
   const [storeSqft, setStoreSqft] = useState(1800);
   const [perishableHours, setPerishableHours] = useState(14);
   const [activeSimTab, setActiveSimTab] = useState('expansion');
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   // Enterprise Contact Form State
   const [contactName, setContactName] = useState('');
@@ -294,12 +292,8 @@ export default function LandingPage() {
               <span className="live-ping" />
               <span className="noc-text">BLR NOC • 5 Metros Live</span>
             </div>
-            <button onClick={() => setIsDemoModalOpen(true)} className="btn-ghost-nav">
-              <Sparkles size={15} />
-              <span>Interactive Tour</span>
-            </button>
             <button onClick={handleLaunchApp} className="btn-primary-nav">
-              <span>{isAuthenticated ? 'Open Cockpit' : 'Partner Sign In'}</span>
+              <span>{isAuthenticated ? 'Open Cockpit' : 'Launch Platform'}</span>
               <ArrowRight size={15} />
             </button>
           </div>
@@ -369,14 +363,9 @@ export default function LandingPage() {
               <span>Launch Darkstori Cockpit</span>
               <ArrowRight size={18} />
             </button>
-            <button onClick={() => setIsDemoModalOpen(true)} className="hero-btn-secondary">
-              <Sparkles size={18} className="sparkle-gold" />
-              <span>Interactive Live Tour</span>
-            </button>
-            <button onClick={handleQuickDemo} className="hero-btn-tertiary">
-              <Play size={16} fill="currentColor" />
-              <span>1-Click Sandbox</span>
-            </button>
+            <a href="#story" className="hero-btn-secondary">
+              <span>Explore Corridors</span>
+            </a>
             <a href="#contact" className="hero-btn-outline">
               <Mail size={16} />
               <span>Book Architecture Pilot</span>
@@ -1669,10 +1658,10 @@ export default function LandingPage() {
               <span>Launch Darkstori Cockpit</span>
               <ArrowRight size={18} />
             </button>
-            <button onClick={handleQuickDemo} className="hero-btn-secondary">
+            <a href="#story" className="hero-btn-secondary">
               <Sparkles size={18} className="sparkle-gold" />
-              <span>Try Instant Guest Sandbox</span>
-            </button>
+              <span>Explore Corridor Network</span>
+            </a>
           </div>
           <p className="cta-footnote">No credit card required • Instant access to 5 focus metros • SOC-2 & ISO 27001 Ready</p>
         </div>
@@ -1719,12 +1708,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
-      {/* Interactive Live Product Demo Modal */}
-      <InteractiveProductDemo
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-      />
     </div>
   );
 }

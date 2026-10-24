@@ -102,10 +102,10 @@ export default function LiveTracker({ onOrder }) {
                      connectionStatus === 'reconnecting' ? 'var(--saffron-500)' : '#ef4444';
 
   const badgeText = connectionStatus === 'connected' ? 'LIVE' : 
-                   connectionStatus === 'reconnecting' ? 'RECONNECTING' : 'DEMO';
+                   connectionStatus === 'reconnecting' ? 'RECONNECTING' : 'TELEMETRY STREAM';
 
   const badgeBg = connectionStatus === 'connected' ? 'rgba(16, 185, 129, 0.1)' : 
-                 connectionStatus === 'reconnecting' ? 'var(--saffron-100)' : 'rgba(239, 68, 68, 0.1)';
+                 connectionStatus === 'reconnecting' ? 'var(--saffron-100)' : 'rgba(255, 159, 28, 0.12)';
 
   return (
     <div

@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Compass,
@@ -18,26 +19,32 @@ import {
   Zap,
   Map,
   X,
-  ArrowRight
+  ArrowRight,
+  Sliders,
+  CheckCircle2
 } from 'lucide-react';
 import { useCity } from '../context/CityContext';
 import { useRole } from '../context/RoleContext';
 import { toast } from 'sonner';
 import { api } from '../services/api';
 
+const CATEGORIES = ['All', 'Navigation', 'Operational Lens', 'Switch City', 'Action'];
+
 export default function CommandPalette({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { currentCity, setCity, cities } = useCity();
-  const { activeRole, setRole } = useRole();
+  const { currentCity, setCity } = useCity();
+  const { setRole } = useRole();
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   const listRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus(), 60);
       setQuery('');
+      setSelectedCategory('All');
       setSelectedIndex(0);
     }
   }, [isOpen]);
@@ -50,6 +57,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       icon: Compass,
       title: 'Switch Lens: Executive (C-Suite)',
       subtitle: 'Focus on Capital ROI, Network Health, and Avoided Spoilage Alpha',
+      badge: 'C-Suite',
       action: () => {
         setRole('executive');
         navigate('/dashboard');
@@ -62,6 +70,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       icon: LayoutDashboard,
       title: 'Switch Lens: Store GM (Operations)',
       subtitle: 'Focus on Dark Store Floorplan, Bottlenecks, and Shelf Waves',
+      badge: 'Store GM',
       action: () => {
         setRole('store-gm');
         navigate('/dashboard');
@@ -74,6 +83,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       icon: Zap,
       title: 'Switch Lens: Fleet Commander (Logistics)',
       subtitle: 'Focus on Swarm Intercept Radar, VRP Dispatch, and Couriers',
+      badge: 'Fleet Ops',
       action: () => {
         setRole('fleet-commander');
         navigate('/dashboard');
@@ -102,6 +112,16 @@ export default function CommandPalette({ isOpen, onClose }) {
     { id: 'city-pune', type: 'Switch City', icon: Map, title: 'Switch to Pune', subtitle: 'Active Tier 2 Hub · 14 Pincodes', action: () => { setCity('Pune'); toast.success('Switched to Pune'); } },
 
     // Quick Actions
+    {
+      id: 'act-tour',
+      type: 'Action',
+      icon: Sparkles,
+      title: 'Start Product Tour',
+      subtitle: 'Walk through dark store operational lenses, digital twin, and VRP dispatch',
+      action: () => {
+        window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
+      }
+    },
     {
       id: 'act-export',
       type: 'Action',
@@ -132,17 +152,6 @@ export default function CommandPalette({ isOpen, onClose }) {
         } catch (e) {
           toast.error('Drift scan request failed');
         }
-      }
-    },
-    {
-      id: 'act-ops-brief',
-      type: 'Action',
-      icon: Sparkles,
-      title: 'Export Executive Operations Brief (Memo & PDF)',
-      subtitle: 'Generate publication-grade C-Suite operational brief with financial ROI',
-      action: () => {
-        navigate('/dashboard');
-        toast.info('Opening Executive Operations Briefing...');
       }
     },
     {
@@ -187,6 +196,8 @@ export default function CommandPalette({ isOpen, onClose }) {
   ];
 
   const filtered = items.filter(item => {
+    const matchesCat = selectedCategory === 'All' || item.type === selectedCategory;
+    if (!matchesCat) return false;
     const q = query.toLowerCase();
     return (
       item.title.toLowerCase().includes(q) ||
@@ -213,88 +224,142 @@ export default function CommandPalette({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      <div 
-        className="w-full max-w-2xl bg-card border border-border/80 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={handleKeyDown}
-      >
-        {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-border/60 gap-3">
-          <Search size={18} className="text-muted-foreground shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Type a command, page, city, or action (e.g. 'forecast', 'mumbai', 'export')..."
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-            className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground/60 text-sm focus:outline-none"
-          />
-          <button 
-            onClick={onClose}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16, ease: 'easeOut' }}
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-24 px-4 bg-black/65 backdrop-blur-xl"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -12 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 380 }}
+            className="w-full max-w-2xl bg-card/95 border border-border/80 rounded-2xl shadow-[0_24px_70px_rgba(0,0,0,0.55)] overflow-hidden backdrop-blur-2xl ring-1 ring-white/10"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={handleKeyDown}
           >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Results List */}
-        <div ref={listRef} className="max-h-96 overflow-y-auto p-2 divide-y divide-border/20">
-          {filtered.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground text-sm">
-              No matching commands or pages found.
+            {/* Apple Spotlight Search Input Bar */}
+            <div className="flex items-center px-4 py-3.5 border-b border-border/60 gap-3 bg-secondary/20">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                <Search size={16} />
+              </div>
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search corridors, actions, metrics, or metros (e.g. 'forecast', 'mumbai', 'decay')..."
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+                className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground/60 text-sm md:text-base focus:outline-none"
+              />
+              {query && (
+                <button
+                  onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <kbd className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-md bg-secondary text-muted-foreground border border-border/60">
+                ESC
+              </kbd>
             </div>
-          ) : (
-            filtered.map((item, idx) => {
-              const Icon = item.icon;
-              const isSelected = idx === selectedIndex;
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => { item.action(); onClose(); }}
-                  onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'bg-primary/10 border border-primary/20 text-foreground' 
-                      : 'hover:bg-accent/50 text-foreground/80'
+
+            {/* Category Segment Tabs */}
+            <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border/40 bg-secondary/10 overflow-x-auto no-scrollbar text-xs">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => { setSelectedCategory(cat); setSelectedIndex(0); }}
+                  className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    selectedCategory === cat
+                      ? 'bg-amber-500 text-black shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`p-2 rounded-lg ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm truncate">{item.title}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/80 text-muted-foreground font-mono">
-                          {item.type}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <ArrowRight size={14} className="text-primary shrink-0 ml-2" />
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-        {/* Footer shortcuts */}
-        <div className="px-4 py-2.5 bg-secondary/40 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span><kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">↑↓</kbd> Navigate</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">↵</kbd> Select</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">ESC</kbd> Close</span>
-          </div>
-          <span className="text-[11px] font-medium text-primary">Darkstori Omnibar</span>
-        </div>
-      </div>
-    </div>
+            {/* Results List */}
+            <div ref={listRef} className="max-h-96 overflow-y-auto p-2 space-y-1">
+              {filtered.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground text-sm">
+                  <p>No matching commands or corridors found.</p>
+                  <span className="text-xs text-muted-foreground/60">Try searching for "forecast", "transshipment", or "mumbai"</span>
+                </div>
+              ) : (
+                filtered.map((item, idx) => {
+                  const Icon = item.icon;
+                  const isSelected = idx === selectedIndex;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => { item.action(); onClose(); }}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'bg-amber-500/10 border border-amber-500/30 text-foreground shadow-sm' 
+                          : 'hover:bg-accent/40 text-foreground/80 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`p-2 rounded-xl transition-colors ${
+                          isSelected 
+                            ? 'bg-amber-500 text-black' 
+                            : 'bg-secondary/80 text-secondary-foreground'
+                        }`}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm truncate">{item.title}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary/80 text-muted-foreground font-mono">
+                              {item.type}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="flex items-center gap-1.5 text-amber-500 shrink-0 ml-2">
+                          <kbd className="hidden sm:inline text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">↵</kbd>
+                          <ArrowRight size={14} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Apple Status Footer */}
+            <div className="px-4 py-2.5 bg-secondary/40 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">↑↓</kbd>
+                  <span className="hidden sm:inline">Navigate</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">↵</kbd>
+                  <span className="hidden sm:inline">Select</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-card border text-[10px]">ESC</kbd>
+                  <span className="hidden sm:inline">Close</span>
+                </span>
+              </div>
+              <span className="text-[11px] font-medium text-amber-500 font-mono">Darkstori Spotlight</span>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
