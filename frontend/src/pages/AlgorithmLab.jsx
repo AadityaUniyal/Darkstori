@@ -109,7 +109,7 @@ export default function AlgorithmLab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)', margin: 0, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Cpu color="#0071E3" size={30} /> System Intelligence
+            <Cpu color="#FF9F1C" size={30} /> System Intelligence
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: 6, margin: 0 }}>
             Prescriptive engine health, predictive accuracy benchmarks, and automated operational pipelines.
@@ -120,7 +120,7 @@ export default function AlgorithmLab() {
           onClick={handleRunCalibration}
           disabled={isCalibrating}
           className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0071E3', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FF9F1C', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
         >
           {isCalibrating ? (
             <>
@@ -140,7 +140,7 @@ export default function AlgorithmLab() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-2xl bg-[#0071E3]/10 border border-[#0071E3]/30 text-white flex items-center justify-between shadow-xl"
+          className="p-4 rounded-2xl bg-[#FF9F1C]/10 border border-[#FF9F1C]/30 text-white flex items-center justify-between shadow-xl"
         >
           <div className="flex items-center gap-3">
             <RefreshCw size={18} className="animate-spin text-[#38BDF8]" />
@@ -208,7 +208,7 @@ export default function AlgorithmLab() {
                   <div key={df.name} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem' }}>
                       <span style={{ color: 'var(--color-text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Icon size={14} color="#0071E3" />
+                        <Icon size={14} color="#FF9F1C" />
                         {df.name}
                       </span>
                       <span style={{ color: '#38BDF8', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
@@ -216,7 +216,7 @@ export default function AlgorithmLab() {
                       </span>
                     </div>
                     <div style={{ height: 6, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${df.weight}%`, background: '#0071E3' }} />
+                      <div style={{ height: '100%', width: `${df.weight}%`, background: '#FF9F1C' }} />
                     </div>
                   </div>
                 );
@@ -241,7 +241,7 @@ export default function AlgorithmLab() {
               </div>
               <div style={{ background: '#141A24', padding: 14, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', display: 'block' }}>Revenue Variance</span>
-                <strong style={{ fontSize: '1.35rem', color: '#0071E3', fontFamily: 'var(--font-mono)' }}>3.4%</strong>
+                <strong style={{ fontSize: '1.35rem', color: '#FF9F1C', fontFamily: 'var(--font-mono)' }}>3.4%</strong>
                 <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'block', marginTop: 2 }}>Predicted vs Realized</span>
               </div>
               <div style={{ background: '#141A24', padding: 14, borderRadius: 12, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
@@ -261,7 +261,7 @@ export default function AlgorithmLab() {
           <div className="glass-card" style={{ padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: 12, marginBottom: 14 }}>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <ShieldCheck size={18} color="#0071E3" /> Automated Intelligence Tasks
+                <ShieldCheck size={18} color="#FF9F1C" /> Automated Intelligence Tasks
               </h3>
               <button onClick={() => refetchJobs()} style={{ background: 'transparent', border: 'none', color: '#38BDF8', cursor: 'pointer' }}>
                 <RefreshCw size={14} />
@@ -302,7 +302,7 @@ export default function AlgorithmLab() {
           {/* Autonomous Optimization Policy */}
           <div className="glass-card" style={{ padding: 22 }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: '0 0 12px', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Sliders size={18} color="#0071E3" /> Continuous Optimization Policies
+              <Sliders size={18} color="#FF9F1C" /> Continuous Optimization Policies
             </h3>
             
             <p style={{ margin: '0 0 16px', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
@@ -311,15 +311,15 @@ export default function AlgorithmLab() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: '#FF9F1C' }} />
                 <span style={{ fontWeight: 600 }}>Auto-Recalibrate on Demand Shift</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: '#FF9F1C' }} />
                 <span style={{ fontWeight: 600 }}>Adaptive Weather Surge Multipliers</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked style={{ accentColor: '#0071E3' }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: '#FF9F1C' }} />
                 <span style={{ fontWeight: 600 }}>Real-time Fleet Re-clustering</span>
               </label>
             </div>

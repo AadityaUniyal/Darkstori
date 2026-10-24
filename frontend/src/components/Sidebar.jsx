@@ -88,7 +88,7 @@ const Sidebar = memo(() => {
             end={item.path === '/'}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 text-[10px] font-semibold flex-1 text-center py-1 transition-all rounded-xl ${
-                isActive ? 'text-[#38BDF8] bg-[#0071E3]/15' : 'text-white/50 hover:text-white'
+                isActive ? 'text-[#FFB703] bg-[#FF9F1C]/15' : 'text-white/50 hover:text-white'
               }`
             }
           >
@@ -107,7 +107,7 @@ const Sidebar = memo(() => {
           <div className="mx-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-1">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold tracking-wider text-white/40 uppercase">OPERATIONAL LENS</span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FF9F1C]/15 text-[#FFB703] border border-[#FF9F1C]/30">
                 {activeRole === 'executive' ? 'Executive' : activeRole === 'store-gm' ? 'Store GM' : 'Fleet Cmd'}
               </span>
             </div>
@@ -133,7 +133,7 @@ const Sidebar = memo(() => {
                 className={({ isActive }) =>
                   `relative flex items-center gap-3 mx-2.5 px-3 py-2 rounded-xl transition-all duration-200 text-[12.5px] font-medium ${
                     isActive 
-                      ? 'bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30 font-semibold shadow-[0_0_12px_rgba(0,113,227,0.15)]' 
+                      ? 'bg-[#FF9F1C]/15 text-[#FFB703] border border-[#FF9F1C]/30 font-semibold shadow-[0_0_12px_rgba(0,113,227,0.15)]' 
                       : 'text-white/60 border border-transparent hover:bg-white/[0.04] hover:text-white'
                   }`
                 }

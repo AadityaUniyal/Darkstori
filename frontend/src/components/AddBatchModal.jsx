@@ -62,7 +62,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
       >
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#38BDF8]">
+            <div className="w-9 h-9 rounded-xl bg-[#FF9F1C]/15 border border-[#FF9F1C]/30 flex items-center justify-center text-[#38BDF8]">
               <Leaf size={18} />
             </div>
             <div>
@@ -93,7 +93,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
               placeholder="e.g. Organic Roma Tomatoes (1kg)"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/50 transition-colors text-xs"
+              className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 transition-colors text-xs"
               required
             />
           </div>
@@ -104,7 +104,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
               >
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
@@ -122,7 +122,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
                 step="0.5"
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
                 required
               />
             </div>
@@ -135,7 +135,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
                 required
               />
             </div>
@@ -146,7 +146,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
                 type="number"
                 value={shelfLifeHours}
                 onChange={(e) => setShelfLifeHours(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0071E3] text-xs"
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
                 required
               />
             </div>
@@ -163,7 +163,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
             <button
               type="submit"
               disabled={createBatchMutation.isPending}
-              className="px-5 py-2 rounded-xl bg-[#0071E3] text-white font-semibold text-xs shadow-lg shadow-[#0071E3]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[#FF9F1C] text-white font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
             >
               {createBatchMutation.isPending ? (
                 <>

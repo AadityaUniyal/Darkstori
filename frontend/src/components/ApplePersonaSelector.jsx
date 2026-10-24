@@ -8,7 +8,7 @@ const PERSONAS = [
     label: 'Executive Lens',
     subtext: 'Capital ROI & Net Alpha',
     icon: Briefcase,
-    color: '#0071E3',
+    color: '#FF9F1C',
     badge: 'C-Suite'
   },
   {

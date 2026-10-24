@@ -237,7 +237,7 @@ export default function AppleDynamicIsland({ onOpenExplainModal, audioFeedback }
                 style={{
                   background: isActionExecuted
                     ? 'rgba(34, 197, 94, 0.25)'
-                    : 'linear-gradient(135deg, #0071E3, #A855F7)',
+                    : 'linear-gradient(135deg, #FF9F1C, #A855F7)',
                   border: `1px solid ${isActionExecuted ? '#22C55E' : 'rgba(255, 255, 255, 0.15)'}`,
                   borderRadius: '12px',
                   padding: '8px 18px',

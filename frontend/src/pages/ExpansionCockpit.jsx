@@ -17,7 +17,7 @@ import AddStoreModal from '../components/AddStoreModal';
 function MetricCard({ label, value, sublabel, icon: Icon }) {
   return (
     <div className="glass-card" style={{ display: 'flex', gap: 14, alignItems: 'center', minHeight: 110, padding: '16px 20px', borderRadius: '16px' }}>
-      <div style={{ width: 44, height: 44, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'rgba(0, 113, 227, 0.12)', color: '#0071E3' }}>
+      <div style={{ width: 44, height: 44, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'rgba(0, 113, 227, 0.12)', color: '#FF9F1C' }}>
         <Icon size={20} />
       </div>
       <div>
@@ -166,7 +166,7 @@ export default function ExpansionCockpit() {
           <button
             className="btn-primary"
             onClick={() => setIsAddStoreOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#0071E3', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#FF9F1C', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
           >
             <Plus size={16} /> Add Dark Store
           </button>
@@ -271,7 +271,7 @@ export default function ExpansionCockpit() {
                     alignItems: 'center',
                     padding: '12px 14px',
                     borderRadius: 14,
-                    border: selectedOpportunity?.neighborhood_id === opp.neighborhood_id ? '1px solid #0071E3' : '1px solid var(--color-border)',
+                    border: selectedOpportunity?.neighborhood_id === opp.neighborhood_id ? '1px solid #FF9F1C' : '1px solid var(--color-border)',
                     background: 'var(--color-surface)',
                     color: 'inherit',
                     cursor: 'pointer',
@@ -337,7 +337,7 @@ export default function ExpansionCockpit() {
                   </div>
                 )}
 
-                <button className="btn-primary" onClick={runSimulation} disabled={simulateMutation.isPending} style={{ background: '#0071E3', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                <button className="btn-primary" onClick={runSimulation} disabled={simulateMutation.isPending} style={{ background: '#FF9F1C', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}>
                   {simulateMutation.isPending ? 'Running simulation...' : 'Simulate economics'}
                 </button>
 
@@ -429,7 +429,7 @@ export default function ExpansionCockpit() {
                       <button
                         onClick={() => setIsAddStoreOpen(true)}
                         style={{
-                          background: 'linear-gradient(135deg, #0071E3, #0284C7)',
+                          background: 'linear-gradient(135deg, #FF9F1C, #0284C7)',
                           color: '#fff',
                           border: 'none',
                           padding: '6px 12px',

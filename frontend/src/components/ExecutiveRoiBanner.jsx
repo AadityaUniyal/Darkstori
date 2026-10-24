@@ -10,14 +10,14 @@ export default function ExecutiveRoiBanner({ selectedCity = 'Bangalore', metrics
     <>
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-[#0E121A] via-[#141A24] to-[#0E121A] p-5 mb-6 shadow-2xl backdrop-blur-xl">
         {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-0 right-1/4 -mt-12 w-96 h-32 bg-[#0071E3]/15 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-1/4 -mt-12 w-96 h-32 bg-[#FF9F1C]/15 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-10 -mb-10 w-72 h-24 bg-emerald-500/10 blur-2xl rounded-full pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* Left Title & Mission */}
           <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0071E3]/20 text-[#38BDF8] border border-[#0071E3]/30">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FF9F1C]/20 text-[#38BDF8] border border-[#FF9F1C]/30">
                 <Sparkles size={11} /> Enterprise ROI Engine
               </span>
               <span className="text-[11px] font-mono text-slate-400">
@@ -36,7 +36,7 @@ export default function ExecutiveRoiBanner({ selectedCity = 'Bangalore', metrics
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setReportModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-lg shadow-[#0071E3]/25 border border-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#FF9F1C] hover:bg-[#0077ED] text-white shadow-lg shadow-[#FF9F1C]/25 border border-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <FileText size={14} />
               Export Executive Ops Brief
@@ -58,7 +58,7 @@ export default function ExecutiveRoiBanner({ selectedCity = 'Bangalore', metrics
           </div>
 
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.02]">
-            <div className="p-2 rounded-lg bg-[#0071E3]/15 text-[#38BDF8] border border-[#0071E3]/30">
+            <div className="p-2 rounded-lg bg-[#FF9F1C]/15 text-[#38BDF8] border border-[#FF9F1C]/30">
               <TrendingUp size={16} />
             </div>
             <div>

@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Typography Hierarchy (Apple SF Pro / Plus Jakarta Sans Standard) */
+  /* Typography Hierarchy - Indian Quick Commerce Punchy Type */
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -18,111 +18,134 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
-  /* Apple-Grade Geometric Radii */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 26px;
+  /* Quick-Commerce Modern Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* Apple Smooth Springs & Easing */
-  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Easing & Springs */
+  --transition-fast: 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Nav Heights */
   --navbar-height: 64px;
-  --bottom-nav-height: 72px;
 
-  /* Darkstori Space Obsidian Titanium Canvas */
-  --color-bg: #07090E;
-  --color-bg-alt: #0C1017;
-  --color-bg-card: rgba(14, 18, 27, 0.76);
-  --color-bg-card-hover: rgba(20, 26, 38, 0.88);
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-hover: rgba(255, 255, 255, 0.075);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-hover: rgba(255, 255, 255, 0.16);
-  --color-border-glow: rgba(0, 113, 227, 0.35);
+  /* Dark Store Operations Slate Surface Canvas */
+  --color-bg: #090D14;
+  --color-bg-alt: #0F1420;
+  --color-bg-card: rgba(17, 24, 39, 0.82);
+  --color-bg-card-hover: rgba(26, 36, 56, 0.92);
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-hover: rgba(255, 255, 255, 0.18);
+  --color-border-glow: rgba(255, 159, 28, 0.35);
 
-  /* High Contrast Apple-Grade Text */
-  --color-text-primary: #F5F5F7;
-  --color-text-secondary: #86868B;
-  --color-text-muted: #636366;
+  /* High Contrast Operational Text */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
   --color-text-on-dark: #FFFFFF;
 
-  /* Darkstori Iconic Signature Color Identity: Hyper-Cobalt & Radiant Cyan */
-  --darkstori-50: #EFF6FF;
-  --darkstori-100: #DBEAFE;
-  --darkstori-200: #BFDBFE;
-  --darkstori-300: #93C5FD;
-  --darkstori-400: #60A5FA;
-  --darkstori-500: #0071E3; /* Primary Hero Blue */
-  --darkstori-600: #0058B3;
-  --darkstori-700: #003F80;
-  --darkstori-cyan: #38BDF8;
-  --darkstori-glow: rgba(0, 113, 227, 0.22);
-  --color-focus-ring: rgba(0, 113, 227, 0.45);
+  /* =========================================================================
+     DARKSTORI DISTINCT QUICK-COMMERCE BRAND IDENTITY
+     Signature: Hyper-Amber (Speed) + Zepto Violet (AI) + Blinkit Mint (Fresh)
+     ========================================================================= */
 
-  /* Apple Semantic Palette Mapping */
-  --emerald-400: #4ADE80;
-  --emerald-500: #34C759; /* Apple Growth Green */
-  --emerald-600: #248A3D;
-  --emerald-glow: rgba(52, 199, 89, 0.2);
+  /* 1. Darkstori Hyper-Volt Amber (Primary Brand Color - 10-Min Speed) */
+  --qc-amber-50: #FFFBEB;
+  --qc-amber-100: #FEF3C7;
+  --qc-amber-300: #FCD34D;
+  --qc-amber-400: #FBBF24;
+  --qc-amber-500: #FF9F1C; /* Darkstori Signature Quick-Commerce Amber */
+  --qc-amber-600: #EA580C;
+  --qc-amber-glow: rgba(255, 159, 28, 0.28);
 
-  --indigo-400: #60A5FA;
-  --indigo-500: #0071E3; /* Unified to Darkstori Cobalt */
-  --indigo-600: #0058B3;
-  --indigo-glow: rgba(0, 113, 227, 0.2);
+  /* 2. Zepto-Grade Electric Violet / Iris (Autonomous Intelligence & Algorithms) */
+  --qc-violet-400: #A855F7;
+  --qc-violet-500: #7C3AED; /* Zepto-Grade Deep Electric Violet */
+  --qc-violet-600: #6D28D9;
+  --qc-violet-glow: rgba(124, 58, 237, 0.25);
 
-  --amber-400: #FBBF24;
-  --amber-500: #FF9500; /* Apple Warning Amber */
-  --rose-500: #FF3B30;  /* Apple Critical Red */
-  --cyan-500: #38BDF8;
+  /* 3. Blinkit-Grade Fresh Grocery Mint & Emerald (Zero-Waste Produce & SLAs) */
+  --qc-emerald-400: #34D399;
+  --qc-emerald-500: #10B981; /* Fresh Grocery Mint */
+  --qc-emerald-600: #0C831F; /* Blinkit Signature Grocery Green */
+  --qc-emerald-glow: rgba(16, 185, 129, 0.25);
 
-  /* Backward-compatible semantic bindings */
-  --saffron-100: rgba(0, 113, 227, 0.12);
-  --saffron-200: #BFDBFE;
-  --saffron-500: #0071E3;
-  --saffron-600: #0058B3;
-  --peacock-100: rgba(0, 113, 227, 0.12);
-  --peacock-500: #0071E3;
-  --monsoon-500: #0071E3;
-  --spice-500: #FF3B30;
-  --marigold-500: #FF9500;
-  --ink-950: #07090E;
+  /* 4. Indian Monsoon & Spoilage Alert Crimson */
+  --qc-crimson-400: #F87171;
+  --qc-crimson-500: #EF4444; /* Monsoon Surge / Spoilage Alert */
+  --qc-crimson-600: #DC2626;
 
-  /* Apple-Grade Elevation & Lighting */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.55), 0 6px 12px -2px rgba(0, 0, 0, 0.35);
-  --shadow-glow-emerald: 0 0 24px rgba(52, 199, 89, 0.2);
-  --shadow-glow-indigo: 0 0 24px rgba(0, 113, 227, 0.25);
+  /* 5. Sky Telemetry Cyan */
+  --qc-cyan-400: #38BDF8;
+  --qc-cyan-500: #0EA5E9;
+
+  /* Semantic System Bindings */
+  --primary: #FF9F1C;
+  --primary-glow: var(--qc-amber-glow);
+  --accent-violet: #7C3AED;
+  --accent-emerald: #10B981;
+  --color-focus-ring: rgba(255, 159, 28, 0.45);
+
+  /* Quick-Commerce Brand Gradients */
+  --brand-gradient: linear-gradient(135deg, #FF9F1C 0%, #FF6B00 100%);
+  --violet-gradient: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+  --emerald-gradient: linear-gradient(135deg, #0C831F 0%, #10B981 100%);
+  --dark-glass-gradient: linear-gradient(180deg, rgba(26, 36, 56, 0.75) 0%, rgba(15, 20, 32, 0.85) 100%);
+
+  /* Backward compatibility semantic aliases */
+  --saffron-100: rgba(255, 159, 28, 0.14);
+  --saffron-200: #FCD34D;
+  --saffron-500: #FF9F1C;
+  --saffron-600: #EA580C;
+  --peacock-100: rgba(124, 58, 237, 0.14);
+  --peacock-500: #7C3AED;
+  --monsoon-500: #0EA5E9;
+  --spice-500: #EF4444;
+  --marigold-500: #FFB703;
+  --emerald-400: #34D399;
+  --emerald-500: #10B981;
+  --emerald-600: #0C831F;
+  --indigo-500: #7C3AED;
+  --ink-950: #090D14;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 40px -4px rgba(0, 0, 0, 0.65), 0 8px 16px -2px rgba(0, 0, 0, 0.4);
+  --shadow-glow-amber: 0 0 28px rgba(255, 159, 28, 0.25);
+  --shadow-glow-emerald: 0 0 28px rgba(16, 185, 129, 0.22);
+  --shadow-glow-violet: 0 0 28px rgba(124, 58, 237, 0.25);
 }
 
 [data-theme="light"] {
-  --color-bg: #F5F5F7;
-  --color-bg-alt: #E8E8ED;
-  --color-bg-card: rgba(255, 255, 255, 0.88);
+  --color-bg: #F8FAFC;
+  --color-bg-alt: #F1F5F9;
+  --color-bg-card: rgba(255, 255, 255, 0.95);
   --color-bg-card-hover: #FFFFFF;
-  --color-surface: rgba(0, 0, 0, 0.03);
-  --color-surface-hover: rgba(0, 0, 0, 0.06);
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.15);
-  --color-border-glow: rgba(0, 113, 227, 0.2);
+  --color-surface: rgba(0, 0, 0, 0.035);
+  --color-surface-hover: rgba(0, 0, 0, 0.065);
+  --color-border: rgba(0, 0, 0, 0.09);
+  --color-border-hover: rgba(0, 0, 0, 0.16);
+  --color-border-glow: rgba(255, 159, 28, 0.35);
 
-  --color-text-primary: #1D1D1F;
-  --color-text-secondary: #6E6E73;
-  --color-text-muted: #86868B;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
   --color-text-on-dark: #FFFFFF;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 14px 30px -4px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 18px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.12);
 }
 
-/* Apple-Style Minimal Precision Scrollbars */
+/* Quick Commerce Minimal Precision Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -131,9 +154,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 113, 227, 0.5);
+  background: rgba(255, 159, 28, 0.5);
 }

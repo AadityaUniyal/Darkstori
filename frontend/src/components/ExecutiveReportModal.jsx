@@ -41,7 +41,7 @@ Date: ${dateStr}
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#141A24]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0071E3]/20 flex items-center justify-center border border-[#0071E3]/40">
+              <div className="w-8 h-8 rounded-lg bg-[#FF9F1C]/20 flex items-center justify-center border border-[#FF9F1C]/40">
                 <ShieldCheck size={18} className="text-[#38BDF8]" />
               </div>
               <div>
@@ -59,7 +59,7 @@ Date: ${dateStr}
               </button>
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#0071E3] hover:bg-[#0077ED] text-white transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#FF9F1C] hover:bg-[#0077ED] text-white transition-colors"
               >
                 <Printer size={13} /> Print / Export PDF
               </button>

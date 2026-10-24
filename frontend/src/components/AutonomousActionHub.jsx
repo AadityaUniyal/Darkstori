@@ -21,7 +21,7 @@ export default function AutonomousActionHub({ selectedCity = 'Bangalore' }) {
       title: 'Pre-Emptive Monsoon Geofence Contraction',
       category: 'weather',
       icon: CloudRain,
-      color: '#0071E3',
+      color: '#FF9F1C',
       description: 'Rain cell detected arriving in 18 minutes. Contract Koramangala service radius from 2.5km to 1.6km and apply 1.4x rider surge payout.',
       impact: 'Defends 10-minute SLA and prevents 14 rider delays',
       status: 'pending',
@@ -90,7 +90,7 @@ export default function AutonomousActionHub({ selectedCity = 'Bangalore' }) {
       {/* Header with Autopilot Switch */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/5">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-[#0071E3]/20 to-[#38BDF8]/20 text-[#38BDF8] border border-[#0071E3]/30">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-[#FF9F1C]/20 to-[#38BDF8]/20 text-[#38BDF8] border border-[#FF9F1C]/30">
             <Bot size={18} />
           </div>
           <div>
@@ -127,7 +127,7 @@ export default function AutonomousActionHub({ selectedCity = 'Bangalore' }) {
               onClick={() => !autopilotMode && handleToggleAutopilot()}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 autopilotMode
-                  ? 'bg-gradient-to-r from-[#0071E3] to-[#38BDF8] text-white font-semibold shadow-md shadow-[#0071E3]/30'
+                  ? 'bg-gradient-to-r from-[#FF9F1C] to-[#38BDF8] text-white font-semibold shadow-md shadow-[#FF9F1C]/30'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -197,7 +197,7 @@ export default function AutonomousActionHub({ selectedCity = 'Bangalore' }) {
                   <button
                     onClick={() => executeAction(act.id)}
                     disabled={isExecuting}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FF9F1C] hover:bg-[#0077ED] text-white shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isExecuting ? (
                       <>

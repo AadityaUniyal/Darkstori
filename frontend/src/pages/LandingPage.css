@@ -52,7 +52,7 @@
 }
 
 .brand-dot {
-  color: var(--darkstori-500, #0071E3);
+  color: #FF9F1C;
   font-size: 1.5rem;
   font-weight: 900;
 }
@@ -60,11 +60,11 @@
 .brand-pill {
   font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 9999px;
-  background: rgba(0, 113, 227, 0.12);
-  color: var(--darkstori-400, #60A5FA);
-  border: 1px solid rgba(0, 113, 227, 0.28);
+  background: rgba(255, 159, 28, 0.15);
+  color: #FFB703;
+  border: 1px solid rgba(255, 159, 28, 0.35);
   margin-left: 6px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -118,21 +118,21 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(180deg, #0077ED 0%, #0062C4 100%);
+  background: linear-gradient(135deg, #FF9F1C 0%, #FF6B00 100%);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 2px 8px rgba(0, 113, 227, 0.35);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 3px 12px rgba(255, 159, 28, 0.35);
   transition: all 0.2s ease;
 }
 
 .btn-primary-nav:hover {
   transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 4px 14px rgba(0, 113, 227, 0.45);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(255, 159, 28, 0.5);
 }
 
 /* Hero Section */
@@ -175,8 +175,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--darkstori-500, #0071E3);
-  box-shadow: 0 0 10px rgba(0, 113, 227, 0.7);
+  background: #FF9F1C;
+  box-shadow: 0 0 10px rgba(255, 159, 28, 0.8);
   animation: pulse-ring 2s infinite;
 }
 
@@ -239,21 +239,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(180deg, #0077ED 0%, #0062C4 100%);
+  background: linear-gradient(135deg, #FF9F1C 0%, #FF6B00 100%);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   padding: 14px 28px;
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 4px 20px rgba(0, 113, 227, 0.4);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 6px 24px rgba(255, 159, 28, 0.45);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 8px 28px rgba(0, 113, 227, 0.5);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 10px 32px rgba(255, 159, 28, 0.6);
 }
 
 .hero-btn-secondary {
@@ -2573,21 +2573,22 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(180deg, #0071E3 0%, #005BB5 100%);
+  background: linear-gradient(135deg, #FF9F1C 0%, #FF6B00 100%);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   padding: 14px 24px;
   border-radius: 12px;
   font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255, 159, 28, 0.45);
   transition: all 0.2s ease;
   margin-top: 4px;
 }
 
 .form-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #0A84FF 0%, #0071E3 100%);
-  box-shadow: 0 4px 18px rgba(0, 113, 227, 0.5);
+  background: linear-gradient(135deg, #FFB703 0%, #FF8500 100%);
+  box-shadow: 0 6px 24px rgba(255, 159, 28, 0.6);
   transform: translateY(-1px);
 }
 

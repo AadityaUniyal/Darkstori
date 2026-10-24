@@ -4,110 +4,74 @@
 
 @layer base {
   :root {
-    --background: 224 35% 4%; /* #07090E Obsidian Titanium */
-    --foreground: 220 20% 97%;
+    --background: 224 40% 5%; /* #090D14 Dark Store Operations Obsidian */
+    --foreground: 220 20% 98%;
 
-    --card: 222 30% 8%;
-    --card-foreground: 220 20% 97%;
+    --card: 222 35% 8%; /* #0F1522 */
+    --card-foreground: 220 20% 98%;
 
-    --popover: 222 30% 8%;
-    --popover-foreground: 220 20% 97%;
+    --popover: 222 35% 8%;
+    --popover-foreground: 220 20% 98%;
 
-    --primary: 211 100% 45%; /* Darkstori Hyper-Cobalt #0071E3 */
+    --primary: 34 100% 55%; /* #FF9F1C Darkstori Hyper-Volt Amber */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 199 89% 48%; /* Radiant Cyan #0EA5E9 */
+    --secondary: 262 83% 58%; /* #7C3AED Zepto Electric Violet */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 20% 12%;
-    --muted-foreground: 220 10% 60%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 211 100% 45%;
+    --accent: 152 76% 40%; /* #10B981 Fresh Grocery Mint */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 4 90% 58%;
+    --destructive: 0 84% 60%; /* #EF4444 Monsoon Crimson */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 14%;
-    --input: 220 20% 14%;
-    --ring: 211 100% 45%;
+    --border: 220 25% 16%;
+    --input: 220 25% 16%;
+    --ring: 34 100% 55%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
   }
 
   [data-theme="light"] {
-    --background: 240 5% 96%; /* #F5F5F7 Apple Light */
-    --foreground: 240 6% 10%;
+    --background: 210 40% 98%; /* #F8FAFC */
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 6% 10%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 10%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 211 100% 45%; /* Darkstori Cobalt */
+    --primary: 34 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 199 89% 48%;
+    --secondary: 262 83% 58%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 90%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 240 5% 90%;
-    --accent-foreground: 240 6% 10%;
+    --accent: 152 76% 36%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 4 90% 58%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 88%;
-    --input: 240 6% 88%;
-    --ring: 211 100% 45%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 34 100% 50%;
   }
 }
 
 @layer base {
   * {
-    box-sizing: border-box;
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
-  
-  html {
-    scroll-behavior: smooth;
-    width: 100%;
-    overflow-x: hidden;
-  }
-
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    width: 100%;
-    overflow-x: hidden;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
-
-  ::selection {
-    background-color: hsla(var(--primary), 0.3);
-    color: hsl(var(--foreground));
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    letter-spacing: -0.02em;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
