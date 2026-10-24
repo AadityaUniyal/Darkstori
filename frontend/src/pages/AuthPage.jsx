@@ -153,7 +153,7 @@ export default function AuthPage() {
       await api.demoLogin(persona);
       window.location.href = '/cockpit';
     } catch (e) {
-      setErrors({ submit: 'Failed to initialize demo sandbox.' });
+      setErrors({ submit: 'Failed to initialize operator session.' });
     }
   };
 
@@ -199,7 +199,7 @@ export default function AuthPage() {
               onClick={() => { setAuthMode('demo'); setErrors({}); }}
             >
               <Sparkles size={14} className="sparkle-gold" />
-              <span>1-Click Sandbox</span>
+              <span>Operator Profiles</span>
             </button>
           </div>
 
@@ -363,16 +363,16 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* Mode 2: 1-Click Instant Demo Sandbox Mode */}
+          {/* Mode 2: Instant Operator Workspace Profiles */}
           {authMode === 'demo' && (
             <div className="demo-persona-wrapper">
               <div className="demo-header">
                 <div className="demo-badge">
                   <Sparkles size={14} />
-                  <span>INSTANT ACCESS SANDBOX</span>
+                  <span>OPERATOR PROFILES</span>
                 </div>
-                <h2>Select Your Operator Persona</h2>
-                <p>Test drive Darkstori with full pre-seeded telemetry data for 5 Indian focus metros without registering an account.</p>
+                <h2>Select Your Operator Workspace</h2>
+                <p>Enter the dark store operational network across 5 Indian metros with pre-configured role permissions.</p>
               </div>
 
               <div className="personas-list">

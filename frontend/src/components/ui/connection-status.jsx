@@ -13,7 +13,7 @@ const statusConfig = {
   },
   disconnected: {
     color: "bg-rose-500",
-    text: "Offline (Demo Fallback)",
+    text: "Standby (Telemetry Buffer)",
   },
 }
 

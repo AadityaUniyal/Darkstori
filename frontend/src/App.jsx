@@ -26,6 +26,7 @@ import RangoliLoader from './components/RangoliLoader';
 import LiveSocketListener from './components/LiveSocketListener';
 import CommandPalette from './components/CommandPalette';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import ProductTourModal from './components/ProductTourModal';
 import { useRole } from './context/RoleContext';
 import OperationsPulse from './components/OperationsPulse';
 import { AuthProvider } from './context/AuthContext';
@@ -143,6 +144,7 @@ function AppContent() {
       <Navbar />
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <ProductTourModal />
       <OperationsPulse />
       <div className="app-container">
         <Sidebar />

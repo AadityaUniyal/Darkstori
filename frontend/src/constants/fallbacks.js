@@ -298,7 +298,7 @@ export const DEFAULT_EXPANSION_LEDGER = [
     estimated_capex: 1800000,
     status: 'APPROVED',
     predicted_roi: '28.4%',
-    reviewer: 'regional_director@darkstori.demo',
+    reviewer: 'regional_director@darkstori.internal',
     timestamp: '2026-10-21 18:30:00'
   },
   {
