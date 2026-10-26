@@ -57,22 +57,22 @@ export default function DarkStoreDigitalTwin() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold text-white font-display tracking-tight">
-                Neuro-Symbolic Anticipatory Dark Store Brain
+                Digital Twin Scenario Simulator
               </h2>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-[#FF9F1C]/20 to-purple-500/20 text-[#38BDF8] border border-[#FF9F1C]/30 font-bold">
-                GOD'S EYE DIGITAL TWIN
+                SIMULATION ONLY
               </span>
             </div>
             <p className="text-xs text-slate-400 font-body">
-              Hawkes Mutual-Excitation Point Process &times; Locally-Adaptive CQR &times; Autonomous Micro-Fulfillment Actuation
+              Explore a generated picker and basket scenario. This does not use a live customer stream or control a real store.
             </p>
           </div>
         </div>
 
         {/* Status Pill */}
         <div className="flex items-center gap-2 bg-[#141A24] px-3.5 py-1.5 rounded-xl border border-white/10 text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="font-mono text-emerald-400 font-semibold">CLOSED-LOOP ACTUATORS ACTIVE</span>
+          <span className="w-2 h-2 rounded-full bg-amber-300" />
+          <span className="font-mono text-amber-300 font-semibold">NO LIVE ACTUATORS</span>
         </div>
       </div>
 

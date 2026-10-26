@@ -6,10 +6,11 @@ services:
 
   backend:
     environment:
-      - DATABASE_URL=postgresql+asyncpg://darkstori:${POSTGRES_PASSWORD}@postgres:5432/darkstori_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-darkstori}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/darkstori_db
       - ENVIRONMENT=production
       - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Set JWT_SECRET_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - MLFLOW_TRACKING_URI=sqlite:///mlflow.db
     restart: unless-stopped

@@ -13,6 +13,7 @@ import { EmptyState } from '../components/ui/empty-state';
 import { Plus } from 'lucide-react';
 import QuickSetupWizard from '../components/QuickSetupWizard';
 import AddStoreModal from '../components/AddStoreModal';
+import AppleSearchBar from '../components/AppleSearchBar';
 
 function MetricCard({ label, value, sublabel, icon: Icon }) {
   return (
@@ -30,11 +31,11 @@ function MetricCard({ label, value, sublabel, icon: Icon }) {
 }
 
 export default function ExpansionCockpit() {
-  const { selectedCity } = useCity();
+  const { selectedCity, selectLocation } = useCity();
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-  const [capex, setCapex] = useState(1500000);
-  const [storeSize, setStoreSize] = useState(1500);
-  const [routingMins, setRoutingMins] = useState(15);
+  const [capex, setCapex] = useState(null);
+  const [storeSize, setStoreSize] = useState(null);
+  const [routingMins, setRoutingMins] = useState(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [resolvedPoint, setResolvedPoint] = useState(null);
@@ -62,7 +63,7 @@ export default function ExpansionCockpit() {
     staleTime: 120000,
   });
 
-  const { data: ledger = [], isLoading: ledgerLoading, refetch: refetchLedger } = useQuery({
+  const { data: ledger = [], isLoading: ledgerLoading, isError: ledgerError, refetch: refetchLedger } = useQuery({
     queryKey: ['expansion-ledger', selectedCity],
     queryFn: () => api.getExpansionLedger({ city: selectedCity, limit: 10 }),
     staleTime: 30000,
@@ -93,7 +94,7 @@ export default function ExpansionCockpit() {
     mutationFn: (simulationId) => api.approveExpansionDecision(simulationId),
     onSuccess: () => {
       refetchLedger();
-      toast.success('Site approved in Decision Ledger! Ready for provisioning.');
+      toast.success('Scenario approval recorded. No physical store was created or provisioned.');
     },
   });
 
@@ -101,7 +102,7 @@ export default function ExpansionCockpit() {
   const safeLedger = Array.isArray(ledger) ? ledger : [];
   const activeOpportunity = selectedOpportunity || safeOpportunities[0] || null;
   const activeSimulation = activeOpportunity?.simulation;
-  const analysisCenter = locationAnalysis ? [locationAnalysis.lat, locationAnalysis.lng] : [20.0, 77.0];
+  const analysisCenter = locationAnalysis ? [locationAnalysis.lat, locationAnalysis.lng] : undefined;
 
   const mapNeighborhoods = useMemo(
     () =>
@@ -109,6 +110,8 @@ export default function ExpansionCockpit() {
         neighborhood_id: o.neighborhood_id,
         neighborhood_name: o.neighborhood_name,
         city: o.city,
+        lat: o.lat,
+        lng: o.lng,
         opportunity_score: o.opportunity_score,
       })),
     [safeOpportunities]
@@ -118,8 +121,9 @@ export default function ExpansionCockpit() {
     if (!locationQuery.trim()) return;
     try {
       const resolved = await api.resolveLocation(locationQuery.trim());
-      if (resolved && resolved.lat && resolved.lng && resolved.lat !== 0) {
+      if (resolved && Number.isFinite(Number(resolved.lat)) && Number.isFinite(Number(resolved.lng))) {
         setResolvedPoint(resolved);
+        selectLocation?.(resolved);
       } else {
         setResolvedPoint(null);
         toast.error('Could not resolve this location. Try a more specific address or city name.');
@@ -132,27 +136,22 @@ export default function ExpansionCockpit() {
 
   const runSimulation = () => {
     if (!activeOpportunity) return;
+    if (![capex, storeSize, routingMins].every((value) => Number.isFinite(Number(value)) && Number(value) > 0)) {
+      toast.error('Enter capex, store size, and routing limit before running the scenario.');
+      return;
+    }
     simulateMutation.mutate({
       neighborhoodId: activeOpportunity.neighborhood_id,
       payload: { capex, store_size_sqft: storeSize, routing_mins: routingMins },
     });
   };
 
-  const analysisNeighborhoods = locationAnalysis?.coverage?.length
-    ? locationAnalysis.coverage.map((c, idx) => ({
-        neighborhood_id: idx + 1,
-        neighborhood_name: c.pincode,
-        city: c.city,
-        opportunity_score: c.market_potential_score,
-        lat: locationAnalysis.lat,
-        lng: locationAnalysis.lng,
-      }))
-    : mapNeighborhoods;
+  const analysisNeighborhoods = mapNeighborhoods;
 
   const locationSummary = locationAnalysis || resolvedPoint;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'relative', zIndex: 1, minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, position: 'relative', zIndex: 1, minHeight: 'auto', paddingBottom: '4rem', width: '100%' }}>
       <AmbientBackground />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'end' }}>
@@ -161,14 +160,14 @@ export default function ExpansionCockpit() {
             Regional Expansion Cockpit
           </h1>
           <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)', fontSize: '0.94rem' }}>
-            Identify high-potential locations, simulate multi-year store economics, and execute approved launches.
+            Search any mapped place, review recorded placement scores, and run a clearly labeled scenario with your own assumptions.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button
             className="btn-primary"
             onClick={() => setIsAddStoreOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#FF9F1C', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#FF9F1C', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(255, 159, 28, 0.3)' }}
           >
             <Plus size={16} /> Add Dark Store
           </button>
@@ -178,44 +177,55 @@ export default function ExpansionCockpit() {
         </div>
       </div>
 
-      {/* iOS-Style Quick Setup Wizard */}
-      <QuickSetupWizard
-        totalStores={storesList.length}
-        totalBatches={batchesList.length}
-        totalPlaybooks={playbooksList.length}
-      />
+      {/* Show Onboarding Wizard only if network has 0 stores */}
+      {storesList.length === 0 && (
+        <QuickSetupWizard
+          totalStores={storesList.length}
+          totalBatches={batchesList.length}
+          totalPlaybooks={playbooksList.length}
+        />
+      )}
 
-      <div className="glass-card" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 320px' }}>
-          <Search size={16} color="var(--color-text-muted)" />
-          <input
-            className="input-field"
-            value={locationQuery}
-            onChange={(e) => setLocationQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleResolveLocation();
-            }}
-            placeholder="Search any city, neighborhood, pin code, or landmark"
-            style={{ flex: 1 }}
-          />
+      {/* Prominent Apple Cupertino Search & Corridor Analyzer */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 360px' }}>
+            <AppleSearchBar
+              placeholder="Search any Indian city, neighborhood, PIN (e.g. 560034), or landmark corridor..."
+              value={locationQuery}
+              onChange={setLocationQuery}
+              onSubmit={handleResolveLocation}
+              onClear={() => { setLocationQuery(''); setResolvedPoint(null); }}
+              isLoading={isAnalyzing}
+              hotkey="ENTER"
+            />
+          </div>
+          <button
+            className="btn-primary"
+            onClick={handleResolveLocation}
+            disabled={!locationQuery.trim() || isAnalyzing}
+            style={{ background: '#FF9F1C', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '14px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            {isAnalyzing ? 'Resolving...' : 'Analyze Corridor'}
+          </button>
         </div>
-        <button className="btn-secondary" onClick={handleResolveLocation} disabled={!locationQuery.trim()}>
-          {isAnalyzing ? 'Resolving...' : 'Resolve location'}
-        </button>
         {locationSummary && (
-          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {locationAnalysis?.query || resolvedPoint?.display_name || locationQuery}
-            {locationAnalysis?.opportunity_score != null ? ` - Score ${locationAnalysis.opportunity_score}` : ''}
+          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, width: 'fit-content', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <MapPin size={13} color="#FF9F1C" />
+            <span>{locationAnalysis?.query || resolvedPoint?.display_name || locationQuery}</span>
+            {locationAnalysis?.opportunity_score != null && (
+              <span style={{ color: '#38BDF8', fontWeight: 600 }}>• Market Potential: {locationAnalysis.opportunity_score}/100</span>
+            )}
           </div>
         )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <MetricCard label="Shortlisted Sites" value={isLoading ? <Skeleton className="h-7 w-12 rounded inline-block" /> : opportunities.length} sublabel="Live expansion candidates" icon={MapPin} />
+        <MetricCard label="Scored Sites" value={isLoading ? <Skeleton className="h-7 w-12 rounded inline-block" /> : opportunities.length} sublabel="Stored placement records" icon={MapPin} />
         <MetricCard
           label="Avg Opportunity"
-          value={isLoading ? <Skeleton className="h-7 w-16 rounded inline-block" /> : `${opportunities.length ? Math.round(opportunities.reduce((a, b) => a + (b.opportunity_score || 0), 0) / opportunities.length) : 0}/100`}
-          sublabel="Weighted market fit"
+          value={isLoading ? <Skeleton className="h-7 w-16 rounded inline-block" /> : opportunities.length ? `${Math.round(opportunities.reduce((a, b) => a + (b.opportunity_score || 0), 0) / opportunities.length)}/100` : '—'}
+          sublabel="Mean of stored scores"
           icon={BarChart3}
         />
         <MetricCard label="Latest Decisions" value={ledgerLoading ? <Skeleton className="h-7 w-12 rounded inline-block" /> : ledger.length} sublabel="Auditable trail entries" icon={ClipboardList} />
@@ -228,7 +238,7 @@ export default function ExpansionCockpit() {
             <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.15rem' }}>Opportunity Map</h2>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-secondary" onClick={() => setActiveTab('sites')} style={{ opacity: activeTab === 'sites' ? 1 : 0.7 }}>
-                Sites
+                Stored Scores
               </button>
               <button className="btn-secondary" onClick={() => setActiveTab('ledger')} style={{ opacity: activeTab === 'ledger' ? 1 : 0.7 }}>
                 Ledger
@@ -238,32 +248,40 @@ export default function ExpansionCockpit() {
 
           {isLoading ? (
             <Skeleton className="w-full h-[420px]" />
-          ) : isError || opportunities.length === 0 ? (
-            <EmptyState title="No opportunity data yet" description="Seed data or connect live neighborhood data to rank expansion sites." />
           ) : (
             <LazyMapView
               neighborhoods={analysisNeighborhoods}
               height="420px"
               center={analysisCenter}
-              zoom={locationAnalysis ? 11 : 5}
-              liveOrders={locationAnalysis?.stores?.map((s) => ({
+              zoom={locationAnalysis ? 11 : undefined}
+              externalPoints={locationAnalysis?.competitors?.map((s) => ({
                 lat: s.lat,
                 lng: s.lng,
                 platform: s.platform,
                 store_name: s.name,
               })) || []}
               showHeatmap={true}
-              onSelect={(nb) => setSelectedOpportunity(opportunities.find((o) => o.neighborhood_id === nb.neighborhood_id) || opportunities[0])}
+              onSelect={(nb) => {
+                if (nb?.neighborhood_id) {
+                  setSelectedOpportunity(opportunities.find((o) => o.neighborhood_id === nb.neighborhood_id) || null);
+                } else if (Number.isFinite(Number(nb?.lat)) && Number.isFinite(Number(nb?.lng))) {
+                  setResolvedPoint(nb);
+                  selectLocation?.(nb);
+                }
+              }}
             />
           )}
 
+          {isError && activeTab === 'sites' && <div role="alert" style={{ marginTop: 12, color: 'var(--color-text-secondary)' }}>Stored placement scores could not be loaded. Check the API connection and retry.</div>}
           <div style={{ marginTop: 16, display: activeTab === 'sites' ? 'grid' : 'none', gap: 10 }}>
             {isLoading ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-[60px] w-full rounded-2xl" />)}
               </div>
             ) : (
-              safeOpportunities.slice(0, 4).map((opp, idx) => (
+              isError ? null : safeOpportunities.length === 0 ? (
+                <EmptyState title="No scored locations available" description="No sample rankings are generated. Add validated placement records to rank sites; search or tap the map to inspect any location." />
+              ) : safeOpportunities.slice(0, 4).map((opp, idx) => (
                 <button
                   key={`${opp.neighborhood_id}-${idx}`}
                   onClick={() => setSelectedOpportunity(opp)}
@@ -281,7 +299,8 @@ export default function ExpansionCockpit() {
                 >
                   <div>
                     <div style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{opp.neighborhood_name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{opp.city} - PIN {opp.pincode || 'NA'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{opp.city} · PIN {opp.pincode || 'Not recorded'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Stored placement score{opp.scored_at ? ` · ${new Date(opp.scored_at).toLocaleDateString()}` : ''}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#38BDF8' }}>{opp.opportunity_score}</div>
@@ -302,23 +321,23 @@ export default function ExpansionCockpit() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'grid', gap: 8, padding: 12, borderRadius: 14, background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{activeOpportunity.neighborhood_name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                    Demand {activeOpportunity.demand_estimate} - Coverage +{activeOpportunity.coverage_gain_pct}% - Cannibalization {activeOpportunity.cannibalization_risk_pct}%
+                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    Stored score only · demand, coverage impact, and cannibalization are not inferred.
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <label style={{ display: 'grid', gap: 6, fontSize: 12, color: 'var(--color-text-secondary)' }}>
                     Capex
-                    <input className="input-field" type="number" value={capex} onChange={(e) => setCapex(Number(e.target.value))} />
+                    <input className="input-field" type="number" min="1" required placeholder="Enter capex (₹)" value={capex ?? ''} onChange={(e) => setCapex(e.target.value === '' ? null : Number(e.target.value))} />
                   </label>
                   <label style={{ display: 'grid', gap: 6, fontSize: 12, color: 'var(--color-text-secondary)' }}>
                     Store size sqft
-                    <input className="input-field" type="number" value={storeSize} onChange={(e) => setStoreSize(Number(e.target.value))} />
+                    <input className="input-field" type="number" min="1" required placeholder="Enter area (sq ft)" value={storeSize ?? ''} onChange={(e) => setStoreSize(e.target.value === '' ? null : Number(e.target.value))} />
                   </label>
                   <label style={{ display: 'grid', gap: 6, fontSize: 12, color: 'var(--color-text-secondary)' }}>
                     Routing constraint mins
-                    <input className="input-field" type="number" value={routingMins} onChange={(e) => setRoutingMins(Number(e.target.value))} />
+                    <input className="input-field" type="number" min="1" required placeholder="Enter target (minutes)" value={routingMins ?? ''} onChange={(e) => setRoutingMins(e.target.value === '' ? null : Number(e.target.value))} />
                   </label>
                 </div>
 
@@ -344,7 +363,11 @@ export default function ExpansionCockpit() {
                 </button>
 
                 {activeSimulation && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <div role="note" style={{ padding: 10, borderRadius: 10, border: '1px solid rgba(255,159,28,.35)', color: 'var(--color-text-secondary)', fontSize: 12 }}>
+                      Scenario estimate only · heuristic assumptions, not a demand forecast or investment recommendation. Validate every input against your operating data.
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="glass-card" style={{ padding: 14 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>12-month ROI</div>
                       <div style={{ fontSize: 28, fontWeight: 700, color: '#34C759' }}>{activeSimulation.roi_12_months_pct}%</div>
@@ -360,6 +383,7 @@ export default function ExpansionCockpit() {
                     <div className="glass-card" style={{ padding: 14 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Routing</div>
                       <div style={{ fontSize: 28, fontWeight: 700 }}>{Math.round(activeSimulation.routing_mins)} mins</div>
+                    </div>
                     </div>
                   </div>
                 )}
@@ -390,7 +414,7 @@ export default function ExpansionCockpit() {
                         disabled={approveMutation.isPending}
                         style={{ background: '#34C759', color: '#ffffff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}
                       >
-                        Approve site
+                        Approve Scenario
                       </button>
                     </div>
                   </div>
@@ -406,6 +430,8 @@ export default function ExpansionCockpit() {
                 <div style={{ display: 'grid', gap: 10 }}>
                   {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[72px] w-full rounded-2xl" />)}
                 </div>
+              ) : ledgerError ? (
+                <div role="alert" style={{ color: 'var(--color-text-secondary)' }}>Decision ledger unavailable. Check the API connection and retry.</div>
               ) : safeLedger.length === 0 ? (
                 <EmptyState title="Ledger is empty" description="Simulate and approve a site to start building the decision trail." />
               ) : (
@@ -415,16 +441,17 @@ export default function ExpansionCockpit() {
                       <div>
                         <div style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{row.neighborhood_name}</div>
                         <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{row.city} · {row.status}</div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{row.data_mode === 'heuristic_simulation' ? 'Scenario only · heuristic inputs' : 'Recorded source not verified'}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 18, fontWeight: 700 }}>{row.roi_12_months_pct}% ROI</div>
-                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{row.breakeven_months} mo breakeven</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>{row.roi_12_months_pct ?? '—'}% scenario ROI</div>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{row.breakeven_months ?? '—'} mo scenario breakeven</div>
                       </div>
                     </div>
                     <div style={{ marginTop: 10, display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                      <span>Demand {row.demand_estimate}</span>
-                      <span>Coverage +{row.coverage_gain_pct}%</span>
-                      <span>Cannibalization {row.cannibalization_risk_pct}%</span>
+                      <span>Scenario demand {row.demand_estimate ?? '—'}</span>
+                      <span>Coverage estimate {row.coverage_gain_pct == null ? '—' : `+${row.coverage_gain_pct}%`}</span>
+                      <span>Cannibalization estimate {row.cannibalization_risk_pct == null ? '—' : `${row.cannibalization_risk_pct}%`}</span>
                       <span>Capex ₹{Number(row.capex || 0).toLocaleString('en-IN')}</span>
                     </div>
                     <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
@@ -444,7 +471,7 @@ export default function ExpansionCockpit() {
                           gap: '4px'
                         }}
                       >
-                        <Plus size={12} /> Commission to Active Fleet
+                        <Plus size={12} /> Open store setup
                       </button>
                     </div>
                   </div>

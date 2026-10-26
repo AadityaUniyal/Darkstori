@@ -1,20 +1,34 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Leaf, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
+import { useCity } from '../context/CityContext';
 
-export default function AddBatchModal({ isOpen, onClose }) {
+export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
   const queryClient = useQueryClient();
+  const { selectedCity } = useCity();
 
   const [productName, setProductName] = useState('');
   const [category, setCategory] = useState('Vegetables');
   const [basePrice, setBasePrice] = useState(40.0);
   const [quantity, setQuantity] = useState(50);
   const [shelfLifeHours, setShelfLifeHours] = useState(36);
-  const [decayRate, setDecayRate] = useState(0.02);
+  const decayRate = 0.02;
+  const [storeId, setStoreId] = useState('');
   const [error, setError] = useState(null);
+  const { data: stores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ['stores-list', selectedCity, 'physical-stores-only'],
+    queryFn: () => api.getStores({ city: selectedCity, include_competitors: false }),
+    enabled: isOpen && Boolean(selectedCity),
+  });
+
+  useEffect(() => {
+    if (!stores.some((store) => String(store.id) === storeId)) {
+      setStoreId(stores[0] ? String(stores[0].id) : '');
+    }
+  }, [stores, storeId]);
 
   const createBatchMutation = useMutation({
     mutationFn: async (payload) => {
@@ -24,6 +38,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
       toast.success(`Product Batch "${data.product_name || productName}" added to inventory!`);
       queryClient.invalidateQueries({ queryKey: ['resilience-batches'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      onSuccess?.(data);
       onClose();
     },
     onError: (err) => {
@@ -38,10 +53,15 @@ export default function AddBatchModal({ isOpen, onClose }) {
       setError('Product SKU name is required.');
       return;
     }
+    if (!storeId) {
+      setError('Choose a store before adding this batch.');
+      return;
+    }
 
     createBatchMutation.mutate({
       product_name: productName.trim(),
       category,
+      store_id: Number(storeId),
       base_price: Number(basePrice),
       quantity: Number(quantity),
       shelf_life_hours: Number(shelfLifeHours),
@@ -86,6 +106,23 @@ export default function AddBatchModal({ isOpen, onClose }) {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
+          <div>
+            <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Dark store · {selectedCity}</label>
+            {storesLoading ? (
+              <div className="rounded-xl border border-white/10 bg-[#141A24] px-3.5 py-2.5 text-xs text-[#86868B]">Loading stores…</div>
+            ) : stores.length === 0 ? (
+              <p className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-3.5 py-2.5 text-xs leading-relaxed text-amber-200/80">There are no connected stores in {selectedCity}. Add a store before recording inventory.</p>
+            ) : (
+              <select
+                value={storeId}
+                onChange={(event) => setStoreId(event.target.value)}
+                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                required
+              >
+                {stores.map((store) => <option key={store.id} value={store.id}>{store.store_name || `Store ${store.id}`}</option>)}
+              </select>
+            )}
+          </div>
           <div>
             <label className="block text-xs font-semibold text-[#86868B] mb-1.5">Product SKU / Produce Name</label>
             <input
@@ -162,7 +199,7 @@ export default function AddBatchModal({ isOpen, onClose }) {
             </button>
             <button
               type="submit"
-              disabled={createBatchMutation.isPending}
+              disabled={createBatchMutation.isPending || storesLoading || stores.length === 0}
               className="px-5 py-2 rounded-xl bg-[#FF9F1C] text-white font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
             >
               {createBatchMutation.isPending ? (

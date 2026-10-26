@@ -13,6 +13,7 @@ from backend.api.routes.cannibalization import (
     analyze_cannibalization,
 )
 from backend.database.connection import AsyncSessionLocal, init_db
+from backend.database.models.models import DarkStore
 
 
 class TestHaversineDistance:
@@ -107,11 +108,23 @@ class TestCannibalizationAnalysis:
             req = CannibalizationRequest(
                 lat=12.9716,
                 lng=77.5946,
-                city="Bangalore",
+                city="Unit Test Cannibalization",
                 radius_km=3.0,
                 proposed_sqft=2000,
                 avg_order_value=350.0,
             )
+            session.add(DarkStore(
+                store_name="Recorded test store",
+                city=req.city,
+                latitude=req.lat + 0.001,
+                longitude=req.lng,
+                storage_capacity_sqft=1500,
+                daily_order_capacity=120,
+                estimated_daily_orders=120,
+                is_active=True,
+                organization_id=None,
+            ))
+            await session.commit()
             payload = {"sub": "unit_test_user", "role": "admin"}
             response = await analyze_cannibalization(req=req, db=session, payload=payload)
 

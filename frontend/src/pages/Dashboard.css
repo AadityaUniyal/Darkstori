@@ -1,10 +1,12 @@
 .dashboard {
-  min-height: 100vh;
+  min-height: auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
   position: relative;
   z-index: 1;
+  padding-bottom: 4rem;
 }
 
 .dash-error {
@@ -424,13 +426,14 @@
    ========================================================================= */
 
 .dashboard-studio {
-  min-height: 100vh;
+  min-height: auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 2rem;
   position: relative;
   z-index: 1;
-  padding-bottom: 3rem;
+  padding-bottom: 5rem;
 }
 
 /* Studio Master Control Topbar */
@@ -624,16 +627,18 @@
   border-radius: 9999px;
 }
 
-/* Command Studio Workspace Grid (65% / 35%) */
+/* Command Studio Workspace Grid (Responsive 1.6fr / 1fr with natural wrapping) */
 .studio-workspace-grid {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.75rem;
+  align-items: start;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
   .studio-workspace-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 }
 
@@ -652,7 +657,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
-  min-height: 620px;
+  min-height: 560px;
 }
 
 .studio-stage-nav {

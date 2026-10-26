@@ -1,5 +1,3 @@
-import base64
-import os
 from cryptography.fernet import Fernet
 from backend.core.config import settings
 from backend.core.logger import logger
@@ -7,25 +5,17 @@ from backend.core.logger import logger
 def _get_fernet_key() -> bytes:
     key_str = getattr(settings, "ENCRYPTION_KEY", None)
     if key_str:
-        # Ensure it's exactly 32 url-safe base-64-encoded bytes
         try:
-            # check if it's already a valid base64 token
-            base64.urlsafe_b64decode(key_str)
-            return key_str.encode()
-        except Exception:
-            # If not properly encoded, just pad and encode
-            padded = key_str.ljust(32)[:32].encode()
-            return base64.urlsafe_b64encode(padded)
+            key = key_str.encode("ascii")
+            Fernet(key)
+            return key
+        except (UnicodeEncodeError, ValueError) as exc:
+            raise RuntimeError("ENCRYPTION_KEY must be a valid Fernet key") from exc
     
-    # Fallback for dev if not provided (NOT for production)
-    if getattr(settings, 'ENVIRONMENT', 'development') == 'production':
-        raise RuntimeError(
-            "CRITICAL: ENCRYPTION_KEY must be set in production! "
-            "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
-        )
-    logger.warning("No ENCRYPTION_KEY found in settings. Using a deterministic dev fallback key. DO NOT USE IN PRODUCTION.")
-    fallback = b"darkstore_fallback_secret_key___"
-    return base64.urlsafe_b64encode(fallback)
+    raise RuntimeError(
+        "ENCRYPTION_KEY must be configured. Generate one with: "
+        "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+    )
 
 fernet = Fernet(_get_fernet_key())
 

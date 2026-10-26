@@ -12,12 +12,11 @@ import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import AddBatchModal from '../components/AddBatchModal';
 import InterHubTransferCard from '../components/InterHubTransferCard';
-import { FALLBACK_RESILIENCE_ALERTS } from '../constants/fallbacks';
 
 export default function ResilienceCockpit() {
   const queryClient = useQueryClient();
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
-  const [alerts, setAlerts] = useState(FALLBACK_RESILIENCE_ALERTS);
+  const [alerts, setAlerts] = useState([]);
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
@@ -28,14 +27,14 @@ export default function ResilienceCockpit() {
 
 
   // Fetch competitive moves & SLA metrics via React Query
-  const { data: compMoves, isLoading: compLoading, refetch: refetchCompMoves } = useQuery({
+  const { data: compMoves, isLoading: compLoading, isError: compError, refetch: refetchCompMoves } = useQuery({
     queryKey: ['resilience-competitive-moves'],
     queryFn: () => api.getCompetitiveMoves(),
     staleTime: 30000,
     refetchInterval: refreshInterval * 1000,
   });
 
-  const { data: slaMetrics, isLoading: slaLoading, refetch: refetchSlaMetrics } = useQuery({
+  const { data: slaMetrics, isLoading: slaLoading, isError: slaError, refetch: refetchSlaMetrics } = useQuery({
     queryKey: ['resilience-sla-metrics'],
     queryFn: () => api.getSLAMetrics(),
     staleTime: 30000,
@@ -66,13 +65,14 @@ export default function ResilienceCockpit() {
   // Populate alerts when real API data arrives
   useEffect(() => {
     const fetchedAlerts = [];
-    if (compMoves?.moves && Array.isArray(compMoves.moves)) {
-      compMoves.moves.forEach((move, idx) => {
+    const moveRows = Array.isArray(compMoves) ? compMoves : compMoves?.moves || [];
+    if (Array.isArray(moveRows)) {
+      moveRows.forEach((move, idx) => {
         fetchedAlerts.push({
           id: `ALT-COMP-${move.move_id || idx + 1}`,
           title: `Competitor Move: ${move.platform} (${move.move_type})`,
           description: `${move.description} (City: ${move.city})`,
-          severity: move.impact_level || 'MEDIUM',
+          severity: 'LOW',
           timestamp: new Date().toLocaleTimeString(),
           category: 'competitive',
         });
@@ -90,9 +90,7 @@ export default function ResilienceCockpit() {
         });
       });
     }
-    if (fetchedAlerts.length > 0) {
-      setAlerts(fetchedAlerts);
-    }
+    setAlerts(fetchedAlerts);
   }, [compMoves, slaMetrics]);
 
   // Listen to darkstori:notification window events
@@ -122,17 +120,20 @@ export default function ResilienceCockpit() {
   };
 
   const getSystemStatus = () => {
-    const hasHigh = alerts.some((a) => a.severity === 'HIGH');
-    const hasMedium = alerts.some((a) => a.severity === 'MEDIUM');
-    if (hasHigh) return { text: 'DEGRADED', color: 'var(--spice-500)', icon: <AlertCircle size={32} /> };
-    if (hasMedium) return { text: 'WARNING', color: 'var(--marigold-500)', icon: <AlertTriangle size={32} /> };
-    return { text: 'OPERATIONAL', color: 'var(--monsoon-500)', icon: <CheckCircle size={32} /> };
+    if (compError || slaError) return { text: 'DATA UNAVAILABLE', color: 'var(--marigold-500)', icon: <AlertCircle size={32} /> };
+    if (isLoading) return { text: 'CHECKING', color: 'var(--color-text-muted)', icon: <RefreshCw size={32} /> };
+    const hasHigh = alerts.some((alert) => alert.category === 'sla' && alert.severity === 'HIGH');
+    const hasMedium = alerts.some((alert) => alert.category === 'sla' && alert.severity === 'MEDIUM');
+    if (hasHigh) return { text: 'SLA ALERTS', color: 'var(--spice-500)', icon: <AlertCircle size={32} /> };
+    if (hasMedium) return { text: 'SLA WATCH', color: 'var(--marigold-500)', icon: <AlertTriangle size={32} /> };
+    if (!Array.isArray(slaMetrics) && !Array.isArray(compMoves)) return { text: 'NO DATA', color: 'var(--color-text-muted)', icon: <AlertCircle size={32} /> };
+    return { text: 'NO RECORDED SLA ALERTS', color: 'var(--peacock-500)', icon: <CheckCircle size={32} /> };
   };
 
   const status = getSystemStatus();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minHeight: 'auto', paddingBottom: '4rem', width: '100%', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}
@@ -171,7 +172,7 @@ export default function ResilienceCockpit() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
-            Overall System Health
+            Telemetry status
           </span>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 700, color: status.color, lineHeight: '1.2' }}>
             {status.text}
@@ -193,7 +194,7 @@ export default function ResilienceCockpit() {
           ) : alerts.length === 0 ? (
             <EmptyState
               title="No active operations alerts"
-              description="All dark store operations and SLA metrics are operating within normal parameters."
+              description="No active alert records are available for this city and time window. This does not establish that operations are within SLA."
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

@@ -179,6 +179,22 @@ async def verify_admin(payload: Dict = Depends(verify_token)) -> Dict:
     return payload
 
 
+def require_roles(*allowed_roles: str):
+    """Build a server-side role dependency for protected write operations."""
+    allowed = {role.strip().lower() for role in allowed_roles}
+
+    async def role_guard(payload: Dict = Depends(verify_token)) -> Dict:
+        role = str(payload.get("role") or "").strip().lower()
+        if role not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account role cannot perform this action",
+            )
+        return payload
+
+    return role_guard
+
+
 def generate_api_key() -> Tuple[str, str, str]:
     """Generate API key. Returns (full_key, prefix, hashed_key)."""
     full_key = f"ds_{secrets.token_urlsafe(32)}"

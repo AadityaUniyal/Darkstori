@@ -116,7 +116,7 @@ export default function LocalEvents() {
   };
 
   return (
-    <div style={{ padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minHeight: 'auto', paddingBottom: '4rem', width: '100%' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>

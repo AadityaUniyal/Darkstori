@@ -1,8 +1,4 @@
-"""FastAPI Backend Application - Main Entry Point.
-
-Darkstori — Hyperlocal Delivery Intelligence Platform
-Focused on 5 key Indian cities: Bangalore, Delhi, Mumbai, Hyderabad, Pune
-"""
+"""Darkstori API application entry point."""
 
 import os
 from backend.api.routes import (
@@ -28,6 +24,8 @@ from backend.api.routes import (
     expansion,
     geo,
     autonomous_grid,
+    decision_loop,
+    ingestion,
 )
 import asyncio
 import socketio
@@ -72,16 +70,6 @@ async def lifespan(app: FastAPI):
             raise RuntimeError(
                 "CRITICAL: DEBUG=True is not allowed in production! Set DEBUG=False in .env"
             )
-        if "change-in-production" in settings.JWT_SECRET_KEY.lower():
-            logger.warning("JWT_SECRET_KEY using development default")
-        if not settings.ENCRYPTION_KEY or "your-32-byte" in settings.ENCRYPTION_KEY:
-            logger.warning("ENCRYPTION_KEY not configured for production; using generated fallback")
-        for origin in settings.ALLOWED_ORIGINS:
-            if "localhost" in origin:
-                logger.warning(
-                    f"ALLOWED_ORIGINS contains localhost origin '{origin}' — "
-                    "remove it for production security"
-                )
         logger.info("[OK] Production configuration validated")
 
     # Initialize database
@@ -89,7 +77,7 @@ async def lifespan(app: FastAPI):
     logger.info("[OK] Database connected")
 
     # Auto-seed baseline data if empty (e.g., fresh SQLite development environment)
-    if settings.ENVIRONMENT != "production":
+    if settings.ENVIRONMENT == "development" and settings.SEED_DEMO_DATA:
         try:
             from backend.database.connection import AsyncSessionLocal
             from backend.database.models.models import DarkStore
@@ -171,7 +159,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("MLflow tracking disabled")
 
-    logger.info("[OK] Darkstori API ready — serving 5 focus cities")
+    logger.info("[OK] Darkstori API ready — configured markets: %s", len(settings.FOCUS_CITIES))
 
     yield
 
@@ -222,12 +210,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Darkstori — Hyperlocal Delivery Intelligence",
     description=(
-        "Prescriptive analytics for dark store operators. "
-        "Deep neighborhood intelligence for 5 key Indian cities: "
-        "Bangalore, Delhi, Mumbai, Hyderabad, Pune."
+        "Decision support for dark-store operators. Market coverage depends on "
+        "configured operating data and geospatial providers."
     ),
     version="3.0.0",
     docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
@@ -265,6 +253,9 @@ async def tenant_scoping_middleware(request, call_next):
         try:
             token = auth_header.split(" ")[1]
             payload = decode_token(token)
+            # A valid token without a tenant belongs to the shared, unassigned
+            # demo workspace and must not see organization-owned records.
+            tenant_id = 0
             # Support both org_id and organization_id claims
             oid = payload.get("org_id") or payload.get("organization_id")
             if oid:
@@ -313,11 +304,13 @@ async def leave_room(sid, data):
 
 
 @app.get("/health/live", tags=["System"])
+@app.get("/api/health/live", tags=["System"])
 async def liveness_check():
     """Kubernetes-style liveness check."""
     return {"status": "alive"}
 
 @app.get("/health/ready", tags=["System"])
+@app.get("/api/health/ready", tags=["System"])
 async def readiness_check():
     """Enhanced readiness check endpoint with component status."""
     health_status = {
@@ -410,6 +403,12 @@ async def root():
     }
 
 
+@app.get("/openapi.json", include_in_schema=False)
+async def openapi_json():
+    """Compatibility endpoint for OpenAPI schema at root."""
+    return app.openapi()
+
+
 # ── Core Routes ────────────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(stores.router, prefix="/api/v1/stores", tags=["Stores"])
@@ -429,6 +428,8 @@ app.include_router(analytics_advanced.router, prefix="/api/v1/dashboard", tags=[
 app.include_router(analytics_heatmap.router, prefix="/api/v1/analytics", tags=["Heatmap Analytics"])
 app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
 app.include_router(autonomous_grid.router, prefix="/api/v1/autonomous-grid", tags=["Autonomous Grid and War Room"])
+app.include_router(ingestion.router, prefix='/api/v1/ingestion', tags=['Operational Ingestion'])
+app.include_router(decision_loop.router, prefix="/api/v1/decision-loop", tags=["Operator Decision Loop"])
 app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
 app.include_router(economics.router, prefix="/api/v1/economics", tags=["Unit Economics"])
 app.include_router(events.router, prefix="/api/v1/events", tags=["Local Events"])
@@ -447,7 +448,10 @@ app.include_router(seed_data.router, prefix="/api/v1", tags=["Seed Data"])
 # Rate limiting middleware — applies to all /api routes
 @app.middleware("http")
 async def rate_limit_middleware(request, call_next):
-    if request.url.path.startswith("/api/"):
+    # Test traffic runs against an isolated in-memory database and often makes
+    # hundreds of requests in seconds. Keep the production limiter enabled,
+    # while avoiding cross-test state leaking into unrelated test cases.
+    if request.url.path.startswith("/api/") and settings.ENVIRONMENT.lower() != "testing":
         try:
             await rate_limit_dependency(request)
         except HTTPException:

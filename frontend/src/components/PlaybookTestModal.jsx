@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Zap } from 'lucide-react';
+import { X, Play, CheckCircle2, AlertTriangle, RefreshCw, Zap } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
 
 export default function PlaybookTestModal({ isOpen, onClose, playbook }) {
-  if (!isOpen || !playbook) return null;
 
   const defaultSampleEvent = {
     competitor_store_opened: {
@@ -35,7 +34,7 @@ export default function PlaybookTestModal({ isOpen, onClose, playbook }) {
   };
 
   const initialPayload = JSON.stringify(
-    defaultSampleEvent[playbook.trigger_type] || {
+    defaultSampleEvent[playbook?.trigger_type] || {
       city: 'Bangalore',
       value: 100,
       timestamp: new Date().toISOString()
@@ -48,11 +47,13 @@ export default function PlaybookTestModal({ isOpen, onClose, playbook }) {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
 
+  if (!isOpen || !playbook) return null;
+
   const handleRunTest = async () => {
     let parsedEvent;
     try {
       parsedEvent = JSON.parse(eventJson);
-    } catch (err) {
+    } catch {
       toast.error('Invalid JSON syntax in test event');
       return;
     }
@@ -70,18 +71,6 @@ export default function PlaybookTestModal({ isOpen, onClose, playbook }) {
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Playbook dry-run execution failed');
-      // Simulated mock fallback
-      setResult({
-        playbook_id: playbook.id,
-        dry_run: true,
-        conditions_met: true,
-        action_type: playbook.action_type || 'send_alert',
-        action_executed: true,
-        simulated_output: {
-          status: 'success',
-          message: `Simulated trigger for ${playbook.name} succeeded. Policy dispatch approved.`
-        }
-      });
     } finally {
       setTesting(false);
     }

@@ -1,6 +1,8 @@
 import os
 import sys
+import secrets
 from pathlib import Path
+from cryptography.fernet import Fernet
 
 # Add project root to sys.path
 PROJECT_ROOT = str(Path(__file__).parent.parent.parent)
@@ -9,6 +11,10 @@ if PROJECT_ROOT not in sys.path:
 
 os.environ["MLFLOW_ENABLE_TRACKING"] = "False"
 os.environ["ENVIRONMENT"] = "testing"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["JWT_SECRET_KEY"] = secrets.token_urlsafe(48)
+os.environ["ENCRYPTION_KEY"] = Fernet.generate_key().decode()
+os.environ["SEED_DEMO_DATA"] = "false"
 
 import pytest
 from fastapi.testclient import TestClient

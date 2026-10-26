@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, BackgroundTasks, status, Request
+from fastapi import APIRouter, Depends, BackgroundTasks, status, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
@@ -81,20 +81,8 @@ async def list_models(
             ) for m in models
         ]
     except Exception as e:
-        logger.warning(f"MLflow registry unavailable or empty, returning local cache model: {e}")
-        # Fallback list for offline mode marked clearly
-        return [
-            ModelListResponse(
-                name="demand_forecasting_model",
-                creation_timestamp="2026-06-01T00:00:00Z", # static timestamp instead of datetime.now()
-                last_updated_timestamp="2026-06-15T00:00:00Z",
-                description="Hyperlocal demand forecasting ensemble model (Simulated Local Fallback).",
-                production_version="3.0.0",
-                staging_version="3.1.0-rc",
-                latest_version="3.1.0",
-                is_fallback=True
-            )
-        ]
+        logger.warning("MLflow registry unavailable or empty: %s", e)
+        raise HTTPException(status_code=503, detail="No registered model metadata is available") from e
 
 
 @router.get("/model/info", response_model=ModelInfoResponse)
@@ -112,20 +100,7 @@ async def get_model_info(
         return ModelInfoResponse(**info, is_fallback=False)
     except Exception as e:
         logger.warning(f"Could not retrieve model details from MLflow: {e}")
-        # Fallback details for offline mode marked clearly
-        return ModelInfoResponse(
-            name=model_name,
-            version="3.0.0",
-            stage=stage,
-            description="Ensemble regressor combining XGBoost, GradientBoosting, and RandomForest (Simulated Local Fallback).",
-            creation_timestamp="2026-06-01T00:00:00Z",
-            last_updated_timestamp="2026-06-15T00:00:00Z",
-            run_id="local-fallback-run-uuid-001",
-            source="./models/production",
-            tags={"framework": "scikit-learn/xgboost", "focus": "seasonality"},
-            status="READY",
-            is_fallback=True
-        )
+        raise HTTPException(status_code=503, detail="Model metadata is unavailable") from e
 
 
 @router.post("/train", status_code=status.HTTP_202_ACCEPTED)

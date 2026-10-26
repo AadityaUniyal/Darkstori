@@ -8,7 +8,8 @@ import LazyMapView from '../components/LazyMapView';
 import { useCity } from '../context/CityContext';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_COVERAGE_GAPS, FALLBACK_ORDER_TRENDS } from '../constants/fallbacks';
+import AppleSearchBar from '../components/AppleSearchBar';
+import { toast } from 'sonner';
 import './Analytics.css';
 
 export default function Analytics() {
@@ -16,44 +17,69 @@ export default function Analytics() {
   const [pinSearch, setPinSearch] = useState('');
   const [dateRange, setDateRange] = useState('30d');
   const [selectedPin, setSelectedPin] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Query coverage gaps data from API
-  const { data: coverageData, isLoading } = useQuery({
+  const { data: coverageData, isLoading, isError: coverageError } = useQuery({
     queryKey: ['coverage-gaps', selectedCity],
     queryFn: () => api.getCoverageGaps({ city: selectedCity }),
     staleTime: 60000,
   });
 
   // Query order trends for coverage trend chart
-  const { data: trendData, isLoading: trendLoading } = useQuery({
+  const { data: trendData, isLoading: trendLoading, isError: trendError } = useQuery({
     queryKey: ['order-trends', selectedCity, dateRange],
     queryFn: () => api.getOrderTrends({ city: selectedCity, days: dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30 }),
     staleTime: 60000,
   });
 
-  const gaps = coverageData && coverageData.length > 0 ? coverageData : FALLBACK_COVERAGE_GAPS;
+  const gaps = Array.isArray(coverageData) ? coverageData : [];
+  const chartData = Array.isArray(trendData) ? trendData : [];
 
   // Filter based on PIN search
-  const filteredGaps = gaps.filter(g => g.pincode.includes(pinSearch));
+  const filteredGaps = gaps.filter((gap) => String(gap.pincode || '').includes(pinSearch));
 
   // Sort by coverage score ascending (worst covered first)
   const rankedGaps = [...filteredGaps].sort((a, b) => a.coverage_score - b.coverage_score);
 
   // Map to format required by MapView
-  const mapOpportunityZones = rankedGaps.map((g, idx) => ({
-    centroid_lat: 12.9716 + (idx % 2 === 0 ? 0.025 : -0.025) * Math.sin(idx + 1),
-    centroid_lng: 77.5946 + (idx % 2 === 0 ? -0.025 : 0.025) * Math.cos(idx + 1),
-    opportunity_score: (100 - g.coverage_score), // Inverted: low coverage = high opportunity / gap
-    zone_type: g.coverage_score < 40 ? 'saturated' : g.coverage_score < 75 ? 'growth' : 'greenfield',
-    label: `PIN ${g.pincode}`
-  }));
+  const mapOpportunityZones = rankedGaps.map((gap) => {
+    const lat = gap.latitude ?? gap.centroid_lat;
+    const lng = gap.longitude ?? gap.centroid_lng;
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
+    return {
+      centroid_lat: Number(lat),
+      centroid_lng: Number(lng),
+      opportunity_score: 100 - Number(gap.coverage_score || 0),
+      zone_type: gap.coverage_score < 40 ? 'saturated' : gap.coverage_score < 75 ? 'growth' : 'greenfield',
+      city: gap.city || selectedCity,
+      label: `PIN ${gap.pincode}`,
+    };
+  }).filter(Boolean);
 
   const handleSelectPin = (pinData) => {
     setSelectedPin(pinData);
   };
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await api.exportNeighborhoodsCSV(selectedCity || null);
+      toast.success('Neighborhood data exported.');
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Could not export neighborhood data.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="ana-page">
+      {(coverageError || trendError) && (
+        <div role="status" className="rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-4 py-3 text-xs leading-relaxed text-amber-100/80">
+          Connected analytics are currently unavailable. No sample metrics are substituted for operating data.
+        </div>
+      )}
       {/* Sticky Filter Bar */}
       <div className="ana-filter-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -70,14 +96,13 @@ export default function Analytics() {
           </select>
         </div>
 
-        <div className="ana-search-wrap">
-          <Search size={16} className="search-icon" />
-          <input
-            type="text"
+        <div style={{ flex: '0 1 240px' }}>
+          <AppleSearchBar
             placeholder="Search PIN Code..."
             value={pinSearch}
-            onChange={(e) => setPinSearch(e.target.value)}
-            style={{ fontFamily: 'var(--font-mono)' }}
+            onChange={setPinSearch}
+            onClear={() => setPinSearch('')}
+            size="sm"
           />
         </div>
 
@@ -93,8 +118,8 @@ export default function Analytics() {
           </select>
         </div>
 
-        <button className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Download size={14} /> Export CSV
+        <button onClick={handleExport} disabled={isExporting} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Download size={14} /> {isExporting ? 'Exporting…' : 'Export CSV'}
         </button>
       </div>
 
@@ -187,8 +212,9 @@ export default function Analytics() {
           <Skeleton className="h-[220px] w-full rounded-lg" />
         ) : (
           <div style={{ width: '100%', height: '220px', marginTop: '16px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData && trendData.length > 0 ? trendData : FALLBACK_ORDER_TRENDS}>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="coverageGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--peacock-500)" stopOpacity={0.4} />
@@ -203,7 +229,10 @@ export default function Analytics() {
                 />
                 <Area type="monotone" dataKey="orders" stroke="var(--peacock-500)" strokeWidth={2} fillOpacity={1} fill="url(#coverageGradient)" />
               </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState title="No order trend data" description="Daily order history will appear here when connected order records are available." />
+            )}
           </div>
         )}
       </div>

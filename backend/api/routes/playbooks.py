@@ -423,11 +423,11 @@ async def get_playbook_stats(
     ).scalar() or 0
 
     return {
-        "total_playbooks": total_pb or 3,
-        "active_playbooks": active_pb or 2,
-        "total_executions": total_exec or 47,
-        "successful_executions": success_exec or 42,
+        "total_playbooks": total_pb,
+        "active_playbooks": active_pb,
+        "total_executions": total_exec,
+        "successful_executions": success_exec,
         "success_rate": round(
-            (success_exec / total_exec * 100) if total_exec else 89.4, 1
+            (success_exec / total_exec * 100) if total_exec else 0.0, 1
         ),
     }

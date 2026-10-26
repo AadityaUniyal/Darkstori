@@ -179,7 +179,7 @@ export default function GodsEyeWarRoom() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>
-                God's Eye Autonomous Grid Control
+                God&apos;s Eye Autonomous Grid Control
               </h2>
               <span style={{
                 background: 'rgba(168, 85, 247, 0.18)',

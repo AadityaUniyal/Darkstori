@@ -9,12 +9,15 @@ if root_dir not in sys.path:
 # Serverless environment indicator
 os.environ["VERCEL"] = "1"
 os.environ.setdefault("ENVIRONMENT", "production")
-os.environ.setdefault(
-    "DATABASE_URL",
-    "postgresql://neondb_owner:npg_roH2CA1qBcIU@ep-orange-field-amzn4w4x-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-)
-os.environ.setdefault("JWT_SECRET_KEY", "darkstori-super-secure-production-jwt-token-key-2026")
-os.environ.setdefault("ENCRYPTION_KEY", "OwB5qP-mX_xtbau7IQEGM1SxAdbEJQierX8dDBovdnc=")
+
+# Production credentials must be configured in the Vercel project environment.
+# Never embed database, signing, or encryption secrets in a public source file.
+required_settings = ("DATABASE_URL", "JWT_SECRET_KEY", "ENCRYPTION_KEY")
+missing_settings = [name for name in required_settings if not os.environ.get(name)]
+if missing_settings:
+    raise RuntimeError(
+        "Missing required Vercel environment variables: " + ", ".join(missing_settings)
+    )
 
 from backend.app import app
 

@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Truck, Navigation, Leaf, Percent, RefreshCw, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { Truck, Leaf, RefreshCw, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 import { useCity } from '../context/CityContext';
 import { toast } from 'sonner';
@@ -9,9 +9,9 @@ export default function VrpDispatchCard({ storeId = null }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [ordersCount, setOrdersCount] = useState(8);
-  const [dispatchedBatches, setDispatchedBatches] = useState({});
 
-  const runVrpOptimization = async () => {
+  const runVrpOptimization = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const res = await api.getBatchDispatch({
@@ -21,17 +21,17 @@ export default function VrpDispatchCard({ storeId = null }) {
         sample_order_count: ordersCount,
       });
       setData(res);
-      toast.success('VRP Batching calculated: optimal multi-stop routes generated');
-    } catch (e) {
+      toast.success('Dispatch simulation calculated');
+    } catch {
       toast.error('Failed to run dispatch optimization');
     } finally {
       setLoading(false);
     }
-  };
+  }, [storeId, currentCity, ordersCount]);
 
   useEffect(() => {
-    runVrpOptimization();
-  }, [storeId, currentCity, ordersCount]);
+    if (storeId) runVrpOptimization();
+  }, [runVrpOptimization, storeId]);
 
   const metrics = data?.vrp_metrics;
 
@@ -45,7 +45,7 @@ export default function VrpDispatchCard({ storeId = null }) {
           </div>
           <div>
             <h3 className="font-semibold text-sm text-foreground">VRP Dispatch & Multi-Drop Batching</h3>
-            <p className="text-xs text-muted-foreground">{data?.store_name || 'Hub Dispatch Matrix'} · Clarke-Wright Savings Engine</p>
+            <p className="text-xs text-muted-foreground">{data?.store_name || 'Hub Dispatch Matrix'} · Clarke-Wright Savings Engine · {data?.data_mode === 'synthetic_simulation' ? 'Simulation only' : 'Waiting for run'}</p>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export default function VrpDispatchCard({ storeId = null }) {
           </select>
           <button
             onClick={runVrpOptimization}
-            disabled={loading}
+            disabled={loading || !storeId}
             className="p-1.5 rounded-lg bg-secondary hover:bg-accent text-foreground transition-colors"
             title="Recalculate VRP Routes"
           >
@@ -70,6 +70,8 @@ export default function VrpDispatchCard({ storeId = null }) {
           </button>
         </div>
       </div>
+
+      {!storeId && <div className="py-8 text-center text-sm text-muted-foreground">Add an active store with coordinates to run a route simulation.</div>}
 
       {/* High-level savings metrics */}
       <div className="grid grid-cols-4 gap-2.5 mb-4">
@@ -140,26 +142,8 @@ export default function VrpDispatchCard({ storeId = null }) {
               ))}
             </div>
 
-            {/* Operational Dispatch CTA */}
-            <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between text-xs">
-              <span className="text-[11px] text-muted-foreground">
-                {dispatchedBatches[batch.batch_id] ? 'Transit initiated · Live GPS Tracking' : 'Batch staged at rider bay'}
-              </span>
-              {dispatchedBatches[batch.batch_id] ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-semibold">
-                  <CheckCircle2 size={12} /> DISPATCHED · ETA {batch.total_route_duration_mins}m
-                </span>
-              ) : (
-                <button
-                  onClick={() => {
-                    setDispatchedBatches(prev => ({ ...prev, [batch.batch_id]: true }));
-                    toast.success(`Rider ${batch.rider_id} dispatched for Batch #${batch.batch_id} (${batch.orders_count} stops)`);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm active:scale-95"
-                >
-                  <Navigation size={12} /> Dispatch Rider ({batch.rider_id})
-                </button>
-              )}
+            <div className="mt-2 pt-2 border-t border-border/20 text-[11px] text-muted-foreground">
+              Simulation output only. No rider was assigned, dispatched, or GPS-tracked.
             </div>
           </div>
         ))}

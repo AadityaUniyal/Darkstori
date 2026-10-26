@@ -8,12 +8,19 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import verify_token
+from backend.core.security import require_roles, verify_token
 from backend.database.connection import get_db
 from backend.database.models.models import DarkStore
 from backend.ml.weather_service import fetch_weather_forecast
 
 router = APIRouter()
+
+
+def _scope_store_query(query, payload: dict):
+    organization_id = payload.get("org_id") or payload.get("organization_id")
+    if str(organization_id or "").isdigit() and int(organization_id) > 0:
+        return query.where(DarkStore.organization_id == int(organization_id))
+    return query.where(DarkStore.organization_id.is_(None))
 
 
 class StoreResponse(BaseModel):
@@ -60,7 +67,7 @@ async def get_stores(
     """Get all active dark stores, optionally filtered."""
     from backend.database.models.models import CompetitorStore
 
-    query = select(DarkStore).where(DarkStore.is_active.is_(True))
+    query = _scope_store_query(select(DarkStore), payload).where(DarkStore.is_active.is_(True))
 
     if platform:
         query = query.where(DarkStore.platform == platform)
@@ -92,13 +99,13 @@ async def get_stores(
 async def get_store_stats(db: AsyncSession = Depends(get_db), payload: dict = Depends(verify_token)):
     """Get store statistics."""
     # Total stores
-    total_query = select(func.count(DarkStore.id)).where(DarkStore.is_active.is_(True))
+    total_query = _scope_store_query(select(func.count(DarkStore.id)), payload).where(DarkStore.is_active.is_(True))
     total_result = await db.execute(total_query)
     total_stores = total_result.scalar() or 0
 
     # By platform
     platform_query = (
-        select(DarkStore.platform, func.count(DarkStore.id).label("count"))
+        _scope_store_query(select(DarkStore.platform, func.count(DarkStore.id).label("count")), payload)
         .where(DarkStore.is_active.is_(True))
         .group_by(DarkStore.platform)
     )
@@ -108,7 +115,7 @@ async def get_store_stats(db: AsyncSession = Depends(get_db), payload: dict = De
 
     # By city tier
     tier_query = (
-        select(DarkStore.city_tier, func.count(DarkStore.id).label("count"))
+        _scope_store_query(select(DarkStore.city_tier, func.count(DarkStore.id).label("count")), payload)
         .where(DarkStore.is_active.is_(True))
         .group_by(DarkStore.city_tier)
     )
@@ -130,9 +137,7 @@ async def get_store(
     payload: dict = Depends(verify_token),
 ):
     """Get a single dark store by ID."""
-    result = await db.execute(
-        select(DarkStore).where(DarkStore.id == store_id)
-    )
+    result = await db.execute(_scope_store_query(select(DarkStore), payload).where(DarkStore.id == store_id))
     store = result.scalar_one_or_none()
 
     if not store:
@@ -141,11 +146,19 @@ async def get_store(
     return store
 
 
-@router.post("", response_model=StoreResponse, dependencies=[Depends(verify_token)])
-@router.post("/", response_model=StoreResponse, dependencies=[Depends(verify_token)], include_in_schema=False)
-async def create_store(store: StoreCreate, db: AsyncSession = Depends(get_db)):
+@router.post("", response_model=StoreResponse, dependencies=[Depends(require_roles("admin", "regional_head"))])
+@router.post("/", response_model=StoreResponse, dependencies=[Depends(require_roles("admin", "regional_head"))], include_in_schema=False)
+async def create_store(
+    store: StoreCreate,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_roles("admin", "regional_head")),
+):
     """Create a new store (requires authentication)."""
-    db_store = DarkStore(**store.model_dump())
+    organization_id = payload.get("org_id") or payload.get("organization_id")
+    db_store = DarkStore(
+        **store.model_dump(),
+        organization_id=int(organization_id) if str(organization_id or "").isdigit() and int(organization_id) > 0 else None,
+    )
     db.add(db_store)
     await db.commit()
     await db.refresh(db_store)
@@ -162,7 +175,7 @@ async def get_store_weather_alert(
     payload: dict = Depends(verify_token),
 ):
     """Fetch live weather forecasts and return alert if rain expected."""
-    result = await db.execute(select(DarkStore).where(DarkStore.id == store_id))
+    result = await db.execute(_scope_store_query(select(DarkStore), payload).where(DarkStore.id == store_id))
     store = result.scalar_one_or_none()
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")

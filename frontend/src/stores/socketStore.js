@@ -6,11 +6,7 @@ export const useSocketStore = create((set, get) => ({
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
   // Notifications
-  notifications: [
-    { id: 1, type: 'info', message: 'Zero-Waste Engine: Initialized. Demographics sync complete.', timestamp: '5m ago', read: false },
-    { id: 2, type: 'success', message: 'Model loaded: demand_forecasting_model v2.4.1 in Production.', timestamp: '15m ago', read: false },
-    { id: 3, type: 'warning', message: 'Model Drift: Pincode 560001 population drift KS-stat=0.142.', timestamp: '1h ago', read: true }
-  ],
+  notifications: [],
   addNotification: (notif) => set((state) => ({
     notifications: [{ ...notif, id: Date.now() + Math.random(), timestamp: 'Just now', read: false }, ...state.notifications].slice(0, 50)
   })),

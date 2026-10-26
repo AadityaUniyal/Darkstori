@@ -5,6 +5,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
@@ -23,7 +24,7 @@ from backend.core.security import (
 )
 
 from backend.database.connection import get_db
-from backend.database.models.models import ApiKey, RefreshToken, User
+from backend.database.models.models import ApiKey, Organization, RefreshToken, User
 from backend.utils.email import send_welcome_email
 from backend.core.audit import log_audit_action
 
@@ -53,6 +54,7 @@ class UserRegister(BaseModel):
     password: str
     full_name: str = ""
     username: str = ""
+    organization: str = ""
 
     @field_validator("password")
     @classmethod
@@ -64,6 +66,14 @@ class UserRegister(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError("Password must contain at least one digit")
         return v
+
+    @field_validator("organization")
+    @classmethod
+    def normalize_organization(cls, value):
+        value = " ".join(value.split())
+        if len(value) > 200:
+            raise ValueError("Workspace name must be 200 characters or fewer")
+        return value
 
 
 class Token(BaseModel):
@@ -106,6 +116,8 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
     refresh_expire = timedelta(days=7)
     uid = user.id if getattr(user, "id", None) is not None else 1
     token_data = {"sub": user.email, "role": user.role, "user_id": str(uid)}
+    if user.organization_id is not None:
+        token_data["organization_id"] = str(user.organization_id)
     access_token = create_access_token(token_data, expires_delta=access_expire)
     refresh_token_str, jti = create_refresh_token(token_data, expires_delta=refresh_expire)
     # Persist refresh token JTI to DB
@@ -135,14 +147,25 @@ async def register(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
-    """Register a new user."""
+    """Register a user into a newly created, isolated workspace."""
     result = await db.execute(select(User).where(User.email == user.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
+    workspace_name = user.organization or f"{user.full_name.strip() or user.email.split('@')[0]}'s workspace"
+    existing_workspace = await db.execute(
+        select(Organization).where(Organization.name.ilike(workspace_name))
+    )
+    if existing_workspace.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="That workspace name is already in use. Choose another name or ask a workspace admin for an invite.",
+        )
     username = user.username or user.email.split("@")[0]
     result = await db.execute(select(User).where(User.username == username))
     if result.scalar_one_or_none():
         username = f"{username}_{user.email.split('@')[0][-4:]}"
+    workspace = Organization(name=workspace_name)
+    db.add(workspace)
     new_user = User(
         email=user.email,
         username=username,
@@ -150,9 +173,19 @@ async def register(
         hashed_password=hash_password(user.password),
         role="user",
         is_active=True,
+        organization_id=workspace.id,
     )
     db.add(new_user)
-    await db.commit()
+    try:
+        await db.flush()
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        logger.info("Registration uniqueness conflict for %s", user.email)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="That email, username, or workspace is already registered.",
+        ) from exc
     await db.refresh(new_user)
     logger.info(f"New user registered: {user.email}")
     await log_audit_action(db, "USER_REGISTER", request=request, user_id=int(new_user.id), target_table="users", target_id=int(new_user.id))  # type: ignore
@@ -186,7 +219,13 @@ async def demo_login(
     db: AsyncSession = Depends(get_db)
 ):
     """Authenticate or generate a sandbox demo persona with genuine signed tokens."""
+    if settings.ENVIRONMENT.strip().lower() not in {"development", "test"}:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Demo login is unavailable")
     req = req or DemoLoginRequest()
+    allowed_demo_roles = {"director", "store-gm", "gm", "fleet-commander", "datascience", "franchise", "user"}
+    requested_role = (req.role or "director").strip().lower()
+    if requested_role not in allowed_demo_roles:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unsupported demo persona")
     demo_email = req.email or f"{req.persona_id or req.role}@darkstori.demo"
     result = await db.execute(select(User).where(User.email == demo_email))
     user = result.scalar_one_or_none()
@@ -196,14 +235,14 @@ async def demo_login(
             username=demo_email.split("@")[0],
             full_name=req.full_name or f"Demo {req.role.capitalize()}",
             hashed_password=hash_password("DemoPassword123!"),
-            role=req.role or "director",
+            role=requested_role,
             is_active=True,
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
-    elif user.role != req.role:
-        user.role = req.role
+    elif user.role != requested_role:
+        user.role = requested_role
         await db.commit()
         await db.refresh(user)
 

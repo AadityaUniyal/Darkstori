@@ -18,15 +18,7 @@ export default function CityPulse() {
     staleTime: 60000,
   });
 
-  const fallbackCities = [
-    { city: 'North Zone', store_count: 12, neighborhood_count: 24, avg_opportunity_score: 8.2 },
-    { city: 'West Zone', store_count: 8, neighborhood_count: 16, avg_opportunity_score: 7.1 },
-    { city: 'Central Zone', store_count: 10, neighborhood_count: 20, avg_opportunity_score: 7.8 },
-    { city: 'South Zone', store_count: 7, neighborhood_count: 15, avg_opportunity_score: 8.0 },
-    { city: 'Growth Zone', store_count: 5, neighborhood_count: 10, avg_opportunity_score: 7.4 },
-  ];
-
-  const citiesData = cityOverview && cityOverview.length > 0 ? cityOverview : fallbackCities;
+  const citiesData = Array.isArray(cityOverview) ? cityOverview : [];
 
   // Sort by average opportunity score descending
   const sortedCities = [...citiesData].sort((a, b) => b.avg_opportunity_score - a.avg_opportunity_score);

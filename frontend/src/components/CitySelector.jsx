@@ -4,11 +4,12 @@ import { api } from '../services/api';
 import { MapPin, Search, Loader2, Globe } from 'lucide-react';
 
 export default function CitySelector() {
-  const { selectedCity, setSelectedCity, cities, addCity } = useCity();
+  const { selectedCity, setSelectedCity, cities, citiesError, addCity, selectLocation } = useCity();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
+  const [searchError, setSearchError] = useState('');
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -35,13 +36,20 @@ export default function CitySelector() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
+    setSearchError('');
     try {
       const result = await api.resolveLocation(searchQuery.trim());
-      if (result && result.lat && result.lng) {
+      if (result && Number.isFinite(Number(result.lat)) && Number.isFinite(Number(result.lng))) {
         setSearchResult(result);
+      } else {
+        setSearchResult(null);
+        setSearchError('No matching place was found. Try a more specific locality or PIN code.');
       }
-    } catch {
+    } catch (error) {
       setSearchResult(null);
+      setSearchError(error?.response?.status === 503
+        ? 'Place search is temporarily unavailable. Try again shortly.'
+        : error?.response?.data?.detail || 'No matching place was found.');
     } finally {
       setIsSearching(false);
     }
@@ -61,6 +69,7 @@ export default function CitySelector() {
     const cityName = searchResult.address?.city || searchResult.address?.town || searchResult.display_name?.split(',')[0] || searchQuery;
     if (addCity) addCity(cityName);
     setSelectedCity(cityName);
+    selectLocation?.(searchResult);
     setIsSearchOpen(false);
     setSearchQuery('');
     setSearchResult(null);
@@ -73,10 +82,11 @@ export default function CitySelector() {
         <div className="flex items-center gap-1.5 bg-card/50 border border-border rounded-lg px-2.5 py-1.5 cursor-pointer hover:bg-accent/40 transition-colors">
           <MapPin size={14} className="text-emerald-500 shrink-0" />
           <select
-            value={selectedCity}
+              value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
             className="bg-transparent text-sm text-foreground outline-none cursor-pointer appearance-none pr-4 max-w-[120px]"
           >
+            {!cities.length && <option value="">{citiesError ? 'Market list unavailable' : 'No configured markets'}</option>}
             {cities.map((city) => {
               const value = typeof city === 'string' ? city : city.city_name;
               return (
@@ -92,7 +102,7 @@ export default function CitySelector() {
         <button
           onClick={() => setIsSearchOpen(!isSearchOpen)}
           className="p-1.5 rounded-lg hover:bg-accent/40 transition-colors text-muted-foreground hover:text-foreground"
-          title="Search any city worldwide"
+          title="Search a place or PIN code"
         >
           <Globe size={15} />
         </button>
@@ -100,23 +110,24 @@ export default function CitySelector() {
 
       {/* Search dropdown */}
       {isSearchOpen && (
-        <div className="absolute top-full mt-2 right-0 w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
-          <div className="p-3 border-b border-border">
-            <div className="flex items-center gap-2 bg-background/50 border border-border rounded-lg px-3 py-2">
-              <Search size={14} className="text-muted-foreground shrink-0" />
+        <div className="absolute top-full mt-2 right-0 w-80 bg-[#0E121A]/95 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-2xl">
+          <div className="p-3 border-b border-white/[0.08]">
+            <div className="flex items-center gap-2 bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2">
+              <Search size={14} className="text-white/40 shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search any city..."
-                className="bg-transparent text-sm outline-none w-full text-foreground placeholder:text-muted-foreground"
+                placeholder="Search any place or PIN code..."
+                aria-label="Search map location"
+                className="bg-transparent text-xs outline-none w-full text-white placeholder:text-white/35"
               />
               {isSearching ? (
-                <Loader2 size={14} className="animate-spin text-emerald-500 shrink-0" />
+                <Loader2 size={14} className="animate-spin text-[#FF9F1C] shrink-0" />
               ) : (
-                <button onClick={handleSearch} className="text-xs text-emerald-500 font-medium shrink-0 hover:text-emerald-400">
+                <button onClick={handleSearch} className="text-xs text-[#FF9F1C] font-semibold shrink-0 hover:text-amber-400 cursor-pointer">
                   Go
                 </button>
               )}
@@ -144,10 +155,11 @@ export default function CitySelector() {
           )}
 
           {!searchResult && !isSearching && searchQuery && (
-            <div className="px-4 py-3 text-xs text-muted-foreground text-center">
-              Press Enter or click Go to search
+            <div className="px-4 py-3 text-xs text-muted-foreground text-center" role="status">
+              {searchError || 'Search a city, locality, PIN code, or address, then press Enter.'}
             </div>
           )}
+          <p className="px-4 pb-3 text-[10px] text-white/35">Geocoded by OpenStreetMap contributors. Search is submitted only when you press Enter or Go.</p>
         </div>
       )}
     </div>

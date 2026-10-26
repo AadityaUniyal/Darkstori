@@ -12,7 +12,7 @@ import AmbientBackground from '../components/AmbientBackground';
 import RangoliGauge from '../components/RangoliGauge';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_FOCUS_CITIES, FALLBACK_NEIGHBORHOODS } from '../constants/fallbacks';
+import AppleSearchBar from '../components/AppleSearchBar';
 
 export default function Neighborhoods() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export default function Neighborhoods() {
     staleTime: 60000,
   });
 
-  const cityList = cities || FALLBACK_FOCUS_CITIES;
+  const cityList = Array.isArray(cities) ? cities : [];
 
   // Fetch All Neighborhoods
   const { data: neighborhoods, isLoading } = useQuery({
@@ -47,7 +47,7 @@ export default function Neighborhoods() {
     staleTime: 60000,
   });
 
-  const neighborhoodList = neighborhoods && neighborhoods.length > 0 ? neighborhoods : FALLBACK_NEIGHBORHOODS;
+  const neighborhoodList = Array.isArray(neighborhoods) ? neighborhoods : [];
 
   // Filter pipeline: City + Search + Score + Competition
   const filtered = neighborhoodList.filter(n => {
@@ -69,7 +69,7 @@ export default function Neighborhoods() {
     }
 
     // Minimum Opportunity Score filter
-    const score = n.market_potential_score || n.opportunity_score || 8.0;
+    const score = n.market_potential_score ?? n.opportunity_score ?? 0;
     if (score < minScore) return false;
 
     // Competition filter
@@ -111,7 +111,7 @@ export default function Neighborhoods() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minHeight: 'auto', paddingBottom: '4rem', width: '100%', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}
@@ -144,26 +144,19 @@ export default function Neighborhoods() {
       {/* Interactive Filter Bar */}
       <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '16px' }}>
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Search Box */}
-          <div style={{ flex: '1 1 280px', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '10px 14px' }}>
-            <Search size={16} color="var(--color-text-muted)" />
-            <input
-              type="text"
+          {/* Apple Cupertino Search Box */}
+          <div style={{ flex: '1 1 320px' }}>
+            <AppleSearchBar
               placeholder="Search by locality, PIN (e.g. 560034), or metro hub..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: '#FFFFFF', fontSize: '0.88rem', width: '100%', outline: 'none' }}
+              onChange={setSearchQuery}
+              onClear={() => setSearchQuery('')}
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
-                <X size={14} />
-              </button>
-            )}
           </div>
 
           {/* City Filter Pills */}
           <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-            {['All', 'Bangalore', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune'].map((cityName) => (
+            {['All', ...cityList.map((city) => city.city_name)].filter((name, index, list) => name && list.indexOf(name) === index).map((cityName) => (
               <button
                 key={cityName}
                 onClick={() => setActiveCityName(cityName)}
@@ -295,7 +288,7 @@ export default function Neighborhoods() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--color-text-muted)' }}>Market Potential Score:</span>
-                    <strong style={{ color: '#38BDF8' }}>{c.market_potential_score || 9.0}/10</strong>
+                    <strong style={{ color: '#38BDF8' }}>{c.market_potential_score ?? 'Not scored'}{c.market_potential_score != null ? '/10' : ''}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--color-text-muted)' }}>Population Catchment:</span>
@@ -315,7 +308,7 @@ export default function Neighborhoods() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--color-text-muted)' }}>Active Dark Stores:</span>
-                    <strong>{c.total_stores || 3} Stores</strong>
+                    <strong>{c.total_stores ?? 'Store count unavailable'}{c.total_stores != null ? ' Stores' : ''}</strong>
                   </div>
                 </div>
                 <button
@@ -362,7 +355,7 @@ export default function Neighborhoods() {
           {sorted.map((n) => {
             const isExpanded = !!expandedCards[n.neighborhood_id];
             const isComparing = selectedForCompare.some(c => c.neighborhood_id === n.neighborhood_id);
-            const score = n.market_potential_score || n.opportunity_score || 8.5;
+            const score = n.market_potential_score ?? n.opportunity_score ?? 0;
 
             return (
               <div
@@ -415,7 +408,7 @@ export default function Neighborhoods() {
                   <div>
                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Competition:</span>
                     <div style={{ fontWeight: 600, color: n.competition_intensity === 'High' ? '#EF4444' : n.competition_intensity === 'Medium' ? '#F59E0B' : '#10B981' }}>
-                      {n.competition_intensity} ({n.total_stores || 2} Hubs)
+                      {n.competition_intensity || 'Competition not recorded'} ({n.total_stores ?? 'Store count unavailable'}{n.total_stores != null ? ' Hubs' : ''})
                     </div>
                   </div>
                 </div>

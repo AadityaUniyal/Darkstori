@@ -23,11 +23,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react-map-gl') || id.includes('maplibre-gl') || id.includes('@deck.gl')) return 'map-viz';
+            if (id.includes('/maplibre-gl/')) return 'maplibre';
+            if (id.includes('/@deck.gl/')) return 'deck-gl';
+            if (id.includes('/@luma.gl/')) return 'luma-gl';
+            if (id.includes('/@loaders.gl/')) return 'loaders-gl';
+            if (id.includes('/react-map-gl/')) return 'react-map-gl';
             if (id.includes('recharts')) return 'charts';
             if (id.includes('framer-motion')) return 'motion';
             if (id.includes('lucide-react')) return 'icons';

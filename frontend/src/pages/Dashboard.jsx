@@ -17,21 +17,17 @@ import CityPulse from '../components/CityPulse';
 import WeatherRadarCard from '../components/WeatherRadarCard';
 import VrpDispatchCard from '../components/VrpDispatchCard';
 import ExecutiveRoiBanner from '../components/ExecutiveRoiBanner';
-import AutonomousActionHub from '../components/AutonomousActionHub';
+import DecisionQueue from '../components/DecisionQueue';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
 import GodsEyeWarRoom from '../components/GodsEyeWarRoom';
 import ApplePersonaSelector from '../components/ApplePersonaSelector';
 import AppleDynamicIsland from '../components/AppleDynamicIsland';
-import ExplainableAiModal from '../components/ExplainableAiModal';
 import AmbientBackground from '../components/AmbientBackground';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_DASHBOARD_METRICS } from '../constants/fallbacks';
 import QuickSetupWizard from '../components/QuickSetupWizard';
 import './Dashboard.css';
-
-const FALLBACK_METRICS = FALLBACK_DASHBOARD_METRICS;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -44,13 +40,11 @@ export default function Dashboard() {
     activeRole === 'store-gm' ? 'digital-twin' : activeRole === 'fleet-commander' ? 'war-room' : 'map'
   );
   const [deepAnalyticsTab, setDeepAnalyticsTab] = useState('roi'); // 'roi' | 'sentiment' | 'pipeline'
-  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
-  const [currentAiExplanation, setCurrentAiExplanation] = useState(null);
 
   // Fetch store list to get active store ID
   const { data: stores = [] } = useQuery({
-    queryKey: ['stores-list', selectedCity],
-    queryFn: () => api.getStores({ city: selectedCity }),
+    queryKey: ['stores-list', selectedCity, 'physical-stores-only'],
+    queryFn: () => api.getStores({ city: selectedCity, include_competitors: false }),
   });
   const activeStoreId = stores?.[0]?.id || null;
 
@@ -62,20 +56,21 @@ export default function Dashboard() {
     refetchInterval: 15 * 60 * 1000,
   });
 
-  const { data: metrics, isError, isLoading } = useQuery({
+  const { data: metrics, isLoading, isError: metricsError } = useQuery({
     queryKey: ['dashboard-metrics', selectedCity],
     queryFn: () => api.getDashboardMetrics(selectedCity),
     staleTime: 60 * 1000,
     retry: 1,
   });
 
-  const displayMetrics = metrics || FALLBACK_METRICS;
-  const summary = displayMetrics.summary || { total_stores: 0, total_neighborhoods: 0, total_orders_30d: 0, total_competitive_moves: 0 };
+  const displayMetrics = metrics || {};
+  const summary = displayMetrics.summary || {};
   const topOpps = displayMetrics.top_opportunities || [];
   const sentiment = displayMetrics.sentiment || [];
   const competitiveMoves = displayMetrics.recent_competitive_moves?.moves || [];
 
-  const isCleanZeroState = !isLoading && (summary.total_stores === 0 && topOpps.length === 0);
+  const isCleanZeroState = !isLoading && !metricsError && (summary.total_stores === 0 && topOpps.length === 0);
+  const metricValue = (value) => metricsError || value == null ? '—' : Number(value || 0).toLocaleString('en-IN');
 
   useEffect(() => {
     if (activeRole && activeRole !== activePersona) {
@@ -103,35 +98,19 @@ export default function Dashboard() {
       <AmbientBackground />
 
       {/* Floating Dynamic Island Live Capsule */}
-      <AppleDynamicIsland
-        onOpenExplainModal={() => {
-          setCurrentAiExplanation({
-            title: "Autonomous Inter-Hub Micro-Transshipment",
-            category: "Autonomous Multi-Hub Grid",
-            sku_name: "Farm Fresh Milk + Artisanal Sourdough (50 Units)",
-            location: "Koramangala 4th Block Hub ➔ Indiranagar 100ft Road Hub",
-            observation: "Indiranagar inventory depleted to 4 units under weekend demand spike. Koramangala holds 50 units with 6-hour spoilage hazard.",
-            math_engine: "Decentralized Stochastic Dynamic Transshipment Flow. EV Cargo distance: 4.2 km. Dispatch duration: 15.4 min.",
-            statistical_guarantee: "Conformal SLA confidence remains at 99.2% post-transshipment.",
-            economic_impact: "Protects ₹4,500 GMV, eradicates ₹2,800 spoilage loss, net alpha: +₹5,850.",
-            action_label: "Confirm EV Cargo Van #EV-4 Dispatch"
-          });
-          setIsExplainModalOpen(true);
-        }}
-      />
+      <AppleDynamicIsland city={selectedCity} />
 
       {/* 1. STUDIO MASTER CONTROL BAR */}
       <header className="studio-topbar">
         <div className="studio-brand-zone">
           <div className="flex items-center gap-3">
             <h1 className="studio-title">Command Center</h1>
-            <span className="studio-live-pill">
-              <span className="live-dot" />
-              <span>4 Hubs Synced • 99.2% SLA Defended</span>
+              <span className="studio-live-pill">
+              <span>{metricsError ? 'Metrics unavailable' : `Recorded network · ${selectedCity || 'India-wide'}`}</span>
             </span>
           </div>
           <p className="studio-subtitle">
-            Autonomous Hyperlocal Operating System • Level 4 Autonomous Grid
+            City operations cockpit · {selectedCity || 'India-wide map'}
           </p>
         </div>
 
@@ -178,65 +157,65 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* 2. AT-A-GLANCE METRIC STRIP (4 Sleek Apple Glass Capsules) */}
+      {/* 2. AT-A-GLANCE METRIC STRIP */}
       <section className="studio-kpi-strip">
         <div className="studio-kpi-card">
           <div className="kpi-header">
-            <span className="kpi-label">DELIVERY SLA CEILING</span>
-            <span className="kpi-badge kpi-badge-success">-36.8% Latency</span>
+            <span className="kpi-label">STORES IN NETWORK</span>
+            <span className="kpi-badge kpi-badge-success">{metricsError ? 'Unavailable' : 'DB'}</span>
           </div>
           <div className="kpi-value-row">
-            <span className="kpi-main-val">7.4 min</span>
-            <span className="kpi-sub-val">vs 11.7m standard</span>
+            <span className="kpi-main-val">{metricValue(summary.total_stores)}</span>
+            <span className="kpi-sub-val">{selectedCity}</span>
           </div>
           <div className="kpi-footer">
             <span className="kpi-indicator bg-emerald-400" />
-            <span>Sub-10m SLA physically defended</span>
+            <span>{metricsError ? 'Could not load connected data' : 'Connected database aggregate'}</span>
           </div>
         </div>
 
         <div className="studio-kpi-card">
           <div className="kpi-header">
-            <span className="kpi-label">CONFORMAL COVERAGE</span>
-            <span className="kpi-badge kpi-badge-blue">95% Guarantee</span>
+            <span className="kpi-label">ORDERS · LAST 30 DAYS</span>
+            <span className="kpi-badge kpi-badge-blue">{metricsError ? 'Unavailable' : 'DB'}</span>
           </div>
           <div className="kpi-value-row">
-            <span className="kpi-main-val text-[#38BDF8]">99.2%</span>
-            <span className="kpi-sub-val">empirical finite-sample</span>
+            <span className="kpi-main-val text-[#38BDF8]">{metricValue(summary.total_orders_30d)}</span>
+            <span className="kpi-sub-val">{summary.total_orders_30d == null ? 'feed not connected' : 'recorded orders'}</span>
           </div>
           <div className="kpi-footer">
             <span className="kpi-indicator bg-[#FF9F1C]" />
-            <span>Heteroscedastic scale estimation</span>
+            <span>Aggregate for the selected city</span>
           </div>
         </div>
 
         <div className="studio-kpi-card">
           <div className="kpi-header">
-            <span className="kpi-label">SPOILAGE SALVAGED</span>
-            <span className="kpi-badge kpi-badge-success">+₹7,840/day</span>
+            <span className="kpi-label">NEIGHBORHOODS TRACKED</span>
+            <span className="kpi-badge kpi-badge-success">{metricsError ? 'Unavailable' : 'DB'}</span>
           </div>
           <div className="kpi-value-row">
-            <span className="kpi-main-val text-emerald-400">94.6%</span>
-            <span className="kpi-sub-val">vs 34.2% dump loss</span>
+            <span className="kpi-main-val text-emerald-400">{metricValue(summary.total_neighborhoods)}</span>
+            <span className="kpi-sub-val">in the current dataset</span>
           </div>
           <div className="kpi-footer">
             <span className="kpi-indicator bg-emerald-400" />
-            <span>Dynamic Sigmoid salvage curve</span>
+            <span>Coverage from the connected API</span>
           </div>
         </div>
 
         <div className="studio-kpi-card">
           <div className="kpi-header">
-            <span className="kpi-label">IN-STORE PICK VELOCITY</span>
-            <span className="kpi-badge kpi-badge-purple">-42.8% Transit</span>
+            <span className="kpi-label">COMPETITIVE MOVES</span>
+            <span className="kpi-badge kpi-badge-purple">{metricsError ? 'Unavailable' : 'DB'}</span>
           </div>
           <div className="kpi-value-row">
-            <span className="kpi-main-val text-purple-300">84.2s</span>
-            <span className="kpi-sub-val">Bay C3 Pre-staged</span>
+            <span className="kpi-main-val text-purple-300">{metricValue(summary.total_competitive_moves)}</span>
+            <span className="kpi-sub-val">available signals</span>
           </div>
           <div className="kpi-footer">
             <span className="kpi-indicator bg-purple-400" />
-            <span>Multivariate Hawkes basket trigger</span>
+            <span>As reported by the current data source</span>
           </div>
         </div>
       </section>
@@ -254,14 +233,14 @@ export default function Dashboard() {
                   className={`stage-nav-pill ${primaryCanvas === 'map' ? 'stage-nav-pill-active' : ''}`}
                 >
                   <Compass size={14} />
-                  <span>Live Network Radar</span>
+                  <span>Recorded Network Map</span>
                 </button>
                 <button
                   onClick={() => setPrimaryCanvas('war-room')}
                   className={`stage-nav-pill ${primaryCanvas === 'war-room' ? 'stage-nav-pill-warroom' : ''}`}
                 >
                   <Zap size={14} />
-                  <span>God's Eye War Room</span>
+                  <span>God&apos;s Eye War Room</span>
                 </button>
                 <button
                   onClick={() => setPrimaryCanvas('digital-twin')}
@@ -290,11 +269,15 @@ export default function Dashboard() {
               {primaryCanvas === 'map' && (
                 <div className="stage-canvas-wrapper">
                   <LazyMapView
-                    neighborhoods={topOpps.map((o) => ({ ...o, city: o.city || 'Focus Market' }))}
+                    neighborhoods={topOpps}
                     height="540px"
                     liveOrders={liveOrders}
                     showHeatmap={showHeatmap}
-                    onSelect={(nb) => navigate(`/neighborhoods?city=${nb.city || 'Focus Market'}`)}
+                    onSelect={(item) => {
+                      if (item?.neighborhood_id) {
+                        navigate(`/neighborhoods?city=${encodeURIComponent(item.city || selectedCity || '')}`);
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -316,16 +299,16 @@ export default function Dashboard() {
 
         {/* Right Column: Tactical Inspector Rail */}
         <aside className="studio-inspector-column">
-          {/* Tile 1: Autonomous Prescriptive Triage */}
+          {/* Tile 1: Evidence-backed operator decision queue */}
           <div className="inspector-card">
-            <AutonomousActionHub selectedCity={selectedCity} />
+            <DecisionQueue city={selectedCity} />
           </div>
 
           {/* Tile 2: Tactical Telemetry & Radar */}
           <div className="inspector-card">
             <div className="inspector-card-header">
               <span className="inspector-title">TACTICAL RADAR & DISPATCH</span>
-              <span className="inspector-tag">Live Telemetry</span>
+              <span className="inspector-tag">Feed status</span>
             </div>
             {activePersona === 'fleet-commander' ? (
               <div className="flex flex-col gap-3">
@@ -443,12 +426,6 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Explainable AI Modal Overlay */}
-      <ExplainableAiModal
-        isOpen={isExplainModalOpen}
-        onClose={() => setIsExplainModalOpen(false)}
-        explanationData={currentAiExplanation}
-      />
     </div>
   );
 }

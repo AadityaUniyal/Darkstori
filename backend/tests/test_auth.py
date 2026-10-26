@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock
-from backend.database.models.models import User
+from backend.database.models.models import Organization, User
 from backend.database.connection import get_db
 
 def test_register_success(test_client, monkeypatch):
@@ -14,6 +14,7 @@ def test_register_success(test_client, monkeypatch):
         
     # Override get_db for this test
     class MockSession:
+        added = []
         async def execute(self, *args, **kwargs):
             return MockResult()
         async def commit(self):
@@ -23,6 +24,7 @@ def test_register_success(test_client, monkeypatch):
         async def close(self):
             pass
         def add(self, instance):
+            self.added.append(instance)
             instance.id = 1
         async def refresh(self, instance):
             pass
@@ -43,6 +45,7 @@ def test_register_success(test_client, monkeypatch):
             "email": "test@example.com",
             "password": "SecurePassword123!",
             "full_name": "Test User",
+            "organization": "Test Workspace",
             "username": "testuser"
         }
     )
@@ -55,3 +58,7 @@ def test_register_success(test_client, monkeypatch):
     assert "access_token" in json_data
     assert "refresh_token" in json_data
     assert json_data["email"] == "test@example.com"
+    organizations = [row for row in MockSession.added if isinstance(row, Organization)]
+    users = [row for row in MockSession.added if isinstance(row, User)]
+    assert len(organizations) == 1 and organizations[0].name == "Test Workspace"
+    assert len(users) == 1 and users[0].organization_id == organizations[0].id

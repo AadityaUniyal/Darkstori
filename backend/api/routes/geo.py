@@ -3,15 +3,14 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.security import verify_token
 from backend.database.connection import get_db
-from backend.database.models.models import DarkStore, PincodeCoverage, Neighborhood
+from backend.database.models.models import DarkStore, PincodeCoverage
 from backend.utils.osm_service import resolve_location, reverse_location, fetch_osm_competitor_stores
-from backend.utils.routing import get_route_summary
 
 router = APIRouter()
 
@@ -23,7 +22,7 @@ class GeoResolveResponse(BaseModel):
     lng: float
     type: Optional[str] = None
     category: Optional[str] = None
-    address: dict = {}
+    address: dict = Field(default_factory=dict)
 
 
 @router.get("/resolve", response_model=GeoResolveResponse)
@@ -35,7 +34,10 @@ async def resolve_geo(
     query_str = q or address
     if not query_str or len(query_str.strip()) < 2:
         raise HTTPException(status_code=400, detail="Provide valid q or address parameter")
-    data = await resolve_location(query_str)
+    try:
+        data = await resolve_location(query_str)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     if not data:
         raise HTTPException(status_code=404, detail="Location not found")
     return GeoResolveResponse(
@@ -55,7 +57,10 @@ async def reverse_geo(
     lng: float,
     payload: dict = Depends(verify_token),
 ):
-    data = await reverse_location(lat, lng)
+    try:
+        data = await reverse_location(lat, lng)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     if not data:
         raise HTTPException(status_code=404, detail="Reverse location not found")
     return data
@@ -71,7 +76,10 @@ async def analyze_location(
     payload: dict = Depends(verify_token),
 ):
     if q:
-        resolved = await resolve_location(q)
+        try:
+            resolved = await resolve_location(q)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
         if not resolved:
             raise HTTPException(status_code=404, detail="Location not found")
         lat = resolved["lat"]
@@ -79,7 +87,10 @@ async def analyze_location(
     if lat is None or lng is None:
         raise HTTPException(status_code=400, detail="Provide either q or lat/lng")
 
-    competitors = await fetch_osm_competitor_stores(lat, lng, radius_m=radius_m)
+    try:
+        competitors = await fetch_osm_competitor_stores(lat, lng, radius_m=radius_m)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     nearby_stores = await db.scalars(
         select(DarkStore).where(
             DarkStore.latitude.between(lat - 0.08, lat + 0.08),
@@ -96,27 +107,25 @@ async def analyze_location(
     )
     coverage_rows = list(coverage.all())
 
-    route_check = await get_route_summary(lat, lng, lat + 0.02, lng + 0.02)
-
-    opp_score = round(
-        min(
-            100.0,
-            max(0.0, 55 + len(coverage_rows) * 4 - len(competitors) * 2.5 + len(stores) * 1.5),
-        ),
-        1,
-    )
     return {
         "query": q,
         "lat": lat,
         "lng": lng,
         "radius_m": radius_m,
-        "opportunity_score": opp_score,
+        "opportunity_score": None,
+        "data_mode": "recorded_data_and_openstreetmap_pois",
+        "note": "Counts describe available records and mapped POIs only. No demand or profitability score is inferred.",
+        "sources": {
+            "competitors": "OpenStreetMap Overpass POIs; community mapped and may be incomplete",
+            "dark_stores": "tenant-scoped Darkstori database records",
+            "coverage": "pincode_coverage database records",
+        },
         "competitor_count": len(competitors),
         "active_store_count": len(stores),
         "coverage_points": len(coverage_rows),
-        "road_distance_km": route_check.get("distance_km"),
-        "route_duration_mins": route_check.get("duration_mins"),
-        "route_source": route_check.get("source"),
+        "route_distance_km": None,
+        "route_duration_mins": None,
+        "route_source": None,
         "competitors": competitors[:25],
         "stores": [
             {

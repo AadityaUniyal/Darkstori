@@ -292,7 +292,7 @@ export default function CommandPalette({ isOpen, onClose }) {
               {filtered.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground text-sm">
                   <p>No matching commands or corridors found.</p>
-                  <span className="text-xs text-muted-foreground/60">Try searching for "forecast", "transshipment", or "mumbai"</span>
+                  <span className="text-xs text-muted-foreground/60">Try searching for &quot;forecast&quot;, &quot;transshipment&quot;, or &quot;mumbai&quot;</span>
                 </div>
               ) : (
                 filtered.map((item, idx) => {

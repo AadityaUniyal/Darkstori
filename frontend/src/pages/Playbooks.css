@@ -1,8 +1,10 @@
 /* ── Playbooks Page ────────────────────────────────────────────────── */
 .playbooks-page {
   position: relative;
-  padding: 1.5rem 2rem;
-  min-height: 100vh;
+  padding: 1.5rem 0;
+  min-height: auto;
+  width: 100%;
+  padding-bottom: 5rem;
 }
 
 /* Header */
@@ -128,13 +130,14 @@
 .playbook-form-row select,
 .playbook-form-row-split input,
 .playbook-form-row-split select {
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  transition: border-color 0.2s;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.88rem;
+  color: #FFFFFF;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
 }
 
 .playbook-form-row input:focus,
@@ -142,7 +145,9 @@
 .playbook-form-row-split input:focus,
 .playbook-form-row-split select:focus {
   outline: none;
-  border-color: var(--saffron-500);
+  border-color: #FF9F1C;
+  box-shadow: 0 0 0 3px rgba(255, 159, 28, 0.16);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .playbook-form-row-split {
@@ -180,12 +185,20 @@
 
 .playbook-condition-builder input,
 .playbook-condition-builder select {
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
-  padding: 0.45rem 0.6rem;
-  font-size: 0.82rem;
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: #FFFFFF;
+}
+
+.playbook-condition-builder input:focus,
+.playbook-condition-builder select:focus {
+  outline: none;
+  border-color: #FF9F1C;
+  box-shadow: 0 0 0 3px rgba(255, 159, 28, 0.16);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .playbook-condition-builder input {

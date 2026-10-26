@@ -1,13 +1,9 @@
-"""Seed Data API Route.
-
-Seeds the database with mock and scraped data for cities,
-neighborhoods, dark stores, pincodes, and metrics.
-"""
+"""Load synthetic benchmark fixtures into an explicitly enabled dev database."""
 
 import random
 from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
@@ -28,6 +24,7 @@ from backend.database.models.models import (
     CompetitiveMove,
     CompetitorStore,
 )
+from backend.core.config import settings
 
 router = APIRouter()
 
@@ -37,6 +34,29 @@ from backend.core.security import verify_token
 async def run_seed_database(db: AsyncSession):
     """Core seeding routine for cities, neighborhoods, stores, orders, and metrics."""
     try:
+        is_dev = settings.ENVIRONMENT == "development" and settings.SEED_DEMO_DATA
+        is_test = settings.ENVIRONMENT == "testing"
+        if not (is_dev or is_test):
+            raise HTTPException(
+                status_code=403,
+                detail="Synthetic benchmark fixtures require development mode with SEED_DEMO_DATA=true, or testing environment",
+            )
+
+        if not is_test:
+            seed_targets = [
+                ProductBatch, DeliverySLAMetric, CustomerCohort, CompetitiveMove,
+                OrderSynthetic, DarkStore, CompetitorStore, PincodeCoverage,
+                NeighborhoodDNA, Neighborhood, FocusCity, MarketMetrics, UserReview,
+                CompetitorPricing,
+            ]
+            for model in seed_targets:
+                existing = await db.scalar(select(func.count()).select_from(model.__table__))
+                if existing:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Benchmark data can only be loaded into an empty development database; existing data was preserved.",
+                    )
+
         logger.info("Starting database seeding...")
 
         # 1. Clear existing data to avoid conflicts
@@ -284,5 +304,7 @@ async def seed_database(db: AsyncSession = Depends(get_db), payload: dict = Depe
     """Seed the database with complete set of demo and analysis data."""
     try:
         return await run_seed_database(db)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to seed database: {str(e)}")
