@@ -14,7 +14,6 @@ import {
   Sparkles,
   Calendar,
   Workflow,
-  Radio
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import './Sidebar.css';
@@ -92,8 +91,12 @@ const Sidebar = memo(() => {
               }`
             }
           >
-            <item.icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
-            <span>{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <item.icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
+                <span>{item.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

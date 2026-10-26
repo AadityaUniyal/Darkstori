@@ -68,7 +68,8 @@ class SimulationResponse(BaseModel):
     monthly_operating_cost: float
     break_even_month: int
     roi_12_months_pct: float
-    confidence_level: float
+    confidence_level: Optional[float] = None
+    data_mode: str = "heuristic_simulation"
     factors: dict
     status: str = "proposed"
     comments: Optional[str] = None
@@ -144,7 +145,7 @@ async def run_simulation(
     payload: dict = Depends(verify_token),
 ):
     """Run a what-if simulation for a new dark store (predict ROI)."""
-    # Fetch neighborhood data
+    # Use a real neighborhood record; no synthetic neighborhood substitutes.
     result = await db.execute(
         select(Neighborhood)
         .options(selectinload(Neighborhood.city))
@@ -154,40 +155,25 @@ async def run_simulation(
     
     # Determine base values
     if not nbhd:
-        dummy_nbhds = {
-            1: ("Koramangala", 150000, 27272.7, 950000.0, 3, "Bangalore", 12.9345, 77.6266),
-            2: ("Indiranagar", 120000, 25000.0, 1100000.0, 4, "Bangalore", 12.9719, 77.6412),
-            3: ("HSR Layout", 180000, 29032.2, 850000.0, 3, "Bangalore", 12.9116, 77.6446),
-            4: ("Saket", 140000, 28000.0, 1200000.0, 2, "Delhi", 28.5244, 77.2166),
-            5: ("Hitech City", 200000, 25000.0, 900000.0, 2, "Hyderabad", 17.4482, 78.3489),
-        }
-        if req.neighborhood_id in dummy_nbhds:
-            name, pop, dens, inc, comp, city, nb_lat, nb_lng = dummy_nbhds[req.neighborhood_id]
-        else:
-            raise HTTPException(status_code=404, detail="Neighborhood not found")
-    else:
-        name = cast(str, nbhd.neighborhood_name) or "Unknown"
-        pop = cast(int, nbhd.population or 50_000)
-        dens = cast(float, nbhd.population_density or 5_000)
-        inc = cast(float, nbhd.avg_household_income or 600_000)
-        comp_result = await db.execute(
-            select(DarkStore)
-            .where(DarkStore.neighborhood_id == req.neighborhood_id)
-            .where(DarkStore.is_active.is_(True))
-        )
-        comp = len(comp_result.scalars().all())
-        city = cast(str, nbhd.city.city_name) if nbhd.city else "Bangalore"
-        
-        # Coordinates or fallback
-        nb_lat = 12.9716
-        nb_lng = 77.5946
-        # Find some coordinates in this neighborhood
-        store_q = await db.execute(
-            select(DarkStore).where(DarkStore.neighborhood_id == req.neighborhood_id).limit(1)
-        )
-        s = store_q.scalar_one_or_none()
-        if s:
-            nb_lat, nb_lng = cast(float, s.latitude), cast(float, s.longitude)
+        raise HTTPException(status_code=404, detail="Neighborhood not found")
+    if not nbhd.population or not nbhd.population_density or not nbhd.avg_household_income:
+        raise HTTPException(status_code=422, detail="Population, density, and household income are required for this scenario")
+    nb_lat = nbhd.centroid_lat or nbhd.latitude
+    nb_lng = nbhd.centroid_lng or nbhd.longitude
+    if nb_lat is None or nb_lng is None:
+        raise HTTPException(status_code=422, detail="The neighborhood has no recorded coordinates")
+
+    name = cast(str, nbhd.neighborhood_name) or "Unknown"
+    pop = int(nbhd.population)
+    dens = float(nbhd.population_density)
+    inc = float(nbhd.avg_household_income)
+    city = cast(str, nbhd.city.city_name) if nbhd.city else "Unknown"
+    comp_result = await db.execute(
+        select(DarkStore.id)
+        .where(DarkStore.neighborhood_id == req.neighborhood_id)
+        .where(DarkStore.is_active.is_(True))
+    )
+    comp = len(comp_result.all())
 
     # Route based delivery time check (Serviceability constraint)
     # We measure route from neighborhood centroid to a simulated perimeter delivery node (approx 2.5 km away)
@@ -215,7 +201,6 @@ async def run_simulation(
         break_even_month = 999  # not profitable
 
     roi_12 = ((monthly_profit * 12) / capex_rate) * 100 if capex_rate else 0
-    confidence = 0.72 + min(0.18, pop / 500_000)
 
     # Persist the simulation if DB model was resolved
     sim_id = None
@@ -229,8 +214,8 @@ async def run_simulation(
             predicted_monthly_revenue=monthly_revenue,
             break_even_month=break_even_month,
             roi_months=break_even_month,
-            confidence_level=round(confidence, 2),
-            status="proposed",
+            confidence_level=None,
+            status="simulation",
             comments=f"OSRM delivery time: {delivery_time_mins:.1f} mins"
         )
         db.add(sim)
@@ -247,8 +232,9 @@ async def run_simulation(
         monthly_operating_cost=round(monthly_opex, 2),
         break_even_month=break_even_month,
         roi_12_months_pct=round(roi_12, 1),
-        confidence_level=round(confidence, 2),
-        status="proposed",
+        confidence_level=None,
+        data_mode="heuristic_simulation",
+        status="simulation",
         comments=None,
         rent_rate=rent_rate,
         staff_rate=staff_rate,
@@ -261,7 +247,10 @@ async def run_simulation(
             "income": inc,
             "competition_stores": comp,
             "store_sqft": req.store_size_sqft,
-            "delivery_time_source": route_info.get("source", "default")
+            "delivery_time_source": route_info.get("source", "unknown"),
+            "demand_method": "transparent heuristic; not a trained or validated forecast",
+            "route_method": "sample route from neighborhood centroid to an assumed 2.5 km perimeter point",
+            "cost_inputs": "operator inputs or clearly stated simulator defaults",
         },
     )
 
@@ -365,8 +354,10 @@ async def propose_location(
     sim = result.scalar_one_or_none()
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
-        
-    sim.status = "proposed"  # type: ignore
+    if sim.status not in {"simulation", "draft"}:
+        raise HTTPException(status_code=409, detail="Only a new simulation can be proposed")
+
+    sim.status = "proposed"
     await db.commit()
     return {"status": "success", "message": f"Simulation #{sim_id} proposed successfully."}
 
@@ -383,9 +374,11 @@ async def review_location(
     sim = result.scalar_one_or_none()
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
-        
-    sim.status = "reviewed"  # type: ignore
-    sim.comments = req.comments  # type: ignore
+    if sim.status != "proposed":
+        raise HTTPException(status_code=409, detail="Only a proposed simulation can be reviewed")
+
+    sim.status = "reviewed"
+    sim.comments = req.comments
     
     # Audit log entry
     audit = AuditLog(
@@ -406,48 +399,15 @@ async def approve_location(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token)
 ):
-    """Set status to approved and provision the dark store."""
+    """Approve a reviewed scenario; physical store provisioning is a separate workflow."""
     result = await db.execute(select(StoreSimulation).where(StoreSimulation.simulation_id == sim_id))
     sim = result.scalar_one_or_none()
     if not sim:
         raise HTTPException(status_code=404, detail="Simulation not found")
-        
-    sim.status = "approved"  # type: ignore
-    
-    # Automatically seed/create dark store from approved simulation
-    nb_res = await db.execute(
-        select(Neighborhood)
-        .options(selectinload(Neighborhood.city))
-        .where(Neighborhood.neighborhood_id == sim.neighborhood_id)
-    )
-    nb = nb_res.scalar_one_or_none()
-    
-    # Find lat/lng
-    lat, lng = 12.9716, 77.5946
-    city = "Bangalore"
-    if nb:
-        city = nb.city.city_name if nb.city else "Bangalore"
-        # centroids fallback
-        lat, lng = 12.93 + (sim_id % 5) * 0.015, 77.62 + (sim_id % 5) * 0.015
-    
-    new_store = DarkStore(
-        platform="Darkstori",
-        store_name=f"Darkstori {nb.neighborhood_name if nb else 'New Location'} Hub",
-        store_code=f"DS-APPROV-{sim_id}",
-        city=city,
-        pincode=nb.pincode if nb else "560001",
-        latitude=lat,
-        longitude=lng,
-        is_active=True,
-        storage_capacity_sqft=sim.store_size_sqft,
-        daily_order_capacity=int(sim.predicted_daily_orders * 1.5),
-        source="approved_simulation",
-        neighborhood_id=sim.neighborhood_id
-    )
-    
-    db.add(new_store)
-    
-    # Audit log with complete decision provenance
+    if sim.status != "reviewed":
+        raise HTTPException(status_code=409, detail="Only a reviewed simulation can be approved")
+
+    sim.status = "approved"
     audit = AuditLog(
         user_id=int(payload.get("user_id")) if payload.get("user_id") and payload.get("user_id").isdigit() else None,
         action="APPROVE_SIMULATION",
@@ -455,27 +415,21 @@ async def approve_location(
         target_id=sim_id,
         new_state={
             "status": "approved",
-            "store_provisioned": new_store.store_name,
-            "decision_provenance": {
-                "model_name": "demand_forecasting_model",
-                "model_version": "3.1.0",
-                "parameters_snapshot": {
-                    "investment": sim.investment_amount,
-                    "size_sqft": sim.store_size_sqft,
-                    "predicted_daily_orders": sim.predicted_daily_orders,
-                    "predicted_monthly_revenue": sim.predicted_monthly_revenue
-                },
-                "approver": {
-                    "email": payload.get("sub"),
-                    "role": payload.get("role", "regional_head")
-                }
-            }
+            "physical_store_created": False,
+            "note": "Approval records a decision only; create and verify a physical store separately.",
+            "parameters_snapshot": {
+                "investment": sim.investment_amount,
+                "size_sqft": sim.store_size_sqft,
+                "predicted_daily_orders": sim.predicted_daily_orders,
+                "predicted_monthly_revenue": sim.predicted_monthly_revenue,
+            },
+            "approver": {"email": payload.get("sub"), "role": payload.get("role")},
         }
     )
     db.add(audit)
     
     await db.commit()
-    return {"status": "success", "message": f"Simulation #{sim_id} approved. Dark store provisioned."}
+    return {"status": "approved", "message": f"Simulation #{sim_id} approved. No physical store was provisioned."}
 
 
 @router.get("/audit-logs")

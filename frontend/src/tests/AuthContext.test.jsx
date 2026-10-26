@@ -7,7 +7,7 @@ import { api } from '../services/api';
 vi.mock('../services/api', () => ({
   api: {
     login: vi.fn().mockImplementation(async (creds) => ({
-      access_token: 'header.' + btoa(JSON.stringify({ sub: creds.email, role: 'admin', exp: Math.floor(Date.now() / 1000) + 3600, user_id: 1 })) + '.signature',
+      access_token: 'header.' + window.btoa(JSON.stringify({ sub: creds.email, role: 'admin', exp: Math.floor(Date.now() / 1000) + 3600, user_id: 1 })) + '.signature',
       user_id: 1,
       email: creds.email,
       role: 'admin',

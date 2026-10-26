@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
 const ExpansionCockpit = lazy(() => import('./pages/ExpansionCockpit'));
@@ -67,8 +67,14 @@ const pageVariants = {
 };
 
 function AnimatedPage({ children }) {
+  const prefersReducedMotion = useReducedMotion();
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+    <motion.div
+      variants={prefersReducedMotion ? undefined : pageVariants}
+      initial={prefersReducedMotion ? false : 'initial'}
+      animate={prefersReducedMotion ? undefined : 'animate'}
+      exit={prefersReducedMotion ? undefined : 'exit'}
+    >
       {children}
     </motion.div>
   );
@@ -109,7 +115,7 @@ function AppContent() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('darkstori:open-command-palette', handleCustomOpen);
     };
-  }, []);
+  }, [setRole]);
 
   if (isLandingPage) {
     return (

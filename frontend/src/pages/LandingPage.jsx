@@ -344,7 +344,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="hero-subtext-description"
           >
-            Quick commerce is a war of seconds and wafer-thin margins where 78% of dark stores bleed capital. Traditional dashboards only tell you what broke yesterday. <strong>Darkstori</strong> is the prescriptive AI operating system that automates location scouting, dynamic markdown pricing decay, rider multi-drop routing, and weather defense across India's premier metros.
+            Quick commerce is a war of seconds and wafer-thin margins where 78% of dark stores bleed capital. Traditional dashboards only tell you what broke yesterday. <strong>Darkstori</strong> is the prescriptive AI operating system that automates location scouting, dynamic markdown pricing decay, rider multi-drop routing, and weather defense across India&apos;s premier metros.
           </motion.p>
 
           <motion.div
@@ -575,7 +575,7 @@ export default function LandingPage() {
             </div>
             <h2 className="section-title">The 10-Minute Dark Store Survival Journey</h2>
             <p className="section-subtitle">
-              Follow how Darkstori's 4 proprietary AI engines step in sequentially to turn systemic quick commerce chaos into automated, sub-10-minute profitable execution.
+              Follow how Darkstori&apos;s 4 proprietary AI engines step in sequentially to turn systemic quick commerce chaos into automated, sub-10-minute profitable execution.
             </p>
           </div>
 
@@ -936,7 +936,7 @@ export default function LandingPage() {
                             <div className="monsoon-idle-state">
                               <CloudRain size={48} className="cloud-idle-icon" />
                               <h4>Clear Skies • Open-Meteo Telemetry Idle</h4>
-                              <p>Click "Simulate Monsoon Cloudburst" above to trigger Darkstori's 20-minute pre-emptive surge defense system.</p>
+                              <p>Click &quot;Simulate Monsoon Cloudburst&quot; above to trigger Darkstori&apos;s 20-minute pre-emptive surge defense system.</p>
                             </div>
                           )}
                         </div>
@@ -1205,7 +1205,7 @@ export default function LandingPage() {
             <div className="bento-card bento-span-2">
               <div className="bento-icon"><MapPin size={28} /></div>
               <h3>1. PostGIS DBSCAN Spatial Greenfield Placement</h3>
-              <p>Identifies high-density demographic zones unserved by Blinkit, Zepto, or Swiggy Instamart. Runs Huff’s Gravity Model with 1.35x road grid circuity to simulate market share capture while guaranteeing zero cannibalization of your existing stores.</p>
+              <p>Explore mapped store locations and recorded placement data across Indian markets. Scenario tools can compare user-entered assumptions; they do not guarantee demand, ROI, market share, or zero cannibalization.</p>
               <div className="bento-tags">
                 <span>ST_ClusterDBSCAN</span>
                 <span>Huff Gravity Model</span>

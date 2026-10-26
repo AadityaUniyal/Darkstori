@@ -153,7 +153,7 @@ export default function AuthPage() {
       await api.demoLogin(persona);
       window.location.href = '/cockpit';
     } catch (e) {
-      setErrors({ submit: 'Failed to initialize operator session.' });
+      setErrors({ submit: e?.response?.data?.detail || 'Failed to initialize operator session.' });
     }
   };
 

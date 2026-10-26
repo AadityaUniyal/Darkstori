@@ -1,95 +1,73 @@
-name: CD
+name: Darkstori Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'  # Deploy only on version tags (e.g., v1.0.0, v1.2.3)
-  workflow_dispatch:  # Allow manual deployment trigger
+    tags: ["v*.*.*"]
+  workflow_dispatch:
 
-env:
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+permissions:
+  contents: read
 
 jobs:
-  # Deploy backend to Railway/Render
-  deploy-backend:
-    name: Deploy Backend
+  validate:
+    name: Validate release candidate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
+    env:
+      ENVIRONMENT: testing
+      DATABASE_URL: sqlite+aiosqlite:///./release_test.db
+      MLFLOW_ENABLE_TRACKING: "False"
+      SEED_DEMO_DATA: "false"
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Deploy to Railway
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install backend dependencies
         run: |
-          echo "🚀 Backend deployment configured"
-          echo "Add Railway CLI deployment here"
-          echo "railway up --service backend"
-        # Uncomment when Railway is configured:
-        # - name: Install Railway CLI
-        #   run: npm install -g @railway/cli
-        # 
-        # - name: Deploy to Railway
-        #   env:
-        #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        #   run: railway up --service backend
-
-  # Deploy frontend to Vercel
-  deploy-frontend:
-    name: Deploy Frontend
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Deploy to Vercel
+          python -m pip install --upgrade pip
+          pip install pytest flake8
+          pip install -r backend/requirements/base.txt
+          pip install -r backend/requirements/ml.txt
+      - name: Create ephemeral test secrets
         run: |
-          echo "🚀 Frontend deployment configured"
-          echo "Add Vercel deployment here"
-          echo "vercel --prod"
-        # Uncomment when Vercel is configured:
-        # - name: Install Vercel CLI
-        #   run: npm install -g vercel
-        # 
-        # - name: Deploy to Vercel
-        #   env:
-        #     VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        #     VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        #     VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        #   run: |
-        #     cd frontend
-        #     vercel --prod --token=$VERCEL_TOKEN
+          echo "JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(48))')" >> "$GITHUB_ENV"
+          echo "ENCRYPTION_KEY=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> "$GITHUB_ENV"
+      - name: Check backend syntax
+        run: flake8 backend --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Verify fresh database migrations
+        run: DATABASE_URL=sqlite+aiosqlite:///./release_migration.db python -m alembic -c alembic.ini upgrade head
+      - name: Run backend suite
+        run: python -m pytest backend/tests/ -q --tb=short
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Test, lint, and build frontend
+        working-directory: frontend
+        run: |
+          npm test
+          npm run lint
+          npm run build
 
-  # Build and push Docker images to GHCR
   publish-images:
-    name: Publish Docker Images
+    name: Publish validated container images
+    needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for backend
+      - uses: docker/metadata-action@v5
         id: meta-backend
-        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/backend
           tags: |
@@ -97,9 +75,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./backend/Dockerfile
@@ -108,10 +84,8 @@ jobs:
           labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Extract metadata for frontend
+      - uses: docker/metadata-action@v5
         id: meta-frontend
-        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/frontend
           tags: |
@@ -119,9 +93,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./frontend/Dockerfile
@@ -131,23 +103,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Create GitHub release on tag
   release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    name: Create GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    
+    needs: [validate, publish-images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Create Release
-        uses: actions/create-release@v1
+      - uses: actions/checkout@v4
+      - name: Publish release notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes

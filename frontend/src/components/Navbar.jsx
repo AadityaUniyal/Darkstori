@@ -1,7 +1,8 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Bell, LogOut, User, ChevronDown, Search } from 'lucide-react';
+import { Bell, LogOut, User, ChevronDown, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../context/RoleContext';
 import CitySelector from './CitySelector';
 import ConnectionStatus from './ui/connection-status';
 import { ThemeToggle } from './ThemeToggle';
@@ -10,7 +11,8 @@ import './Navbar.css';
 import './CitySelector.css';
 
 const Navbar = memo(() => {
-  const { user, isAuthenticated, logout, setRole } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { activeRole, setRole: setOperationalRole } = useRole();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -18,7 +20,7 @@ const Navbar = memo(() => {
   // Notifications State & Logic from Store
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifRef = useRef(null);
-  const { notifications, markAllRead, markRead, clearNotifications } = useSocketStore();
+  const { notifications, markRead, clearNotifications } = useSocketStore();
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
@@ -47,14 +49,14 @@ const Navbar = memo(() => {
           <>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
-              className="flex md:w-56 items-center justify-center md:justify-between bg-card/60 hover:bg-card hover:border-amber-500/40 border border-border/80 rounded-full md:px-3.5 py-1.5 md:mr-2 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_12px_rgba(255,159,28,0.12)]"
+              className="flex items-center justify-between bg-white/[0.05] hover:bg-white/[0.08] hover:border-[#FF9F1C]/40 border border-white/10 rounded-full px-3.5 py-1.5 md:w-60 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_16px_rgba(255,159,28,0.15)] backdrop-blur-xl"
               title="Search corridors, metrics, actions (⌘K)"
             >
-              <div className="flex items-center gap-2">
-                <Search className="text-muted-foreground group-hover:text-amber-500 transition-colors w-[18px] h-[18px] md:w-[14px] md:h-[14px]" />
-                <span className="hidden md:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">Search & actions...</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Search className="text-white/40 group-hover:text-[#FF9F1C] transition-colors w-[15px] h-[15px] shrink-0" />
+                <span className="hidden md:inline text-xs text-white/55 group-hover:text-white transition-colors truncate">Spotlight search...</span>
               </div>
-              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-secondary/80 text-muted-foreground border border-border/50 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">⌘K</kbd>
+              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-white/[0.06] text-white/40 border border-white/10 group-hover:border-[#FF9F1C]/30 group-hover:text-[#FF9F1C] transition-colors shrink-0">⌘K</kbd>
             </button>
             
             <CitySelector />
@@ -131,20 +133,19 @@ const Navbar = memo(() => {
                   <div className="px-4 py-2">
                     <label className="text-[0.75rem] text-muted-foreground block mb-1">Operational Role:</label>
                     <select
-                      value={user?.role || 'admin'}
-                      onChange={(e) => setRole(e.target.value)}
+                      value={activeRole}
+                      onChange={(e) => setOperationalRole(e.target.value)}
                       className="w-full bg-surface border border-border text-foreground rounded px-2 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
                     >
-                      <option value="admin">Admin</option>
-                      <option value="expansion_lead">Expansion Lead</option>
-                      <option value="finance_reviewer">Finance Reviewer</option>
-                      <option value="regional_head">Regional Head</option>
+                      <option value="executive">Executive</option>
+                      <option value="store-gm">Store GM</option>
+                      <option value="fleet-commander">Fleet Commander</option>
                     </select>
                   </div>
                   <div className="user-dropdown-divider" />
                   <button
                     onClick={() => {
-                      setUserMenuOpen(false);
+                      setMenuOpen(false);
                       window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
                     }}
                     className="user-dropdown-item w-full text-left flex items-center justify-between"

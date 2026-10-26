@@ -58,9 +58,7 @@ async def test_adversarial_empty_store_set_postgis():
     zones = await get_opportunity_zones(city="Bangalore", eps_km=1.5, min_stores=3, db=db, payload=payload)
 
     assert isinstance(zones, list)
-    assert len(zones) >= 1  # Should return fallback zone rather than crashing
-    assert zones[0].store_count > 0
-    assert zones[0].dominant_platform != ""
+    assert len(zones) == 0  # Truthful behavior: returns empty list rather than inventing fallback zones
 
 
 @pytest.mark.asyncio
@@ -86,8 +84,7 @@ async def test_adversarial_empty_store_set_sqlite():
     zones = await get_opportunity_zones(city="Pune", eps_km=1.5, min_stores=3, db=db, payload=payload)
 
     assert isinstance(zones, list)
-    assert len(zones) == 1
-    assert zones[0].cluster_id == 0
+    assert len(zones) == 0  # Truthful: no stores found
 
 
 def test_adversarial_simple_dbscan_empty_input():
@@ -128,7 +125,7 @@ async def test_adversarial_subthreshold_single_store():
     payload = {"sub": "test_user"}
     zones = await get_opportunity_zones(city="Bangalore", eps_km=1.5, min_stores=3, db=db, payload=payload)
     assert isinstance(zones, list)
-    assert len(zones) == 1
+    assert len(zones) == 0  # Fewer stores than min_stores=3 returns empty list
 
 
 def test_adversarial_simple_dbscan_single_point_min_samples_1_vs_2():

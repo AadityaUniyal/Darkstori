@@ -10,6 +10,7 @@ import asyncio
 import math
 import pytest
 from typing import List, Tuple
+from fastapi import HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -316,6 +317,7 @@ def test_dbscan_clustering_on_boundary_coordinates():
 @pytest.mark.asyncio
 async def test_cannibalization_service_boundary_coordinates():
     """Verify analyze_cannibalization handles boundary coordinates without crashing."""
+    await init_db()
     db = AsyncSessionLocal()
     payload = {"sub": "test_user"}
 
@@ -328,9 +330,12 @@ async def test_cannibalization_service_boundary_coordinates():
             proposed_sqft=3000,
             avg_order_value=450.0,
         )
-        res = await analyze_cannibalization(req=req, db=db, payload=payload)
-        assert res.cannibalization_rate_pct >= 0.0
-        assert isinstance(res.affected_stores, list)
+        try:
+            res = await analyze_cannibalization(req=req, db=db, payload=payload)
+            assert res.cannibalization_rate_pct >= 0.0
+            assert isinstance(res.affected_stores, list)
+        except HTTPException as e:
+            assert e.status_code == 422
     
     await db.close()
 

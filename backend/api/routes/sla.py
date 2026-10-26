@@ -7,7 +7,7 @@ peak-hour performance per pincode / neighborhood.
 from datetime import date, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,40 +62,7 @@ async def get_sla_metrics(
     rows = (await db.execute(query)).scalars().all()
 
     if not rows:
-        # Fallback dummy SLA metrics
-        c = city or "Bangalore"
-        return [
-            SLAPincodeDetail(
-                pincode="560034" if c == "Bangalore" else "110017" if c == "Delhi" else "400053",
-                neighborhood_name="Koramangala" if c == "Bangalore" else "Saket" if c == "Delhi" else "Andheri West",
-                city=c,
-                avg_eta_min=14.2,
-                sla_breach_pct=4.5,
-                peak_eta_min=24.5,
-                orders_7d=2800,
-                recorded_date=str(date.today()),
-            ),
-            SLAPincodeDetail(
-                pincode="560038" if c == "Bangalore" else "110001" if c == "Delhi" else "400050",
-                neighborhood_name="Indiranagar" if c == "Bangalore" else "Connaught Place" if c == "Delhi" else "Bandra West",
-                city=c,
-                avg_eta_min=12.8,
-                sla_breach_pct=3.1,
-                peak_eta_min=21.0,
-                orders_7d=3200,
-                recorded_date=str(date.today()),
-            ),
-            SLAPincodeDetail(
-                pincode="560102" if c == "Bangalore" else "110048" if c == "Delhi" else "400011",
-                neighborhood_name="HSR Layout" if c == "Bangalore" else "GK 1" if c == "Delhi" else "Chinchpokli",
-                city=c,
-                avg_eta_min=15.5,
-                sla_breach_pct=6.8,
-                peak_eta_min=28.0,
-                orders_7d=2400,
-                recorded_date=str(date.today()),
-            )
-        ]
+        return []
 
     return [
         SLAPincodeDetail(
@@ -128,15 +95,7 @@ async def sla_overview(
     rows = (await db.execute(query)).all()
 
     if not rows:
-        return [
-            SLAOverview(
-                city=c,
-                avg_eta_min=15.0 if c == "Mumbai" else 13.5 if c == "Bangalore" else 14.0,
-                avg_breach_pct=11.5 if c == "Mumbai" else 3.8 if c == "Bangalore" else 6.0,
-                total_pincodes_tracked=3 if c == "Bangalore" else 2,
-            )
-            for c in ["Bangalore", "Delhi", "Mumbai", "Hyderabad", "Pune"]
-        ]
+        return []
 
     results = []
     for city_name, avg_eta, avg_breach, pc_count in rows:
@@ -253,9 +212,16 @@ async def get_optimized_batch_dispatch(
             store_q = store_q.where(DarkStore.city == req.city)
         store = (await db.execute(store_q)).scalars().first()
 
-    store_lat = store.latitude if store else 12.9716
-    store_lng = store.longitude if store else 77.5946
-    store_name = store.store_name if store else "Koramangala Hub #04"
+    if not store:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="No matching active store is available for this dispatch simulation")
+    if store.latitude is None or store.longitude is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="The selected store has no coordinates")
+
+    store_lat = store.latitude
+    store_lng = store.longitude
+    store_name = store.store_name or store.name or f"Store {store.id}"
 
     # Generate or fetch pending orders around the store radius
     sample_orders = []
@@ -280,11 +246,13 @@ async def get_optimized_batch_dispatch(
     )
 
     return {
-        "store_id": store.id if store else 1,
+        "data_mode": "synthetic_simulation",
+        "store_id": store.id,
         "store_name": store_name,
         "store_location": {"lat": store_lat, "lng": store_lng},
         "vrp_metrics": optimization_result,
         "algorithm": "Clarke-Wright Savings VRP + 2-Opt TSP",
+        "note": "Customer stops and order values are generated for algorithm exploration; this is not a live dispatch plan.",
     }
 
 
@@ -304,47 +272,11 @@ async def get_conformal_sla_stats(
     anticipatory_prepick: bool = Query(False),
     payload: dict = Depends(verify_token),
 ):
-    """
-    Returns distribution-free Split Conformal Prediction statistics for 10-minute SLA guarantees.
-    Provides mathematically guaranteed finite-sample coverage P(Y in C(X)) >= 1 - alpha.
-    """
-    from backend.ml.conformal_prediction import conformal_sla_engine
-
-    sample_point_estimates = [7.2, 7.8, 8.4, 9.1, 9.7]
-    evaluated_orders = [
-        {
-            "order_id": f"ORD-CONF-{idx + 101}",
-            "neighborhood": nb,
-            **conformal_sla_engine.predict_interval(
-                predicted_mean_min=pe,
-                alpha=alpha,
-                traffic_multiplier=1.1 if idx % 2 == 1 else 1.0,
-                anticipatory_prepick_enabled=anticipatory_prepick,
-            ),
-        }
-        for idx, (pe, nb) in enumerate(zip(
-            sample_point_estimates,
-            ["Koramangala 5th Block", "Indiranagar 100ft Rd", "HSR Layout Sector 2", "Domlur Intermediate Ring", "BTM Layout 2nd Stage"]
-        ))
-    ]
-
-    quantile = conformal_sla_engine.compute_conformal_quantile(alpha)
-
-    return {
-        "framework": "Split Conformal Prediction (Distribution-Free)",
-        "guarantee": f"Finite-sample {round((1.0 - alpha) * 100, 1)}% Statistical Coverage Guarantee",
-        "alpha": alpha,
-        "conformal_quantile_min": round(quantile, 3),
-        "empirical_coverage_pct": 95.4,
-        "calibration_set_size": conformal_sla_engine.calibration_size,
-        "anticipatory_prepick_active": anticipatory_prepick,
-        "evaluated_active_orders": evaluated_orders,
-        "theoretical_properties": [
-            "Exact finite-sample coverage without distributional assumptions (distribution-free)",
-            "Robust to non-stationary urban traffic shocks and monsoon precipitation",
-            "Eliminates heuristic point-estimate SLA breach refund claims"
-        ]
-    }
+    """Return unavailable until measured operating calibration data is connected."""
+    raise HTTPException(
+        status_code=503,
+        detail="SLA calibration is not configured. No synthetic coverage or order metrics are returned.",
+    )
 
 
 @router.post("/conformal-predict")
@@ -352,17 +284,10 @@ async def evaluate_conformal_sla(
     req: ConformalPredictRequest,
     payload: dict = Depends(verify_token),
 ):
-    """
-    Evaluates an order or dark store context with Split Conformal Prediction intervals.
-    """
-    from backend.ml.conformal_prediction import conformal_sla_engine
-
-    return conformal_sla_engine.predict_interval(
-        predicted_mean_min=req.predicted_mean_min,
-        alpha=req.alpha,
-        traffic_multiplier=req.traffic_multiplier,
-        weather_multiplier=req.weather_multiplier,
-        anticipatory_prepick_enabled=req.anticipatory_prepick_enabled,
+    """Refuse to label a scenario as an SLA prediction without calibrated data."""
+    raise HTTPException(
+        status_code=503,
+        detail="SLA prediction is unavailable until a measured calibration dataset and validated point model are connected.",
     )
 
 
@@ -418,6 +343,8 @@ async def simulate_neuro_symbolic_darkstore(
     )
 
     return {
+        "data_mode": "synthetic_simulation",
+        "note": "Generated scenario only; no customer clickstream, picker, dispatch, or SLA actuators are connected.",
         "hawkes_predicted_basket": predicted_basket,
         **simulation_result
     }

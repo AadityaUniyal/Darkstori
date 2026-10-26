@@ -29,7 +29,7 @@ const NotFound = () => {
         <h1 className="text-5xl font-black text-foreground mb-4 tracking-tight">404</h1>
         <h2 className="text-xl font-semibold text-foreground/80 mb-2">Page Not Found</h2>
         <p className="text-muted-foreground mb-8">
-          The quadrant you're looking for has been reassigned or doesn't exist in our current spatial index.
+          The quadrant you&apos;re looking for has been reassigned or doesn&apos;t exist in our current spatial index.
         </p>
         <Link 
           to="/" 

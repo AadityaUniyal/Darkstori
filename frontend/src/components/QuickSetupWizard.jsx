@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -11,18 +10,12 @@ import {
   CheckCircle2,
   Circle,
   ArrowRight,
-  Database,
-  Loader2,
-  Layers
 } from 'lucide-react';
-import { api } from '../services/api';
-import { toast } from 'sonner';
 import AddStoreModal from './AddStoreModal';
 import AddBatchModal from './AddBatchModal';
 
 export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, totalPlaybooks = 0 }) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [isStoreModalOpen, setIsStoreModalOpen] = useState(false);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -35,22 +28,6 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
 
   const completedCount = (isStoreDone ? 1 : 0) + (isBatchDone ? 1 : 0) + (isPlaybookDone ? 1 : 0);
   const progressPercent = Math.round((completedCount / 4) * 100);
-
-  const seedMutation = useMutation({
-    mutationFn: async () => {
-      return await api.seedOptionA();
-    },
-    onSuccess: () => {
-      toast.success('Successfully loaded 5 Focus Metro benchmarks (Bangalore, Mumbai, Delhi, Hyderabad, Pune)!');
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['stores-list'] });
-      queryClient.invalidateQueries({ queryKey: ['expansion-opportunities'] });
-      queryClient.invalidateQueries({ queryKey: ['resilience-batches'] });
-    },
-    onError: (err) => {
-      toast.error('Failed to load benchmark dataset. Check network connection.');
-    }
-  });
 
   return (
     <>
@@ -67,7 +44,7 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
               Welcome to Your Darkstori Operating System
             </h2>
             <p className="text-sm text-[#86868B] mt-1 max-w-xl">
-              Configure your dark store network in 4 straightforward steps, or load verified Indian metro benchmarks to test drive real-world analytics.
+              Connect your own stores and inventory first. Sample benchmarks are illustrative and are not operating evidence.
             </p>
           </div>
 
@@ -204,30 +181,12 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
           </div>
         </div>
 
-        {/* Optional Benchmark Seeding Button */}
+        {/* Data provenance notice */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10 text-xs text-[#86868B]">
           <div className="flex items-center gap-2">
-            <Layers size={15} className="text-[#38BDF8]" />
-            <span>Want to test with full multi-city data instantly?</span>
+            <span className="text-[#38BDF8]">Data source</span>
+            <span>Only connected store and inventory records can generate operational actions.</span>
           </div>
-
-          <button
-            onClick={() => seedMutation.mutate()}
-            disabled={seedMutation.isPending}
-            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-[#FF9F1C]/20 hover:border-[#FF9F1C]/30 text-white font-semibold flex items-center gap-2 transition-all shadow-sm"
-          >
-            {seedMutation.isPending ? (
-              <>
-                <Loader2 size={14} className="animate-spin text-[#38BDF8]" />
-                <span>Loading Metro Benchmarks...</span>
-              </>
-            ) : (
-              <>
-                <Database size={14} className="text-[#38BDF8]" />
-                <span>Load 5 Focus Metro Benchmark Pack</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
 

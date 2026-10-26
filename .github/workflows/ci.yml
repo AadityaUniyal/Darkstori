@@ -2,43 +2,68 @@ name: Darkstori CI
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [main, develop]
+    tags: ["v*.*.*"]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  backend:
+    name: Backend checks
     runs-on: ubuntu-latest
-    
+    env:
+      ENVIRONMENT: testing
+      DATABASE_URL: sqlite+aiosqlite:///./ci_test.db
+      MLFLOW_ENABLE_TRACKING: "False"
+      SEED_DEMO_DATA: "false"
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-        cache: 'pip'
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # Install basic tools
-        pip install flake8 pytest
-        # Install project requirements
-        pip install -r backend/requirements/base.txt
-        pip install -r backend/requirements/ml.txt
-        
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 backend --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings.
-        flake8 backend --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
-        
-    - name: Test with pytest
-      env:
-        DATABASE_URL: "postgresql+asyncpg://dummy:dummy@localhost:5432/dummy"
-        ENVIRONMENT: "testing"
-        MLFLOW_ENABLE_TRACKING: "False"
-      run: |
-        pytest backend/tests/ -v --tb=short -x || echo "Tests completed with failures"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements/base.txt
+            backend/requirements/ml.txt
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          pip install -r backend/requirements/base.txt
+          pip install -r backend/requirements/ml.txt
+      - name: Create ephemeral test secrets
+        run: |
+          echo "JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(48))')" >> "$GITHUB_ENV"
+          echo "ENCRYPTION_KEY=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> "$GITHUB_ENV"
+      - name: Lint backend syntax and undefined names
+        run: flake8 backend --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Upgrade a fresh isolated migration database
+        run: DATABASE_URL=sqlite+aiosqlite:///./migration_test.db python -m alembic -c alembic.ini upgrade head
+      - name: Run backend suite (fail on any failure)
+        run: python -m pytest backend/tests/ -q --tb=short
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+      - name: Run frontend lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

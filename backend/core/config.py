@@ -7,7 +7,7 @@ Uses Pydantic BaseSettings for validation and type safety.
 from pathlib import Path
 from typing import List, Union, Any
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 # Project paths
@@ -39,8 +39,14 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    # Focus Cities (hardcoded — do not override via env)
-    FOCUS_CITIES: List[str] = ["Bangalore", "Delhi", "Mumbai", "Hyderabad", "Pune"]
+    # Optional rollout filter. Location search and the basemap are not limited
+    # to a static city list; configured operating markets come from the database.
+    FOCUS_CITIES: List[str] = []
+
+    # Replace public OpenStreetMap endpoints with managed/self-hosted services
+    # before scaling location search or POI analysis.
+    GEOCODER_BASE_URL: str = "https://nominatim.openstreetmap.org"
+    OVERPASS_API_URL: str = "https://overpass-api.de/api/interpreter"
 
     # Database — must be set via environment variable
     DATABASE_URL: str = ""
@@ -52,10 +58,11 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: int = 30
 
     # JWT Security
-    JWT_SECRET_KEY: str = "change-me-in-production-min-32-chars-long"
+    JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ENCRYPTION_KEY: str = ""
+    SEED_DEMO_DATA: bool = False
 
     # CORS (override via env var as JSON array or comma-separated)
     ALLOWED_ORIGINS: Union[List[str], str] = [
@@ -126,6 +133,8 @@ class Settings(BaseSettings):
     @classmethod
     def validate_secret_key(cls, v, info):
         """Validate JWT secret key meets minimum security requirements."""
+        if not v:
+            raise ValueError("JWT_SECRET_KEY must be configured")
         if len(v) < 32:
             raise ValueError("JWT_SECRET_KEY must be at least 32 characters")
         env = info.data.get("ENVIRONMENT", "development")
@@ -163,6 +172,18 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [x.strip() for x in v.split(",") if x.strip()]
         return v
+
+    @model_validator(mode="after")
+    def validate_production_configuration(self):
+        if self.ENVIRONMENT.lower() != "production":
+            return self
+        if not self.ENCRYPTION_KEY:
+            raise ValueError("ENCRYPTION_KEY must be configured in production")
+        if "*" in self.ALLOWED_ORIGINS:
+            raise ValueError("Wildcard ALLOWED_ORIGINS is not allowed in production")
+        if any("localhost" in origin or "127.0.0.1" in origin for origin in self.ALLOWED_ORIGINS):
+            raise ValueError("Localhost origins are not allowed in production")
+        return self
 
     @field_validator("PERFORMANCE_ROLLING_WINDOWS", mode="before")
     @classmethod

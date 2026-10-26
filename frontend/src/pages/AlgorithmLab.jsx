@@ -102,7 +102,7 @@ export default function AlgorithmLab() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, minHeight: 'auto', paddingBottom: '4rem', width: '100%', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}

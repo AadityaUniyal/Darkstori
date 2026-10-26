@@ -29,8 +29,10 @@ class OpportunityZone(BaseModel):
     store_count: int
     dominant_platform: str
     platforms: dict
-    opportunity_score: float
+    opportunity_score: Optional[float] = None
     zone_type: str  # "saturated" | "growth" | "greenfield"
+    data_mode: str = "recorded_store_density"
+    note: str = "Observed store density only; demand and profitability are not inferred."
 
 
 class PlacementScoreResponse(BaseModel):
@@ -39,7 +41,7 @@ class PlacementScoreResponse(BaseModel):
     city: str
     lat: Optional[float]
     lng: Optional[float]
-    opportunity_score: float
+    opportunity_score: Optional[float] = None
     demand_score: Optional[float]
     competition_gap: Optional[float]
     logistics_viability: Optional[float]
@@ -140,13 +142,19 @@ async def get_opportunity_zones(
                 minpoints := :min_samples
               ) OVER() AS cid
             FROM (
-                SELECT id, platform, latitude, longitude, city, is_active FROM dark_stores
+                SELECT id, platform, latitude, longitude, city, is_active, organization_id FROM dark_stores
                 UNION ALL
-                SELECT id, platform, latitude, longitude, city, is_active FROM competitor_stores
+                SELECT id, platform, latitude, longitude, city, is_active, NULL AS organization_id FROM competitor_stores
             ) AS all_active_stores
             WHERE is_active = true
         """
         params = {"eps_m": eps_meters, "min_samples": min_stores}
+        organization_id = payload.get("org_id") or payload.get("organization_id")
+        if str(organization_id or "").isdigit() and int(organization_id) > 0:
+            sql += " AND (organization_id = :organization_id OR organization_id IS NULL)"
+            params["organization_id"] = int(organization_id)
+        else:
+            sql += " AND organization_id IS NULL"
         if city:
             sql += " AND city = :city"
             params["city"] = city
@@ -184,14 +192,7 @@ async def get_opportunity_zones(
         stores.extend(comp_result.scalars().all())
 
         if len(stores) < min_stores:
-            # Fallback zones
-            return [
-                OpportunityZone(
-                    cluster_id=0, centroid_lat=12.93, centroid_lng=77.62,
-                    store_count=5, dominant_platform="Zepto", platforms={"Zepto": 3, "Blinkit": 2},
-                    opportunity_score=85.0, zone_type="growth"
-                )
-            ]
+            return []
 
         coords = [(s.latitude, s.longitude, {"platform": s.platform, "id": s.id}) for s in stores]
         clusters = _simple_dbscan(coords, eps_km=eps_km, min_samples=min_stores)
@@ -210,8 +211,9 @@ async def get_opportunity_zones(
 
         count = len(members)
         diversity = len(platforms)
-        opp_score = round(max(0, 100 - count * 8 + diversity * 5), 1)
-        zone_type = "saturated" if count >= 8 else "growth" if count >= 4 else "greenfield"
+        # A POI cluster only measures recorded store density; it cannot establish demand or profitability.
+        opp_score = None
+        zone_type = "observed_cluster"
 
         zones.append(OpportunityZone(
             cluster_id=cid,
@@ -224,7 +226,7 @@ async def get_opportunity_zones(
             zone_type=zone_type,
         ))
 
-    zones.sort(key=lambda z: z.opportunity_score, reverse=True)
+    zones.sort(key=lambda z: z.store_count, reverse=True)
     return zones
 
 
@@ -242,24 +244,6 @@ async def get_placement_scores(
     )
     result = await db.execute(query)
     scores = result.scalars().all()
-
-    if not scores:
-        # Fallback dummy scores
-        nbhds = {
-            "Bangalore": [("Koramangala", 12.934, 77.626, 9.2), ("Indiranagar", 12.971, 77.641, 8.9), ("HSR Layout", 12.910, 77.643, 8.2)],
-            "Delhi": [("Saket", 28.524, 77.216, 9.0), ("Connaught Place", 28.630, 77.217, 7.1)],
-            "Mumbai": [("Andheri West", 19.129, 72.827, 8.5), ("Bandra West", 19.054, 72.840, 8.0)],
-        }.get(city, [("Gachibowli", 17.448, 78.348, 8.0)])
-
-        return [
-            PlacementScoreResponse(
-                id=i, neighborhood_name=name, city=city, lat=lat, lng=lng,
-                opportunity_score=score * 10.0, demand_score=85.0, competition_gap=70.0,
-                logistics_viability=90.0, recommended_store_size_sqft=1500,
-                estimated_breakeven_months=12, confidence=0.88, city_tier="Tier 1"
-            )
-            for i, (name, lat, lng, score) in enumerate(nbhds)
-        ]
 
     return scores
 
@@ -288,12 +272,12 @@ async def get_placement_summary(
     served = (await db.execute(served_q)).scalar() or 0
 
     return {
-        "total_pincodes": total or 250,
-        "served_pincodes": served or 180,
-        "unserved_pincodes": (total - served) if total else 70,
-        "coverage_pct": round(served / total * 100, 1) if total else 72.0,
-        "avg_coverage_score": round(float(row[1]), 2) if row and row[1] else 65.4,
-        "total_population_covered": int(row[2]) if row and row[2] else 4500000,
+        "total_pincodes": total,
+        "served_pincodes": served,
+        "unserved_pincodes": max(0, total - served),
+        "coverage_pct": round(served / total * 100, 1) if total else None,
+        "avg_coverage_score": round(float(row[1]), 2) if row and row[1] is not None else None,
+        "total_population_covered": int(row[2]) if row and row[2] is not None else None,
         "city_filter": city,
     }
 
@@ -312,24 +296,5 @@ async def get_top_placement_opps(
     )
     result = await db.execute(query)
     scores = result.scalars().all()
-
-    if not scores:
-        # Fallback top opportunities
-        opps = [
-            ("Koramangala", "Bangalore", 12.934, 77.626, 92.0),
-            ("Saket", "Delhi", 28.524, 77.216, 90.0),
-            ("Indiranagar", "Bangalore", 12.971, 77.641, 89.0),
-            ("Hitech City", "Hyderabad", 17.448, 78.348, 88.0),
-            ("Andheri West", "Mumbai", 19.129, 72.827, 85.0),
-        ]
-        return [
-            PlacementScoreResponse(
-                id=i, neighborhood_name=name, city=city, lat=lat, lng=lng,
-                opportunity_score=score, demand_score=80.0, competition_gap=75.0,
-                logistics_viability=85.0, recommended_store_size_sqft=1500,
-                estimated_breakeven_months=14, confidence=0.85, city_tier="Tier 1"
-            )
-            for i, (name, city, lat, lng, score) in enumerate(opps)
-        ]
 
     return scores

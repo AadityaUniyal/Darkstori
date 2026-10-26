@@ -5,7 +5,7 @@ Revises: 001_ml_tracking
 Create Date: 2026-08-04 00:00:00.000000
 """
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
@@ -24,6 +24,8 @@ def get_json_type():
 
 
 def upgrade() -> None:
+    if not context.is_offline_mode() and "expansion_decisions" in set(sa.inspect(op.get_bind()).get_table_names()):
+        return
     op.create_table(
         "expansion_decisions",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -44,8 +46,8 @@ def upgrade() -> None:
         sa.Column("approved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
         sa.Column("review_notes", sa.Text(), nullable=True),
         sa.Column("decision_payload", get_json_type(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("NOW()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
     )
     op.create_index("idx_expansion_decision_city_status", "expansion_decisions", ["city", "status"])
     op.create_index("idx_expansion_decision_created", "expansion_decisions", ["created_at"])

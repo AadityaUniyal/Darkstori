@@ -60,25 +60,6 @@ async def list_cohorts(
     )
     rows = (await db.execute(query)).scalars().all()
 
-    if not rows:
-        # Return demo cohorts so the frontend isn't empty
-        demo = [
-            ("2025-01", 1200, 68, 52, 41, 35, 30, 26),
-            ("2025-02", 1450, 72, 55, 44, 37, 32, 28),
-            ("2025-03", 1680, 70, 53, 43, 36, 31, None),
-            ("2025-04", 1320, 65, 50, 40, 34, None, None),
-            ("2025-05", 1550, 74, 57, 46, None, None, None),
-            ("2025-06", 1890, 71, 54, None, None, None, None),
-        ]
-        return [
-            CohortRow(
-                cohort_month=m, user_count=u,
-                m1_retention=r1, m2_retention=r2, m3_retention=r3,
-                m4_retention=r4, m5_retention=r5, m6_retention=r6,
-            )
-            for m, u, r1, r2, r3, r4, r5, r6 in demo
-        ]
-
     return rows
 
 

@@ -3,12 +3,11 @@ import { api } from '../services/api';
 
 const CityContext = createContext(null);
 
-const DEFAULT_CITIES = ['Bangalore', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune'];
-const DEFAULT_CITY = 'Bangalore';
-
 export function CityProvider({ children }) {
-  const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
-  const [cities, setCities] = useState(DEFAULT_CITIES);
+  const [selectedCity, setSelectedCity] = useState('');
+  const [cities, setCities] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [citiesError, setCitiesError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -19,15 +18,17 @@ export function CityProvider({ children }) {
         const names = (data || [])
           .map((city) => city.city_name || city.city)
           .filter(Boolean);
-        if (mounted && names.length > 0) {
+        if (mounted) {
+          setCitiesError(false);
           setCities(names);
-          if (!names.includes(selectedCity)) {
+          if (!selectedCity && names.length > 0) {
             setSelectedCity(names[0]);
           }
         }
       } catch {
         if (mounted) {
-          setCities(DEFAULT_CITIES);
+          setCities([]);
+          setCitiesError(true);
         }
       }
     };
@@ -47,9 +48,19 @@ export function CityProvider({ children }) {
     });
   }, []);
 
+  const selectLocation = useCallback((location) => {
+    if (!location || !Number.isFinite(Number(location.lat)) || !Number.isFinite(Number(location.lng))) return;
+    setSelectedLocation({ ...location, lat: Number(location.lat), lng: Number(location.lng) });
+    const cityName = location.address?.city || location.address?.town || location.address?.municipality;
+    if (cityName) {
+      setSelectedCity(cityName);
+      setCities((prev) => prev.includes(cityName) ? prev : [...prev, cityName]);
+    }
+  }, []);
+
   const value = useMemo(
-    () => ({ selectedCity, setSelectedCity, cities, addCity }),
-    [selectedCity, cities, addCity]
+    () => ({ selectedCity, currentCity: selectedCity, setSelectedCity, setCity: setSelectedCity, cities, citiesError, addCity, selectedLocation, setSelectedLocation, selectLocation }),
+    [selectedCity, cities, citiesError, addCity, selectedLocation, selectLocation]
   );
 
   return <CityContext.Provider value={value}>{children}</CityContext.Provider>;

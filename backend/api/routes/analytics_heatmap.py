@@ -6,7 +6,7 @@ coverage gap identification, and platform order comparison.
 
 from datetime import date, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,8 @@ async def get_order_heatmap(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Get geolocated order distribution for rendering heatmaps."""
+    """Expose only a production order feed, never benchmark coordinates."""
+    raise HTTPException(status_code=501, detail="Production order geolocation is unavailable; scenario order rows are not presented as live activity")
     since = date.today() - timedelta(days=days)
     query = (
         select(
@@ -52,26 +53,7 @@ async def get_order_heatmap(
     rows = result.all()
 
     if not rows:
-        CITY_CENTROIDS = {
-            "bangalore": (12.9716, 77.5946),
-            "delhi": (28.6139, 77.2090),
-            "mumbai": (19.0760, 72.8777),
-            "hyderabad": (17.3850, 78.4867),
-            "pune": (18.5204, 73.8567),
-        }
-        city_key = city.lower() if city else "bangalore"
-        lat, lng = CITY_CENTROIDS.get(city_key, (12.9716, 77.5946))
-        import random
-        demo_rows = []
-        platforms = ["Blinkit", "Zepto", "Instamart", "BB Now"]
-        for i in range(120):
-            demo_rows.append({
-                "lat": lat + random.uniform(-0.06, 0.06),
-                "lng": lng + random.uniform(-0.06, 0.06),
-                "value": round(random.uniform(120, 850), 2),
-                "platform": random.choice(platforms),
-            })
-        return demo_rows
+        return []
 
     return [
         {
@@ -123,7 +105,8 @@ async def get_platform_comparison(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Compare order volume, avg delivery time, and revenue by platform."""
+    """Compare platforms only after a production order source is connected."""
+    raise HTTPException(status_code=501, detail="Platform order comparison requires a verified production order feed")
     query = select(
         OrderSynthetic.platform,
         func.count(OrderSynthetic.id).label("total_orders"),
@@ -161,7 +144,8 @@ async def get_order_trends(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
-    """Retrieve daily order trends, revenue, and delivery performance over a given timeframe."""
+    """Aggregate daily order trends from a production feed."""
+    raise HTTPException(status_code=501, detail="Order trends require a verified production order feed")
     since = date.today() - timedelta(days=days)
     query = (
         select(
@@ -186,16 +170,7 @@ async def get_order_trends(
     rows = result.all()
 
     if not rows:
-        trends = []
-        for i in range(days):
-            d = since + timedelta(days=i)
-            trends.append({
-                "date": d.isoformat(),
-                "total_orders": 120 + (i * 3) % 40,
-                "total_revenue": round((120 + (i * 3) % 40) * 380.0, 2),
-                "avg_delivery_mins": 9.8,
-            })
-        return {"trends": trends, "days": days, "city": city}
+        return {"trends": [], "days": days, "city": city}
 
     trends = [
         {

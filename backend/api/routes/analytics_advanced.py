@@ -42,7 +42,13 @@ async def get_dashboard_metrics(
 ):
     """Aggregate all critical KPIs, city details, top opportunity areas, sentiment and competitive moves."""
     # 1. Summary KPIs
-    total_stores_q = select(func.count(DarkStore.id)).where(DarkStore.is_active.is_(True))
+    organization_id = payload.get("org_id") or payload.get("organization_id")
+    if str(organization_id or "").isdigit() and int(organization_id) > 0:
+        org_filter = DarkStore.organization_id == int(organization_id)
+    else:
+        org_filter = DarkStore.organization_id.is_(None)
+
+    total_stores_q = select(func.count(DarkStore.id)).where(DarkStore.is_active.is_(True), org_filter)
     if city:
         total_stores_q = total_stores_q.where(DarkStore.city == city)
 
@@ -50,18 +56,15 @@ async def get_dashboard_metrics(
     if city:
         total_nbhds_q = total_nbhds_q.join(FocusCity, Neighborhood.city_id == FocusCity.city_id).where(FocusCity.city_name == city)
 
-    since = date.today() - timedelta(days=30)
-    total_orders_q = select(func.count(OrderSynthetic.id)).where(OrderSynthetic.order_date >= since)
-    if city:
-        total_orders_q = total_orders_q.where(OrderSynthetic.store_id.in_(select(DarkStore.id).where(DarkStore.city == city)))
-
     total_moves_q = select(func.count(CompetitiveMove.move_id))
     if city:
         total_moves_q = total_moves_q.where(CompetitiveMove.city == city)
 
     total_stores = (await db.execute(total_stores_q)).scalar() or 0
     total_nbhds = (await db.execute(total_nbhds_q)).scalar() or 0
-    total_orders = (await db.execute(total_orders_q)).scalar() or 0
+    # `orders_synthetic` is a scenario/benchmark table, not an authenticated
+    # production order feed. Do not present it as operational volume.
+    total_orders = None
     total_moves = (await db.execute(total_moves_q)).scalar() or 0
 
     # 1.1 Pincode Coverage metrics
@@ -90,12 +93,12 @@ async def get_dashboard_metrics(
         city_name, store_count, nb_count = crow
         # Get average opportunity score for city
         avg_score_q = select(func.avg(PlacementScore.opportunity_score)).where(PlacementScore.city == city_name)
-        avg_score = (await db.execute(avg_score_q)).scalar() or 7.5
+        avg_score = (await db.execute(avg_score_q)).scalar()
         city_overview.append({
             "city": city_name,
             "store_count": store_count,
             "neighborhood_count": nb_count,
-            "avg_opportunity_score": round(float(avg_score) / 10.0, 1) if avg_score > 10.0 else round(float(avg_score), 1),
+            "avg_opportunity_score": (round(float(avg_score) / 10.0, 1) if avg_score > 10.0 else round(float(avg_score), 1)) if avg_score is not None else None,
         })
 
     # 3. Top Opportunities
@@ -128,12 +131,12 @@ async def get_dashboard_metrics(
     sent_rows = (await db.execute(sent_q)).all()
     sentiment = []
     for srow in sent_rows:
-        total = srow[1] or 1
+        total = srow[1] or 0
         sentiment.append({
             "platform": srow[0],
-            "positive_pct": round((srow[2] or 0) / total * 100, 1),
-            "negative_pct": round((srow[3] or 0) / total * 100, 1),
-            "avg_sentiment": round(float(srow[4] or 0.5), 2),
+            "positive_pct": round((srow[2] or 0) / total * 100, 1) if total else None,
+            "negative_pct": round((srow[3] or 0) / total * 100, 1) if total else None,
+            "avg_sentiment": round(float(srow[4]), 2) if srow[4] is not None else None,
         })
 
     # 5. Recent Competitive Moves
@@ -164,6 +167,11 @@ async def get_dashboard_metrics(
         "top_opportunities": top_opportunities,
         "sentiment": sentiment,
         "recent_competitive_moves": {"moves": moves},
+        "metric_sources": {
+            "stores": "dark_stores database records",
+            "orders_30d": "unavailable: production OMS/order feed not connected",
+            "pincode_coverage": "pincode_coverage database records",
+        },
     }
 
 

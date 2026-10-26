@@ -5,13 +5,13 @@ Revises:
 Create Date: 2026-05-10 12:00:00.000000
 
 """
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '001_ml_tracking'
-down_revision = None
+down_revision = '000_core_schema'
 branch_labels = None
 depends_on = None
 
@@ -28,6 +28,17 @@ def get_json_type():
 
 def upgrade() -> None:
     """Create ML tracking tables."""
+    if context.is_offline_mode():
+        existing_tables = set()
+    else:
+        existing_tables = set(sa.inspect(op.get_bind()).get_table_names())
+    feature_tables = {
+        'ml_predictions', 'ml_performance_metrics', 'ml_feature_drift', 'ml_training_jobs'
+    }
+    if feature_tables.issubset(existing_tables):
+        return
+    if feature_tables.intersection(existing_tables):
+        raise RuntimeError("ML tracking schema is partially present; reconcile it before applying this migration")
     
     # Create ml_predictions table
     op.create_table(
@@ -43,8 +54,8 @@ def upgrade() -> None:
         sa.Column('actual_value', sa.Float(), nullable=True),
         sa.Column('prediction_error', sa.Float(), nullable=True),
         sa.Column('latency_ms', sa.Float(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.text('NOW()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('NOW()'), onupdate=sa.text('NOW()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), onupdate=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     )
     
     # Create indexes for ml_predictions
@@ -66,7 +77,7 @@ def upgrade() -> None:
         sa.Column('mape', sa.Float(), nullable=True),
         sa.Column('prediction_count', sa.Integer(), nullable=True),
         sa.Column('avg_latency_ms', sa.Float(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.text('NOW()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     )
     
     # Create unique constraint for ml_performance_metrics
@@ -92,7 +103,7 @@ def upgrade() -> None:
         sa.Column('current_mean', sa.Float(), nullable=True),
         sa.Column('training_std', sa.Float(), nullable=True),
         sa.Column('current_std', sa.Float(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.text('NOW()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     )
     
     # Create indexes for ml_feature_drift

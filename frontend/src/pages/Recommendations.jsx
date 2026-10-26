@@ -140,7 +140,7 @@ export default function Recommendations() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', minHeight: '100vh', position: 'relative', zIndex: 1 }} className="print-area">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minHeight: 'auto', paddingBottom: '4rem', width: '100%', position: 'relative', zIndex: 1 }} className="print-area">
       <AmbientBackground />
 
       {/* Header controls */}

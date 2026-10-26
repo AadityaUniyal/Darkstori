@@ -95,6 +95,7 @@ class DarkStore(Base):
 
     organization = relationship("Organization", back_populates="dark_stores")
     orders = relationship("OrderSynthetic", back_populates="store")
+    order_events = relationship("OrderEvent", back_populates="store")
 
     __table_args__ = (
         Index("idx_store_location", "latitude", "longitude"),
@@ -186,6 +187,37 @@ class OrderSynthetic(Base):
         Index("idx_order_status_date", "status", "order_date"),
         Index("idx_orders_neighborhood", "neighborhood_id"),
         Index("idx_orders_customer_date", "customer_id", "order_date"),
+    )
+
+
+class OrderEvent(Base):
+    """An operator-owned order event received from an OMS or dispatch system.
+
+    Synthetic benchmark rows deliberately remain in ``orders_synthetic`` and
+    are never returned by live analytics endpoints.
+    """
+    __tablename__ = "order_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False, index=True)
+    store_id = Column(Integer, ForeignKey("dark_stores.id"), nullable=False, index=True)
+    source = Column(String(80), nullable=False)
+    source_event_id = Column(String(160), nullable=False)
+    event_type = Column(String(50), nullable=False)
+    occurred_at = Column(DateTime, nullable=False, index=True)
+    order_value = Column(Float)
+    delivery_mins = Column(Float)
+    delivery_latitude = Column(Float)
+    delivery_longitude = Column(Float)
+    pincode = Column(String(10))
+    payload = Column(JSON, nullable=False, default=dict)
+    received_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    store = relationship("DarkStore", back_populates="order_events")
+
+    __table_args__ = (
+        UniqueConstraint("organization_id", "source", "source_event_id", name="uq_order_event_source"),
+        Index("idx_order_events_org_occurred", "organization_id", "occurred_at"),
     )
 
 
@@ -429,6 +461,7 @@ class StoreSimulation(Base):
     __tablename__ = "store_simulations"
 
     simulation_id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     id = synonym("simulation_id")
     neighborhood_id = Column(Integer, ForeignKey("neighborhoods.neighborhood_id"), nullable=True)
     name = Column(String(200), nullable=True)
@@ -724,6 +757,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     action = Column(String(100), nullable=False)
     target_table = Column(String(100))
@@ -740,6 +774,7 @@ class StockLedger(Base):
     __tablename__ = "stock_ledger"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     store_id = Column(Integer, ForeignKey("dark_stores.id"), nullable=False)
     sku_name = Column(String(200), nullable=False)
     quantity_changed = Column(Integer, nullable=False)
@@ -800,6 +835,7 @@ class Playbook(Base):
     __tablename__ = "playbooks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     name = Column(String(200), nullable=False)
     description = Column(Text)
     is_active = Column(Boolean, default=True)
@@ -836,6 +872,7 @@ class PlaybookExecution(Base):
     __tablename__ = "playbook_executions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     playbook_id = Column(Integer, ForeignKey("playbooks.id"), nullable=False)
     trigger_event = Column(JSONB, nullable=False)  # the raw event payload
     conditions_matched = Column(Boolean, default=True)
@@ -856,6 +893,7 @@ class CannibalizationSimulation(Base):
     __tablename__ = "cannibalization_simulations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     proposed_lat = Column(Float, nullable=False)
     proposed_lng = Column(Float, nullable=False)
     proposed_city = Column(String(100), nullable=False)
@@ -882,6 +920,7 @@ class ExpansionDecision(Base):
     __tablename__ = "expansion_decisions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     city = Column(String(100), nullable=False)
     neighborhood_id = Column(Integer, ForeignKey("neighborhoods.neighborhood_id"), nullable=True)
     neighborhood_name = Column(String(200), nullable=False)

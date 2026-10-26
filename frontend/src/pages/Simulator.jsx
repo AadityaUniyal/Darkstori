@@ -12,7 +12,6 @@ import LazyMapView from '../components/LazyMapView';
 import CannibalizationMap from '../components/CannibalizationMap';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/empty-state';
-import { FALLBACK_SIMULATOR_NEIGHBORHOODS } from '../constants/fallbacks';
 
 
 const PRESET_HUBS = [
@@ -84,13 +83,12 @@ export default function Simulator() {
     refetchInterval: 5000
   });
 
-  const fallbackNeighborhoods = FALLBACK_SIMULATOR_NEIGHBORHOODS;
-
-  const neighborhoodList = nbhds && nbhds.length > 0 ? nbhds : fallbackNeighborhoods;
+  const neighborhoodList = Array.isArray(nbhds) ? nbhds : [];
 
   // ROI Predictor Mutation
   const predictROIMutation = useMutation({
     mutationFn: (payload) => api.predictROI(payload),
+    onError: () => toast.error('Simulation unavailable. The connected prediction service did not return a result.'),
   });
 
   // Proposal workflow mutations
@@ -116,15 +114,18 @@ export default function Simulator() {
       refetchProposals();
       refetchAudits();
       setActiveTab('ledger');
+      toast.success('Approval recorded. Register the physical store separately when it is ready.');
     }
   });
 
   const getNearestNeighborhood = (lat, lng) => {
     let minD = Infinity;
     let nearest = neighborhoodList[0];
+    if (!nearest) return null;
     neighborhoodList.forEach(n => {
-      const nLat = n.centroid_lat || 12.9716;
-      const nLng = n.centroid_lng || 77.5946;
+      const nLat = n.centroid_lat ?? n.latitude;
+      const nLng = n.centroid_lng ?? n.longitude;
+      if (!Number.isFinite(Number(nLat)) || !Number.isFinite(Number(nLng))) return;
       const dist = Math.pow(nLat - lat, 2) + Math.pow(nLng - lng, 2);
       if (dist < minD) {
         minD = dist;
@@ -141,8 +142,12 @@ export default function Simulator() {
     }
     setPlacementMode(true);
 
-    const lat = nb.centroid_lat || nb.lat || 12.9716 + (Math.random() - 0.5) * 0.05;
-    const lng = nb.centroid_lng || nb.lng || 77.5946 + (Math.random() - 0.5) * 0.05;
+    const lat = nb.centroid_lat ?? nb.lat;
+    const lng = nb.centroid_lng ?? nb.lng;
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) {
+      toast.error('This neighborhood has no mapped coordinates.');
+      return;
+    }
 
     const nearestNb = getNearestNeighborhood(lat, lng);
 
@@ -170,7 +175,7 @@ export default function Simulator() {
             logistics_viability: data.roi_12_months_pct > 15 ? 'High' : 'Medium',
             recommended_store_size_sqft: storeSize,
             estimated_breakeven_months: data.break_even_month,
-            confidence: Math.round(data.confidence_level * 100),
+            confidence: null,
             predicted_daily_orders: data.predicted_daily_orders,
             monthly_revenue: data.predicted_monthly_revenue,
             monthly_opex: data.monthly_operating_cost,
@@ -208,8 +213,12 @@ export default function Simulator() {
 
   const runSimulationForNbhd = (nb) => {
     if (!nb) return;
-    const lat = nb.centroid_lat || nb.latitude || 12.9345;
-    const lng = nb.centroid_lng || nb.longitude || 77.6266;
+    const lat = nb.centroid_lat ?? nb.latitude;
+    const lng = nb.centroid_lng ?? nb.longitude;
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) {
+      toast.error('This neighborhood has no mapped coordinates.');
+      return;
+    }
 
     predictROIMutation.mutate({
       neighborhood_id: nb.neighborhood_id || 1,
@@ -240,7 +249,7 @@ export default function Simulator() {
             logistics_viability: data.roi_12_months_pct > 15 ? 'High' : 'Medium',
             recommended_store_size_sqft: storeSize,
             estimated_breakeven_months: data.break_even_month || 6.5,
-            confidence: Math.round((data.confidence_level || 0.92) * 100),
+            confidence: null,
             predicted_daily_orders: projectedOrders,
             monthly_revenue: monthlyRev,
             monthly_opex: data.monthly_operating_cost || 1140000,
@@ -268,14 +277,9 @@ export default function Simulator() {
     setCapexOverride(preset.capex);
     setStoreSize(preset.size);
     setRoutingMins(preset.routing);
-    const target = neighborhoodList.find(n => n.neighborhood_id === preset.nbhd_id) || {
-      neighborhood_id: preset.nbhd_id,
-      neighborhood_name: preset.name,
-      city: preset.city,
-      centroid_lat: 12.9345,
-      centroid_lng: 77.6266
-    };
-    runSimulationForNbhd(target);
+    const target = neighborhoodList.find(n => n.neighborhood_id === preset.nbhd_id);
+    if (target) runSimulationForNbhd(target);
+    else toast.error('This preset is not connected to a neighborhood record.');
   };
 
   // Preload first scenario on mount
@@ -288,7 +292,7 @@ export default function Simulator() {
   const activeDraft = drafts.find(d => d.id === activeDraftId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', minHeight: 'auto', paddingBottom: '4rem', width: '100%', position: 'relative', zIndex: 1 }}>
       <AmbientBackground />
 
       {/* Header */}
@@ -298,7 +302,7 @@ export default function Simulator() {
             <Activity color="#FF9F1C" size={32} /> Hyperlocal Store Simulator
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.94rem', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
-            Configure localized unit economics, evaluate route serviceability, and execute approval workflows.
+            Explore indicative unit economics from connected neighborhood records. Results use a heuristic and do not provision a store or guarantee ROI.
           </p>
         </div>
 
@@ -367,8 +371,8 @@ export default function Simulator() {
         ))}
       </div>
 
-      {/* Main Grid Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 380px', gap: '24px' }}>
+      {/* Main Responsive Grid Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '28px', alignItems: 'start' }}>
         
         {/* Left Side: Map + Cost Configuration Panels */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -784,6 +788,16 @@ export default function Simulator() {
                         )}
 
                         <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                          {(p.status === 'simulation' || p.status === 'draft') && (
+                            <button
+                              onClick={() => proposeMutation.mutate(p.simulation_id)}
+                              disabled={proposeMutation.isPending}
+                              className="btn-secondary"
+                              style={{ width: '100%', padding: '6px 0', fontSize: '0.78rem' }}
+                            >
+                              Submit Scenario for Review
+                            </button>
+                          )}
                           {(!user?.role || user?.role === 'finance_reviewer' || user?.role === 'admin' || user?.role === 'user') && p.status === 'proposed' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
                               <input 
@@ -805,11 +819,10 @@ export default function Simulator() {
                               <button 
                                 onClick={() => {
                                   approveMutation.mutate(p.simulation_id);
-                                  toast.success('Site approved in ledger!');
                                 }}
                                 className="btn-secondary" style={{ flex: 1, background: '#34C759', border: 'none', color: '#ffffff', padding: '6px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer' }}
                               >
-                                Approve Store Location
+                                Approve Scenario
                               </button>
                             </div>
                           )}
@@ -820,7 +833,7 @@ export default function Simulator() {
                               className="btn-primary"
                               style={{ width: '100%', background: 'linear-gradient(135deg, #FF9F1C, #0284C7)', border: 'none', color: '#fff', padding: '8px 0', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                             >
-                              <Plus size={13} /> Commission to Active Fleet
+                              <Plus size={13} /> Register Physical Store
                             </button>
                           )}
                         </div>
@@ -854,19 +867,19 @@ export default function Simulator() {
                     />
                   ) : (
                     auditLogs?.map((log) => {
-                      const prov = log.new_state?.decision_provenance;
+                      const prov = log.new_state?.decision_provenance || log.new_state;
                       return (
                         <div key={log.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                            <span style={{ color: 'var(--color-text-primary)' }}>{log.new_state?.store_provisioned || "Darkstore Hub"}</span>
-                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--peacock-500)' }}>v{prov?.model_version || "3.1.0"}</span>
+                            <span style={{ color: 'var(--color-text-primary)' }}>{log.new_state?.store_provisioned || `Scenario #${log.target_id} approved`}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--peacock-500)' }}>{prov?.model_version ? `v${prov.model_version}` : 'Heuristic'}</span>
                           </div>
                           <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.74rem' }}>
-                            Approver: {prov?.approver?.email || "regional_head@darkstori.com"}
+                            Approver: {prov?.approver?.email || 'Recorded operator'}
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '0.7rem', color: 'var(--color-text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px', marginTop: '4px' }}>
-                            <span>Capex: ₹{(prov?.parameters_snapshot?.investment || 1500000).toLocaleString('en-IN')}</span>
-                            <span>Orders Proj: {prov?.parameters_snapshot?.predicted_daily_orders || 240} daily</span>
+                            <span>Capex: {prov?.parameters_snapshot?.investment != null ? `₹${Number(prov.parameters_snapshot.investment).toLocaleString('en-IN')}` : 'Not recorded'}</span>
+                            <span>Orders estimate: {prov?.parameters_snapshot?.predicted_daily_orders != null ? `${prov.parameters_snapshot.predicted_daily_orders} / day` : 'Not recorded'}</span>
                           </div>
                         </div>
                       );

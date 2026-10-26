@@ -20,6 +20,40 @@ from backend.database.connection import AsyncSessionLocal, init_db
 from backend.database.models.models import ProductBatch, DarkStore
 
 
+async def add_recorded_batch(session, city: str, qr_hash: str):
+    """Create a real database fixture; production routes never invent batches."""
+    now = datetime.now()
+    store = DarkStore(
+        store_name=f"{city} test store",
+        city=city,
+        latitude=12.9716,
+        longitude=77.5946,
+        is_active=True,
+        organization_id=None,
+    )
+    session.add(store)
+    await session.flush()
+    batch = ProductBatch(
+        product_name="Test produce",
+        category="Fruits",
+        store_id=store.id,
+        quantity=10,
+        base_price=100.0,
+        current_price=100.0,
+        freshness_score=0.95,
+        arrival_time=now,
+        expiry_time=now + timedelta(hours=36),
+        decay_rate_per_hour=0.03,
+        qr_code_hash=qr_hash,
+        bruising_percent=0.0,
+        color_state="Fresh/Optimal",
+    )
+    session.add(batch)
+    await session.commit()
+    await session.refresh(batch)
+    return batch
+
+
 class TestSigmoidDiscountFormula:
     """Tests for continuous Sigmoid perishable markdown calculation."""
 
@@ -63,7 +97,9 @@ class TestResilienceDecayAndAlerts:
         await init_db()
         async with AsyncSessionLocal() as session:
             payload = {"sub": "resilience_tester", "role": "operations"}
-            req = DecayRequest(hours=10.0, city="Bangalore", temp_failure=False)
+            city = "Unit Test Decay Normal"
+            await add_recorded_batch(session, city, "qr_unit_decay_normal")
+            req = DecayRequest(hours=10.0, city=city, temp_failure=False)
             batches = await simulate_decay(req=req, db=session, payload=payload)
 
             assert len(batches) > 0
@@ -78,7 +114,9 @@ class TestResilienceDecayAndAlerts:
         await init_db()
         async with AsyncSessionLocal() as session:
             payload = {"sub": "resilience_tester", "role": "operations"}
-            req = DecayRequest(hours=6.0, city="Bangalore", temp_failure=True)
+            city = "Unit Test Decay Breach"
+            await add_recorded_batch(session, city, "qr_unit_decay_breach")
+            req = DecayRequest(hours=6.0, city=city, temp_failure=True)
             batches = await simulate_decay(req=req, db=session, payload=payload)
 
             assert len(batches) > 0
@@ -95,12 +133,13 @@ class TestQRCodeAndQualityVerification:
         await init_db()
         async with AsyncSessionLocal() as session:
             payload = {"sub": "scanner_user", "role": "picker"}
-            req = ScanRequest(qr_code_hash="qr_ban_01", store_id=1)
+            batch = await add_recorded_batch(session, "Unit Test QR", "qr_unit_test_known")
+            req = ScanRequest(qr_code_hash=batch.qr_code_hash, store_id=batch.store_id)
             response = await scan_qr_crate(req=req, db=session, payload=payload)
 
-            assert response.product_name == "Organic Bananas"
+            assert response.product_name == "Test produce"
             assert response.category == "Fruits"
-            assert response.qr_code_hash == "qr_ban_01"
+            assert response.qr_code_hash == "qr_unit_test_known"
 
     @pytest.mark.asyncio
     async def test_scan_qr_crate_unknown_hash_raises_404(self):

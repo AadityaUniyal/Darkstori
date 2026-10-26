@@ -3,8 +3,8 @@ services:
     image: postgis/postgis:16-3.4-alpine
     container_name: darkstori-postgres
     environment:
-      POSTGRES_USER: darkstori
-      POSTGRES_PASSWORD: darkstori_dev_password
+      POSTGRES_USER: ${POSTGRES_USER:-darkstori}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: darkstori_db
     ports:
       - "5432:5432"
@@ -25,11 +25,11 @@ services:
       dockerfile: backend/Dockerfile
     container_name: darkstori-backend
     environment:
-      - DATABASE_URL=postgresql+asyncpg://darkstori:darkstori_dev_password@postgres:5432/darkstori_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-darkstori}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/darkstori_db
       - ENVIRONMENT=development
       - DEBUG=True
-      - SECRET_KEY=darkstore-dev-secret-key-min-32-chars-long
-      - JWT_SECRET_KEY=darkstore-dev-secret-key-min-32-chars-long
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?Set ENCRYPTION_KEY in .env}
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:80
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db

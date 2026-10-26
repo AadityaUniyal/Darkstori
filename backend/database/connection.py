@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urlunparse
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool, StaticPool
 from sqlalchemy import text
+from sqlalchemy.orm import with_loader_criteria
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.compiler import compiles
 
@@ -94,20 +95,48 @@ class TenantScopedSession(AsyncSession):
     
     async def execute(self, statement, params=None, execution_options=None, bind_arguments=None, **kwargs):
         from backend.core.tenant import get_current_tenant_id
+        from backend.database.models.models import Base, DarkStore, User
+
         tenant_id = get_current_tenant_id()
-        
-        if tenant_id is not None:
-            # Safely rewrite statements to inject organization_id filters
-            try:
-                # Handle selects / general statements
-                if hasattr(statement, "froms"):
-                    for from_clause in statement.froms:
-                        entity = getattr(from_clause, "entity_namespace", None)
-                        if entity and hasattr(entity, "organization_id"):
-                            statement = statement.where(entity.organization_id == tenant_id)
-            except Exception as e:
-                logger.warning(f"Failed to auto-inject tenant scope: {e}")
-                
+
+        if tenant_id is not None and getattr(statement, "is_select", False):
+            # Apply tenant criteria to ORM entities even inside joins and nested
+            # selects; the previous FROM-clause rewrite missed those shapes.
+            dark_store_filter = (
+                DarkStore.organization_id == tenant_id
+                if tenant_id > 0
+                else DarkStore.organization_id.is_(None)
+            )
+            user_filter = (
+                User.organization_id == tenant_id
+                if tenant_id > 0
+                else User.organization_id.is_(None)
+            )
+            tenant_options = [
+                with_loader_criteria(DarkStore, dark_store_filter, include_aliases=True),
+                with_loader_criteria(User, user_filter, include_aliases=True),
+            ]
+            # Apply the same tenant boundary to every mapped record that owns an
+            # organization_id, including audit, inventory ledger, and workflows.
+            for mapper in Base.registry.mappers:
+                model = mapper.class_
+                if model in (DarkStore, User) or "organization_id" not in mapper.columns:
+                    continue
+                tenant_filter = (
+                    model.organization_id == tenant_id
+                    if tenant_id > 0
+                    else model.organization_id.is_(None)
+                )
+                tenant_options.append(with_loader_criteria(model, tenant_filter, include_aliases=True))
+            statement = statement.options(*tenant_options)
+        elif tenant_id is not None and (getattr(statement, "is_update", False) or getattr(statement, "is_delete", False)):
+            table = getattr(statement, "table", None)
+            tenant_column = table.c.get("organization_id") if table is not None else None
+            if tenant_column is not None:
+                statement = statement.where(
+                    tenant_column == tenant_id if tenant_id > 0 else tenant_column.is_(None)
+                )
+
         if params is not None:
             kwargs["params"] = params
         if execution_options is not None:
@@ -116,6 +145,26 @@ class TenantScopedSession(AsyncSession):
             kwargs["bind_arguments"] = bind_arguments
         return await super().execute(statement, **kwargs)
 
+    async def flush(self, objects=None):
+        """Stamp new tenant-owned rows and reject cross-tenant ownership writes."""
+        from backend.core.tenant import get_current_tenant_id
+        from backend.database.models.models import Base
+
+        tenant_id = get_current_tenant_id()
+        if tenant_id is not None:
+            mapper_by_class = {mapper.class_: mapper for mapper in Base.registry.mappers}
+            for instance in list(self.new) + list(self.dirty):
+                mapper = mapper_by_class.get(type(instance))
+                if mapper is None or "organization_id" not in mapper.columns:
+                    continue
+                existing_org = getattr(instance, "organization_id", None)
+                expected_org = tenant_id if tenant_id > 0 else None
+                if existing_org is not None and existing_org != expected_org:
+                    raise PermissionError("Cannot create a record for a different organization")
+                if instance in self.new:
+                    instance.organization_id = expected_org
+        await super().flush(objects=objects)
+
 
 # Session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -123,76 +172,40 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 async def init_db():
-    """Initialize database connection (create tables and trigger registrations)."""
+    """Use isolated metadata setup in tests; require Alembic for every shared database."""
     from backend.database.models.models import Base
     try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-            logger.info("Database initialized successfully")
-            
-            # Setup real-time PostgreSQL triggers and migrations if using Postgres
-            if engine.dialect.name == "postgresql":
-                # Ensure PostGIS extension is enabled
-                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-                logger.info("PostGIS extension ensured/created")
-                
-                # Auto-migrate store_simulations table with status and comments columns
-                await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'proposed';"))
-                await conn.execute(text("ALTER TABLE store_simulations ADD COLUMN IF NOT EXISTS comments TEXT;"))
-                
-                # Drop incorrect legacy check constraint if exists
-                await conn.execute(text("ALTER TABLE pincode_coverage DROP CONSTRAINT IF EXISTS check_coverage;"))
-                trigger_statements = [
-                    """
-                    CREATE OR REPLACE FUNCTION notify_table_change()
-                    RETURNS trigger AS $$
-                    DECLARE
-                      payload JSON;
-                    BEGIN
-                      payload = json_build_object(
-                        'table', TG_TABLE_NAME,
-                        'action', TG_OP,
-                        'data', row_to_json(NEW)
-                      );
-                      PERFORM pg_notify('darkstori_events', payload::text);
-                      RETURN NEW;
-                    END;
-                    $$ LANGUAGE plpgsql;
-                    """,
-                    "DROP TRIGGER IF EXISTS trigger_order_changes ON orders_synthetic;",
-                    """
-                    CREATE TRIGGER trigger_order_changes
-                    AFTER INSERT OR UPDATE ON orders_synthetic
-                    FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """,
-                    "DROP TRIGGER IF EXISTS trigger_batch_changes ON product_batches;",
-                    """
-                    CREATE TRIGGER trigger_batch_changes
-                    AFTER INSERT OR UPDATE ON product_batches
-                    FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """,
-                    "DROP TRIGGER IF EXISTS trigger_store_changes ON dark_stores;",
-                    """
-                    CREATE TRIGGER trigger_store_changes
-                    AFTER INSERT OR UPDATE ON dark_stores
-                    FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """,
-                    "DROP TRIGGER IF EXISTS trigger_competitor_changes ON competitor_stores;",
-                    """
-                    CREATE TRIGGER trigger_competitor_changes
-                    AFTER INSERT OR UPDATE ON competitor_stores
-                    FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """,
-                    "DROP TRIGGER IF EXISTS trigger_stock_ledger_changes ON stock_ledger;",
-                    """
-                    CREATE TRIGGER trigger_stock_ledger_changes
-                    AFTER INSERT OR UPDATE ON stock_ledger
-                    FOR EACH ROW EXECUTE FUNCTION notify_table_change();
-                    """,
-                ]
-                for stmt in trigger_statements:
-                    await conn.execute(text(stmt))
-                logger.info("Real-time PostgreSQL triggers registered successfully")
+        if settings.ENVIRONMENT == "testing":
+            if engine.dialect.name != "sqlite":
+                raise RuntimeError("Tests must use an isolated SQLite database; refusing shared database access")
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Isolated test database initialized")
+            return
+
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from pathlib import Path
+
+        project_root = Path(__file__).resolve().parents[2]
+        migration_config = Config(str(project_root / "alembic.ini"))
+        expected_heads = set(ScriptDirectory.from_config(migration_config).get_heads())
+        try:
+            async with engine.connect() as conn:
+                rows = (await conn.execute(text("SELECT version_num FROM alembic_version"))).scalars().all()
+        except Exception as exc:
+            raise RuntimeError(
+                "Database migration state is missing. Initialize an isolated database and run "
+                "python -m alembic -c alembic.ini upgrade head before starting the app."
+            ) from exc
+        current_revisions = set(rows)
+        if current_revisions != expected_heads:
+            raise RuntimeError(
+                "Database migrations are not at Alembic head. "
+                f"Expected {sorted(expected_heads)}, found {sorted(current_revisions)}. "
+                "Run python -m alembic -c alembic.ini upgrade head after reviewing the migration plan."
+            )
+        logger.info("Database connectivity and Alembic revision verified")
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
         raise
