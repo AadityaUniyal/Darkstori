@@ -172,13 +172,13 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 async def init_db():
-    """Use isolated metadata setup in tests; require Alembic for every shared database."""
+    """Use isolated metadata setup in tests and serverless; require Alembic for every shared database."""
     from backend.database.models.models import Base
     try:
-        if engine.dialect.name == "sqlite" and settings.ENVIRONMENT in ("testing", "development"):
+        if (engine.dialect.name == "sqlite" and settings.ENVIRONMENT in ("testing", "development")) or is_serverless:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            logger.info("SQLite metadata initialized for development/testing")
+            logger.info("Database metadata initialized for development/serverless")
             return
 
         from alembic.config import Config
