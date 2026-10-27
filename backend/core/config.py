@@ -66,14 +66,13 @@ class Settings(BaseSettings):
 
     # CORS (override via env var as JSON array or comma-separated)
     ALLOWED_ORIGINS: Union[List[str], str] = [
-      "http://localhost:3000",
-      "http://localhost:8501",
-      "http://localhost:5173",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:5173",
-      "https://darkstore-intelligence.vercel.app",
-      "https://darkstori.vercel.app",
-      "*",
+        "https://darkstori.vercel.app",
+        "https://darkstore-intelligence.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:8501",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
     ]
 
     # External APIs
@@ -179,10 +178,26 @@ class Settings(BaseSettings):
             return self
         if not self.ENCRYPTION_KEY:
             raise ValueError("ENCRYPTION_KEY must be configured in production")
-        if "*" in self.ALLOWED_ORIGINS:
-            raise ValueError("Wildcard ALLOWED_ORIGINS is not allowed in production")
-        if any("localhost" in origin or "127.0.0.1" in origin for origin in self.ALLOWED_ORIGINS):
-            raise ValueError("Localhost origins are not allowed in production")
+        # In production, sanitize origins by removing wildcard and loopback entries
+        if isinstance(self.ALLOWED_ORIGINS, list):
+            self.ALLOWED_ORIGINS = [
+                origin for origin in self.ALLOWED_ORIGINS
+                if origin != "*" and "localhost" not in origin and "127.0.0.1" not in origin
+            ]
+            if not self.ALLOWED_ORIGINS:
+                self.ALLOWED_ORIGINS = [
+                    "https://darkstori.vercel.app",
+                    "https://darkstore-intelligence.vercel.app",
+                ]
+        elif isinstance(self.ALLOWED_ORIGINS, str):
+            origins = [
+                o.strip() for o in self.ALLOWED_ORIGINS.split(",")
+                if o.strip() and o.strip() != "*" and "localhost" not in o and "127.0.0.1" not in o
+            ]
+            self.ALLOWED_ORIGINS = origins or [
+                "https://darkstori.vercel.app",
+                "https://darkstore-intelligence.vercel.app",
+            ]
         return self
 
     @field_validator("PERFORMANCE_ROLLING_WINDOWS", mode="before")

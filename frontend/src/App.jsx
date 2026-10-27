@@ -80,7 +80,7 @@ function AnimatedPage({ children }) {
 
 function AppContent() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/auth';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/auth' || location.pathname === '/register';
   const isLandingPage = location.pathname === '/' || location.pathname === '/welcome';
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -135,6 +135,7 @@ function AppContent() {
             <Routes location={location}>
               <Route path="/login" element={<AuthPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/register" element={<AuthPage />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </AnimatedPage>

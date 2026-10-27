@@ -67,7 +67,7 @@ export default function AuthPage() {
 
   // Mode: 'login' | 'register' | 'forgot' | 'demo'
   const queryParams = new URLSearchParams(location.search);
-  const initialMode = queryParams.get('mode') || 'login';
+  const initialMode = location.pathname === '/register' ? 'register' : (queryParams.get('mode') || 'login');
   const [authMode, setAuthMode] = useState(initialMode);
 
   // Form Fields
@@ -124,17 +124,22 @@ export default function AuthPage() {
       newErrors.email = 'Invalid email address format';
     }
 
-    if (authMode !== 'forgot') {
+    if (authMode === 'register') {
+      if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+      if (!organization.trim()) newErrors.organization = 'Company or Hub name is required';
       if (!password) {
         newErrors.password = 'Password is required';
-      } else if (password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
+      } else if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters long';
+      } else if (!/[A-Z]/.test(password)) {
+        newErrors.password = 'Password must contain at least one uppercase letter (A-Z)';
+      } else if (!/[0-9]/.test(password)) {
+        newErrors.password = 'Password must contain at least one digit (0-9)';
       }
-    }
-
-    if (authMode === 'register') {
-      if (!fullName) newErrors.fullName = 'Full name is required';
-      if (!organization) newErrors.organization = 'Company or Hub name is required';
+    } else if (authMode === 'login') {
+      if (!password) {
+        newErrors.password = 'Password is required';
+      }
     }
 
     setErrors(newErrors);
@@ -329,7 +334,11 @@ export default function AuthPage() {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
-                    {errors.password && <span className="err-txt">{errors.password}</span>}
+                    {errors.password ? (
+                      <span className="err-txt">{errors.password}</span>
+                    ) : authMode === 'register' ? (
+                      <span className="auth-hint-txt">Must be at least 8 characters with 1 uppercase letter and 1 number.</span>
+                    ) : null}
                   </div>
                 )}
 

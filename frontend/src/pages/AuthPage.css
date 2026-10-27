@@ -256,6 +256,11 @@
   color: #FF453A;
 }
 
+.auth-hint-txt {
+  font-size: 0.72rem;
+  color: var(--text-tertiary, #8A8F98);
+}
+
 .auth-submit-btn {
   margin-top: 8px;
   background: linear-gradient(180deg, #0077ED 0%, #0062C4 100%);
