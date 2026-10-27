@@ -33,6 +33,7 @@ prometheus-client==0.25.0
 # Email Validation
 aiosmtplib==3.0.1
 email-validator==2.3.0
+numpy>=1.26.0
 
 # NOTE: Removed dead dependencies:
 #   redis==5.0.1       — Redis not used in new architecture

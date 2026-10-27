@@ -10,7 +10,10 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 @dataclass
@@ -190,14 +193,23 @@ def generate_benchmark_historical_cohort(count: int = 20) -> List[BatchSimulatio
         {"product": "Alphonso Mangoes 500g", "cat": "Produce", "price": 240.0, "life": 48.0, "velocity": 0.4},
     ]
 
-    rng = np.random.default_rng(42)
+    if np is not None:
+        rng = np.random.default_rng(42)
+        integers_fn = lambda a, b: int(rng.integers(a, b))
+        uniform_fn = lambda a, b: float(rng.uniform(a, b))
+    else:
+        import random
+        py_rng = random.Random(42)
+        integers_fn = lambda a, b: py_rng.randint(a, b - 1)
+        uniform_fn = lambda a, b: py_rng.uniform(a, b)
+
     cohort = []
     for i in range(count):
         t = templates[i % len(templates)]
-        qty = int(rng.integers(20, 60))
+        qty = integers_fn(20, 60)
         # Slight variance on velocity and base shelf-life
-        life = float(t["life"] * rng.uniform(0.85, 1.15))
-        velocity = float(t["velocity"] * rng.uniform(0.75, 1.25))
+        life = float(t["life"] * uniform_fn(0.85, 1.15))
+        velocity = float(t["velocity"] * uniform_fn(0.75, 1.25))
 
         cohort.append(
             BatchSimulationInput(
