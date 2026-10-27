@@ -41,12 +41,19 @@ import {
   Workflow
 } from 'lucide-react';
 import { toast } from 'sonner';
-import KineticScrambleHeadline from '../components/KineticScrambleHeadline';
 import AmbientBackground from '../components/AmbientBackground';
 import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
 
 const AUTHOR_EMAIL = 'aadityauniyal2004@gmail.com';
+
+const HERO_SPECIALTIES = [
+  'PostGIS Greenfield Placement',
+  'Zero-Waste Sigmoid Markdowns',
+  '10-Minute VRP Fleet Dispatch',
+  'Walk-Forward Demand Forecasting',
+  'Network Cannibalization Defense'
+];
 
 const FOCUS_METROS = [
   { id: 'bangalore', name: 'Bangalore', hubs: 48, status: 'Active', latency: '42ms', greenfields: 'HSR, Indiranagar, Whitefield' },
@@ -174,7 +181,15 @@ export default function LandingPage() {
   }, []);
 
   // Scrollytelling Story State
+  const [specialtyIdx, setSpecialtyIdx] = useState(0);
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
+
+  useEffect(() => {
+    const specialtyTimer = setInterval(() => {
+      setSpecialtyIdx((prev) => (prev + 1) % HERO_SPECIALTIES.length);
+    }, 3800);
+    return () => clearInterval(specialtyTimer);
+  }, []);
   const [isStoryAutoplay, setIsStoryAutoplay] = useState(false);
   const [radarRadius, setRadarRadius] = useState(1.8);
   const [storyPerishableHours, setStoryPerishableHours] = useState(10);
@@ -320,22 +335,26 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.div
-            initial={{ opacity: 0, y: 22 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="hero-kinetic-container"
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="hero-rotating-container"
           >
-            <span className="hero-lead-text">Automate operational execution with </span>
-            <KineticScrambleHeadline
-              phrases={[
-                'PostGIS Greenfield Placement',
-                'Zero-Waste Sigmoid Markdown',
-                '10-Min VRP Fleet Dispatch',
-                'Walk-Forward XGBoost Forecasting',
-                'Network Cannibalization Defense'
-              ]}
-              interval={3600}
-            />
+            <span className="hero-lead-text">Automating operational execution across</span>
+            <span className="hero-rotating-badge-wrapper">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={specialtyIdx}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  className="hero-rotating-badge"
+                >
+                  {HERO_SPECIALTIES[specialtyIdx]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.div>
 
           <motion.p
@@ -643,10 +662,10 @@ export default function LandingPage() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={STORY_CHAPTERS[activeStoryIdx].id}
-                    initial={{ opacity: 0, x: -18 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 18 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                     className="chapter-narrative-wrapper"
                   >
                     <div className="chapter-header-badge">
@@ -690,10 +709,10 @@ export default function LandingPage() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`stage-${STORY_CHAPTERS[activeStoryIdx].id}`}
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                     className="scrolly-interactive-canvas"
                   >
                     {/* Chapter 1 Stage: Spatial Radar */}

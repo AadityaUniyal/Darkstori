@@ -479,9 +479,7 @@
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background-color: #34C759;
-  box-shadow: 0 0 8px #34C759;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: #10B981;
 }
 
 .studio-subtitle {

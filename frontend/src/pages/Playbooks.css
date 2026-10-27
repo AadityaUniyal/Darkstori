@@ -275,7 +275,7 @@
 
 .playbook-card:hover {
   border-color: var(--saffron-500);
-  box-shadow: 0 0 20px rgba(var(--saffron-500-rgb, 245, 158, 11), 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .playbook-paused {

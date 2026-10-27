@@ -8,10 +8,10 @@ export default function AmbientBackground() {
       height: '100vh',
       zIndex: -1,
       overflow: 'hidden',
-      background: '#07090E',
+      background: '#090B10',
       pointerEvents: 'none'
     }}>
-      {/* Apple-grade subtle deep space ambient illumination */}
+      {/* Subtle deep space ambient illumination */}
       <div style={{
         position: 'absolute',
         top: '-15%',
@@ -19,7 +19,7 @@ export default function AmbientBackground() {
         width: '65vw',
         height: '50vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(0, 113, 227, 0.05) 0%, rgba(0, 113, 227, 0) 70%)',
+        background: 'radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 70%)',
         filter: 'blur(80px)',
       }} />
       <div style={{
@@ -29,7 +29,7 @@ export default function AmbientBackground() {
         width: '50vw',
         height: '45vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(14, 165, 233, 0.035) 0%, rgba(14, 165, 233, 0) 70%)',
+        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.015) 0%, rgba(245, 158, 11, 0) 70%)',
         filter: 'blur(90px)',
       }} />
     </div>

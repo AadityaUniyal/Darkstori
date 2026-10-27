@@ -37,11 +37,9 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--qc-amber-500, #FF9F1C);
+  background: var(--primary, #F59E0B);
   margin-left: 7px;
   display: inline-block;
-  box-shadow: 0 0 8px rgba(255, 159, 28, 0.7);
-  animation: slowPulse 3s ease-in-out infinite;
 }
 
 @keyframes slowPulse {
