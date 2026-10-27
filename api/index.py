@@ -9,6 +9,7 @@ if root_dir not in sys.path:
 # Serverless environment indicator
 os.environ["VERCEL"] = "1"
 os.environ.setdefault("ENVIRONMENT", "production")
+os.environ.setdefault("ALLOWED_ORIGINS", "https://darkstori.vercel.app,https://darkstore-intelligence.vercel.app")
 
 # Production credentials must be configured in the Vercel project environment.
 # Never embed database, signing, or encryption secrets in a public source file.

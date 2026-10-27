@@ -1,6 +1,24 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 
+function formatAuthError(err, fallback) {
+  const detail = err?.response?.data?.detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item?.msg) return item.msg.replace(/^Value error,\s*/i, '');
+        return JSON.stringify(item);
+      })
+      .filter(Boolean)
+      .join(', ');
+  }
+  if (typeof detail === 'string') {
+    return detail;
+  }
+  return err?.message || fallback;
+}
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -56,7 +74,7 @@ export function AuthProvider({ children }) {
         return data;
       }
     } catch (e) {
-      const message = e?.response?.data?.detail || e?.message || 'Login failed. Please check your credentials and try again.';
+      const message = formatAuthError(e, 'Login failed. Please check your credentials and try again.');
       throw new Error(message);
     }
   }, []);
@@ -76,7 +94,7 @@ export function AuthProvider({ children }) {
         return data;
       }
     } catch (e) {
-      const message = e?.response?.data?.detail || e?.message || 'Registration failed. Please try again.';
+      const message = formatAuthError(e, 'Registration failed. Please try again.');
       throw new Error(message);
     }
   }, []);

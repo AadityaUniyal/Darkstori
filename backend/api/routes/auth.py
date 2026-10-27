@@ -166,6 +166,7 @@ async def register(
         username = f"{username}_{user.email.split('@')[0][-4:]}"
     workspace = Organization(name=workspace_name)
     db.add(workspace)
+    await db.flush()
     new_user = User(
         email=user.email,
         username=username,
