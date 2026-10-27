@@ -36,7 +36,7 @@ router = APIRouter()
 
 @router.get("/dashboard/metrics")
 async def get_dashboard_metrics(
-    city: Optional[str] = Query(None),
+    city: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
@@ -181,7 +181,7 @@ async def get_city_overview(
     payload: dict = Depends(verify_token),
 ):
     """Get city-level dark store intelligence performance aggregates."""
-    res = await get_dashboard_metrics(db=db, payload=payload)
+    res = await get_dashboard_metrics(city=None, db=db, payload=payload)
     return res["city_overview"]
 
 
@@ -192,7 +192,7 @@ async def get_sentiment_overview(
     payload: dict = Depends(verify_token),
 ):
     """Retrieve platform sentiment metrics, filtered by city."""
-    res = await get_dashboard_metrics(db=db, payload=payload)
+    res = await get_dashboard_metrics(city=city, db=db, payload=payload)
     return res["sentiment"]
 
 
