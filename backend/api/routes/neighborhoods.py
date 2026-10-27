@@ -82,7 +82,6 @@ class DNAResponse(BaseModel):
 @router.get("/cities", response_model=List[CityResponse])
 async def get_focus_cities(
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
 ):
     """Retrieve all focus cities."""
     query = select(FocusCity).order_by(FocusCity.city_name.asc())

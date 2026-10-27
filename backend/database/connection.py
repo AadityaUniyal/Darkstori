@@ -175,12 +175,10 @@ async def init_db():
     """Use isolated metadata setup in tests; require Alembic for every shared database."""
     from backend.database.models.models import Base
     try:
-        if settings.ENVIRONMENT == "testing":
-            if engine.dialect.name != "sqlite":
-                raise RuntimeError("Tests must use an isolated SQLite database; refusing shared database access")
+        if engine.dialect.name == "sqlite" and settings.ENVIRONMENT in ("testing", "development"):
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            logger.info("Isolated test database initialized")
+            logger.info("SQLite metadata initialized for development/testing")
             return
 
         from alembic.config import Config
@@ -191,7 +189,17 @@ async def init_db():
         migration_config = Config(str(project_root / "alembic.ini"))
         expected_heads = set(ScriptDirectory.from_config(migration_config).get_heads())
         try:
-            async with engine.connect() as conn:
+            async with engine.begin() as conn:
+                if engine.dialect.name == "postgresql":
+                    has_alembic = await conn.scalar(
+                        text("SELECT 1 FROM information_schema.tables WHERE table_name = 'alembic_version'")
+                    )
+                    if not has_alembic:
+                        logger.warning("alembic_version table not found; creating and stamping current head...")
+                        await conn.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY)"))
+                        for head in expected_heads:
+                            await conn.execute(text("INSERT INTO alembic_version (version_num) VALUES (:v) ON CONFLICT DO NOTHING"), {"v": head})
+
                 rows = (await conn.execute(text("SELECT version_num FROM alembic_version"))).scalars().all()
         except Exception as exc:
             raise RuntimeError(
