@@ -34,102 +34,102 @@
   /* Nav Heights */
   --navbar-height: 64px;
 
-  /* Dark Store Operations Slate Surface Canvas */
-  --color-bg: #090D14;
-  --color-bg-alt: #0F1420;
-  --color-bg-card: rgba(17, 24, 39, 0.82);
-  --color-bg-card-hover: rgba(26, 36, 56, 0.92);
-  --color-surface: rgba(255, 255, 255, 0.04);
-  --color-surface-hover: rgba(255, 255, 255, 0.08);
-  --color-border: rgba(255, 255, 255, 0.09);
-  --color-border-hover: rgba(255, 255, 255, 0.18);
-  --color-border-glow: rgba(255, 159, 28, 0.35);
+  /* Dark Store Operations Slate Surface Canvas - Refined Executive Dark */
+  --color-bg: #090B10;
+  --color-bg-alt: #0E121A;
+  --color-bg-card: rgba(18, 24, 38, 0.7);
+  --color-bg-card-hover: rgba(26, 34, 52, 0.85);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-hover: rgba(255, 255, 255, 0.065);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-border-glow: rgba(255, 255, 255, 0.12);
 
   /* Apple Glass Input & Search Tokens */
-  --apple-search-bg: rgba(255, 255, 255, 0.05);
-  --apple-search-border: rgba(255, 255, 255, 0.12);
-  --apple-input-bg: rgba(255, 255, 255, 0.04);
-  --apple-input-border: rgba(255, 255, 255, 0.11);
-  --apple-input-focus-border: rgba(255, 159, 28, 0.55);
-  --apple-input-focus-ring: rgba(255, 159, 28, 0.16);
+  --apple-search-bg: rgba(255, 255, 255, 0.04);
+  --apple-search-border: rgba(255, 255, 255, 0.09);
+  --apple-input-bg: rgba(255, 255, 255, 0.035);
+  --apple-input-border: rgba(255, 255, 255, 0.09);
+  --apple-input-focus-border: rgba(245, 158, 11, 0.5);
+  --apple-input-focus-ring: rgba(245, 158, 11, 0.12);
 
   /* High Contrast Operational Text */
-  --color-text-primary: #FFFFFF;
+  --color-text-primary: #F8FAFC;
   --color-text-secondary: #94A3B8;
   --color-text-muted: #64748B;
   --color-text-on-dark: #FFFFFF;
 
   /* =========================================================================
-     DARKSTORI DISTINCT QUICK-COMMERCE BRAND IDENTITY
-     Signature: Hyper-Amber (Speed) + Zepto Violet (AI) + Blinkit Mint (Fresh)
+     DARKSTORI REFINED QUICK-COMMERCE BRAND IDENTITY
+     Refined Editorial Amber (Speed) + Slate Indigo (Intelligence) + Emerald (Fresh)
      ========================================================================= */
 
-  /* 1. Darkstori Hyper-Volt Amber (Primary Brand Color - 10-Min Speed) */
+  /* 1. Darkstori Warm Amber (Primary Brand Color - 10-Min Speed) */
   --qc-amber-50: #FFFBEB;
   --qc-amber-100: #FEF3C7;
   --qc-amber-300: #FCD34D;
   --qc-amber-400: #FBBF24;
-  --qc-amber-500: #FF9F1C; /* Darkstori Signature Quick-Commerce Amber */
-  --qc-amber-600: #EA580C;
-  --qc-amber-glow: rgba(255, 159, 28, 0.28);
+  --qc-amber-500: #F59E0B; /* Refined Warm Amber */
+  --qc-amber-600: #D97706;
+  --qc-amber-glow: transparent;
 
-  /* 2. Zepto-Grade Electric Violet / Iris (Autonomous Intelligence & Algorithms) */
+  /* 2. Electric Violet / Iris (Autonomous Intelligence & Algorithms) */
   --qc-violet-400: #A855F7;
-  --qc-violet-500: #7C3AED; /* Zepto-Grade Deep Electric Violet */
+  --qc-violet-500: #7C3AED;
   --qc-violet-600: #6D28D9;
-  --qc-violet-glow: rgba(124, 58, 237, 0.25);
+  --qc-violet-glow: transparent;
 
-  /* 3. Blinkit-Grade Fresh Grocery Mint & Emerald (Zero-Waste Produce & SLAs) */
+  /* 3. Fresh Grocery Mint & Emerald (Zero-Waste Produce & SLAs) */
   --qc-emerald-400: #34D399;
-  --qc-emerald-500: #10B981; /* Fresh Grocery Mint */
-  --qc-emerald-600: #0C831F; /* Blinkit Signature Grocery Green */
-  --qc-emerald-glow: rgba(16, 185, 129, 0.25);
+  --qc-emerald-500: #10B981;
+  --qc-emerald-600: #059669;
+  --qc-emerald-glow: transparent;
 
-  /* 4. Indian Monsoon & Spoilage Alert Crimson */
+  /* 4. Alert Crimson */
   --qc-crimson-400: #F87171;
-  --qc-crimson-500: #EF4444; /* Monsoon Surge / Spoilage Alert */
+  --qc-crimson-500: #EF4444;
   --qc-crimson-600: #DC2626;
 
-  /* 5. Sky Telemetry Cyan */
+  /* 5. Sky Telemetry Slate/Cyan */
   --qc-cyan-400: #38BDF8;
   --qc-cyan-500: #0EA5E9;
 
   /* Semantic System Bindings */
-  --primary: #FF9F1C;
-  --primary-glow: var(--qc-amber-glow);
+  --primary: #F59E0B;
+  --primary-glow: transparent;
   --accent-violet: #7C3AED;
   --accent-emerald: #10B981;
-  --color-focus-ring: rgba(255, 159, 28, 0.45);
+  --color-focus-ring: rgba(245, 158, 11, 0.25);
 
-  /* Quick-Commerce Brand Gradients */
-  --brand-gradient: linear-gradient(135deg, #FF9F1C 0%, #FF6B00 100%);
-  --violet-gradient: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
-  --emerald-gradient: linear-gradient(135deg, #0C831F 0%, #10B981 100%);
-  --dark-glass-gradient: linear-gradient(180deg, rgba(26, 36, 56, 0.75) 0%, rgba(15, 20, 32, 0.85) 100%);
+  /* Quick-Commerce Brand Gradients - Soft & Natural */
+  --brand-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --violet-gradient: linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%);
+  --emerald-gradient: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  --dark-glass-gradient: linear-gradient(180deg, rgba(22, 28, 44, 0.7) 0%, rgba(14, 18, 28, 0.8) 100%);
 
   /* Backward compatibility semantic aliases */
-  --saffron-100: rgba(255, 159, 28, 0.14);
+  --saffron-100: rgba(245, 158, 11, 0.1);
   --saffron-200: #FCD34D;
-  --saffron-500: #FF9F1C;
-  --saffron-600: #EA580C;
-  --peacock-100: rgba(124, 58, 237, 0.14);
+  --saffron-500: #F59E0B;
+  --saffron-600: #D97706;
+  --peacock-100: rgba(124, 58, 237, 0.1);
   --peacock-500: #7C3AED;
   --monsoon-500: #0EA5E9;
   --spice-500: #EF4444;
-  --marigold-500: #FFB703;
+  --marigold-500: #F59E0B;
   --emerald-400: #34D399;
   --emerald-500: #10B981;
-  --emerald-600: #0C831F;
+  --emerald-600: #059669;
   --indigo-500: #7C3AED;
-  --ink-950: #090D14;
+  --ink-950: #090B10;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 20px 40px -4px rgba(0, 0, 0, 0.65), 0 8px 16px -2px rgba(0, 0, 0, 0.4);
-  --shadow-glow-amber: 0 0 28px rgba(255, 159, 28, 0.25);
-  --shadow-glow-emerald: 0 0 28px rgba(16, 185, 129, 0.22);
-  --shadow-glow-violet: 0 0 28px rgba(124, 58, 237, 0.25);
+  /* Shadows - Deep, Natural, Non-Fluorescent */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 14px 32px -4px rgba(0, 0, 0, 0.6), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow-amber: 0 4px 20px -4px rgba(0, 0, 0, 0.5);
+  --shadow-glow-emerald: 0 4px 20px -4px rgba(0, 0, 0, 0.5);
+  --shadow-glow-violet: 0 4px 20px -4px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {

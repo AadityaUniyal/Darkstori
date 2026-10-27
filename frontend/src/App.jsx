@@ -51,18 +51,16 @@ const queryClient = new QueryClient({
 });
 
 const pageVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.98 },
+  initial: { opacity: 0, y: 8 },
   animate: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
   },
   exit: {
     opacity: 0,
-    y: -12,
-    scale: 0.98,
-    transition: { duration: 0.2, ease: 'easeIn' },
+    y: -4,
+    transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
