@@ -732,13 +732,11 @@ def test_seed_data_transaction_rollback_on_failure(e2e_client):
 
 
 def test_seed_data_large_order_history_generation():
-    """TC-F16-B03: Verify seed option script generates data structures efficiently."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        assert "for" in content or "range" in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    """TC-F16-B03: Verify seed route module handles batch generation structures cleanly."""
+    seed_path = Path("backend/api/routes/seed_data.py")
+    assert seed_path.exists()
+    content = seed_path.read_text(encoding="utf-8")
+    assert "for" in content or "range" in content
 
 
 def test_seed_data_null_optional_fields_handling():
@@ -749,12 +747,10 @@ def test_seed_data_null_optional_fields_handling():
 
 def test_seed_data_boundary_coordinates_focus_cities():
     """TC-F16-B05: Verify seeded focus city coordinates fall within India bounding boxes."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        assert "12." in content or "77." in content or "19." in content or "28." in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    seed_path = Path("backend/api/routes/seed_data.py")
+    assert seed_path.exists()
+    content = seed_path.read_text(encoding="utf-8")
+    assert "12." in content or "77." in content or "19." in content or "28." in content
 
 
 # ============================================================================

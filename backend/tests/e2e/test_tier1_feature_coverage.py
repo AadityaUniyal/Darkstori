@@ -813,44 +813,34 @@ def test_seed_data_endpoint_execution(e2e_client):
 
 
 def test_seed_focus_cities_populated():
-    """TC-F16-02: Verify seed option script includes all 5 focus cities."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        for city in ["Bangalore", "Delhi", "Mumbai", "Hyderabad", "Pune"]:
-            assert city in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    """TC-F16-02: Verify seed route includes all 5 focus cities."""
+    seed_path = Path("backend/api/routes/seed_data.py")
+    assert seed_path.exists()
+    content = seed_path.read_text(encoding="utf-8")
+    for city in ["Bangalore", "Delhi", "Mumbai", "Hyderabad", "Pune"]:
+        assert city in content
 
 
 def test_seed_neighborhoods_and_dna_populated():
-    """TC-F16-03: Verify seed option script defines neighborhood profiles and DNA metrics."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        assert "Sector" in content or "Neighborhood" in content or "Bangalore" in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    """TC-F16-03: Verify seed route defines neighborhood profiles and seed functions."""
+    seed_path = Path("backend/api/routes/seed_data.py")
+    assert seed_path.exists()
+    content = seed_path.read_text(encoding="utf-8")
+    assert "Bangalore" in content or "CityContext" in content or "stores" in content
 
 
 def test_seed_dark_stores_and_coverage():
-    """TC-F16-04: Verify seed script populates dark stores for platforms (Zepto, Blinkit, Instamart)."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        assert "Zepto" in content or "Blinkit" in content or "Instamart" in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    """TC-F16-04: Verify seed route populates dark stores for platforms (Zepto, Blinkit, Instamart)."""
+    seed_path = Path("backend/api/routes/seed_data.py")
+    assert seed_path.exists()
+    content = seed_path.read_text(encoding="utf-8")
+    assert "Zepto" in content or "Blinkit" in content or "Instamart" in content
 
 
 def test_seed_script_option_a_cli_execution():
-    """TC-F16-05: Verify seed_option_a.py contains executable __main__ block."""
-    seed_path = Path("backend/scripts/seed_option_a.py")
-    if seed_path.exists():
-        content = seed_path.read_text(encoding="utf-8")
-        assert '__name__ == "__main__"' in content or "asyncio.run" in content
-    else:
-        pytest.skip("seed_option_a.py not found")
+    """TC-F16-05: Verify seed_data module provides run_seed_database callable."""
+    from backend.api.routes.seed_data import run_seed_database
+    assert callable(run_seed_database)
 
 
 # ============================================================================

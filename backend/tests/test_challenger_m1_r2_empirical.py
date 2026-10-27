@@ -36,7 +36,6 @@ from backend.api.routes.placement import _haversine_km as placement_haversine, _
 from backend.api.routes.cannibalization import _haversine_km as cannibalization_haversine, analyze_cannibalization, CannibalizationRequest
 from backend.utils.routing import _haversine_km as routing_haversine
 from backend.utils.vrp_optimizer import _haversine_km as vrp_haversine, optimize_dispatch_batches
-from backend.scripts.calculate_pincode_coverage import haversine as script_haversine
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -215,7 +214,6 @@ HAVERSINE_FUNCTIONS = [
     ("cannibalization", cannibalization_haversine, 1.0),
     ("routing", routing_haversine, 1.0),
     ("vrp_optimizer", vrp_haversine, 1.35),  # 1.35x circuity factor
-    ("calculate_pincode_coverage", script_haversine, 1.0),
 ]
 
 
