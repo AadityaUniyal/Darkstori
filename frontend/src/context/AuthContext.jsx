@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { api } from '../services/api';
 
 function formatAuthError(err, fallback) {
-  const detail = err?.response?.data?.detail;
+  const detail = err?.response?.data?.detail ?? err?.response?.data?.error;
   if (Array.isArray(detail)) {
     return detail
       .map((item) => {
