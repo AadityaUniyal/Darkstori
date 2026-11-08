@@ -649,7 +649,7 @@ export default function GodsEyeWarRoom() {
                   {swarmData.baseline_pipeline.total_duration_min} min
                 </div>
                 <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>
-                  Rider travels full {swarmData.baseline_pipeline.total_distance_km}km through traffic gridlock. Breaches 10m target by {Math.max(0, swarmData.baseline_pipeline.total_duration_min - 10.0).toFixed(1)}m.
+                  Rider travels full {swarmData.baseline_pipeline.total_distance_km}km through traffic gridlock. Breaches 10m target by {Math.max(0, (swarmData.baseline_pipeline.total_duration_min || 0) - 10.0).toFixed(1)}m.
                 </div>
               </div>
 

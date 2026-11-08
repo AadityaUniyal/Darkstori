@@ -56,7 +56,7 @@ async def get_sla_metrics(
     """Retrieve SLA performance details for pincodes, optionally filtered by city."""
     query = select(DeliverySLAMetric).order_by(DeliverySLAMetric.sla_breach_pct.desc())
     if city:
-        query = query.where(DeliverySLAMetric.city == city)
+        query = query.where(func.lower(DeliverySLAMetric.city) == func.lower(city))
     query = query.limit(limit)
 
     rows = (await db.execute(query)).scalars().all()
@@ -159,7 +159,7 @@ async def live_sla_performance(
         from backend.database.models.models import DarkStore
         query = query.where(
             OrderSynthetic.store_id.in_(
-                select(DarkStore.id).where(DarkStore.city == city)
+                select(DarkStore.id).where(func.lower(DarkStore.city) == func.lower(city))
             )
         )
 

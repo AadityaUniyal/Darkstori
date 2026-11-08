@@ -228,3 +228,8 @@ backup/
 .browser-*.png
 
 .vercel
+
+/*-*.json
+/check-*.json
+/ssm-*.json
+/test_aws_deployment.py

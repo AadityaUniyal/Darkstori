@@ -16,6 +16,10 @@ class FeatureCache:
         self.redis_client = None
         self._local_cache: Dict[str, Dict[str, Any]] = {}
         self._is_connected = False
+
+    @property
+    def redis(self):
+        return self.redis_client
         
     async def init(self):
         """Initialize the Redis connection."""

@@ -79,15 +79,7 @@ export default function ProductTourModal() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    try {
-      const completed = localStorage.getItem('darkstori_tour_completed');
-      if (!completed) {
-        const timer = setTimeout(() => setIsOpen(true), 1200);
-        return () => clearTimeout(timer);
-      }
-    } catch (e) {
-      // LocalStorage access restricted in private mode
-    }
+    // Only open tour when explicitly requested by operator
   }, []);
 
   useEffect(() => {

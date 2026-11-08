@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,75 +18,83 @@ import {
   ChevronLeft,
   KeyRound,
   MapPin,
-  Check
+  Check,
+  Compass,
+  Layers,
+  Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../context/RoleContext';
 import { api } from '../services/api';
 import AmbientBackground from '../components/AmbientBackground';
 import './AuthPage.css';
 
-const PERSONAS = [
+const UNIFIED_PERSONAS = [
   {
-    id: 'director',
-    role: 'director',
-    title: 'Regional Director',
-    badge: 'Multi-City Oversight',
-    city: 'Bangalore & Mumbai',
-    description: 'Greenfield scouting, cannibalization governance, portfolio P&L'
-  },
-  {
-    id: 'gm',
-    role: 'gm',
-    title: 'Dark Store GM',
-    badge: 'Hub Operations',
-    city: 'HSR Layout Sector 4',
-    description: 'Sigmoid perishable markdowns, 10-min VRP rider dispatch'
-  },
-  {
-    id: 'datascience',
-    role: 'datascience',
-    title: 'Supply Chain ML Engineer',
-    badge: 'MLOps & Forecasting',
+    id: 'executive',
+    role: 'executive',
+    title: 'Executive / Expansion Director',
+    badge: 'Cupertino Sapphire & Gold',
     city: 'All 5 Metros',
-    description: 'XGBoost walk-forward models, drift monitoring, MLflow models'
+    icon: Compass,
+    accentColor: '#0071E3',
+    targetRoute: '/cockpit',
+    description: 'Greenfield scouting, competitor Huff gravity displacement, CapEx & breakeven models, portfolio ROI.'
   },
   {
-    id: 'franchise',
-    role: 'franchise',
-    title: 'Franchise Network Partner',
-    badge: 'Owner-Operator',
-    city: 'Delhi-NCR & Pune',
-    description: 'Unit economics, safety stock ROP, automated playbooks'
+    id: 'store-gm',
+    role: 'store-gm',
+    title: 'Dark Store General Manager',
+    badge: 'Industrial Saffron & Emerald',
+    city: 'HSR Layout & Indiranagar',
+    icon: Layers,
+    accentColor: '#FF9F1C',
+    targetRoute: '/floor',
+    description: 'Sub-120s dispatch cadence, single-pass TSP picker routing, Golden Zone slotting, Sigmoid zero-waste.'
+  },
+  {
+    id: 'fleet-commander',
+    role: 'fleet-commander',
+    title: 'Fleet Commander / NOC Chief',
+    badge: 'Tactical Cyber Cyan & Crimson',
+    city: 'NOC War Room (5 Cities)',
+    icon: Truck,
+    accentColor: '#00F0FF',
+    targetRoute: '/dashboard',
+    description: '10-minute SLA radar, Clarke-Wright multi-drop VRP dispatch, live Doppler monsoon flood protection.'
   }
 ];
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register, isAuthenticated, setRole } = useAuth();
+  const { login, register, isAuthenticated, demoLogin } = useAuth();
+  const { setRole: setGlobalRole } = useRole();
 
-  // Mode: 'login' | 'register' | 'forgot' | 'demo'
   const queryParams = new URLSearchParams(location.search);
-  const initialMode = location.pathname === '/register' ? 'register' : (queryParams.get('mode') || 'login');
+  const initialMode = location.pathname === '/register' || queryParams.get('mode') === 'register' ? 'register' : (queryParams.get('mode') || 'demo');
+  const initialRoleParam = queryParams.get('role');
+  
   const [authMode, setAuthMode] = useState(initialMode);
+  const [selectedRole, setSelectedRole] = useState(initialRoleParam || 'executive');
+  const [selectedCity, setSelectedCity] = useState('Bangalore');
 
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [organization, setOrganization] = useState('');
-  const [selectedPersona, setSelectedPersona] = useState(PERSONAS[0]);
   const [showPassword, setShowPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [errors, setErrors] = useState({});
-
-  const from = location.state?.from?.pathname || '/cockpit';
+  const [onboardingSuccess, setOnboardingSuccess] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    if (isAuthenticated && !onboardingSuccess) {
+      const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit';
+      navigate(target, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate, selectedRole, onboardingSuccess]);
 
   // Auth Mutation
   const authMutation = useMutation({
@@ -98,17 +106,29 @@ export default function AuthPage() {
           email: payload.email,
           password: payload.password,
           full_name: payload.fullName,
-          organization: payload.organization
+          organization: payload.organization,
+          city: payload.city,
+          role: payload.role
         });
       } else if (authMode === 'forgot') {
         return await api.forgotPassword(payload.email);
       }
     },
     onSuccess: (data) => {
+      setGlobalRole(selectedRole);
       if (authMode === 'forgot') {
         setResetSent(true);
+      } else if (authMode === 'register') {
+        setOnboardingSuccess({
+          fullName,
+          organization,
+          city: selectedCity,
+          role: selectedRole,
+          targetRoute: selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit'
+        });
       } else {
-        navigate(from, { replace: true });
+        const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit';
+        navigate(target, { replace: true });
       }
     },
     onError: (err) => {
@@ -126,15 +146,11 @@ export default function AuthPage() {
 
     if (authMode === 'register') {
       if (!fullName.trim()) newErrors.fullName = 'Full name is required';
-      if (!organization.trim()) newErrors.organization = 'Company or Hub name is required';
+      if (!organization.trim()) newErrors.organization = 'Company / Network name is required';
       if (!password) {
         newErrors.password = 'Password is required';
-      } else if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters long';
-      } else if (!/[A-Z]/.test(password)) {
-        newErrors.password = 'Password must contain at least one uppercase letter (A-Z)';
-      } else if (!/[0-9]/.test(password)) {
-        newErrors.password = 'Password must contain at least one digit (0-9)';
+      } else if (password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
       }
     } else if (authMode === 'login') {
       if (!password) {
@@ -149,16 +165,28 @@ export default function AuthPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    authMutation.mutate({ email, password, fullName, organization });
+    authMutation.mutate({
+      email,
+      password,
+      fullName,
+      organization,
+      city: selectedCity,
+      role: selectedRole
+    });
   };
 
-  const handleLaunchDemoPersona = async (persona) => {
+  const handleLaunchPersona = async (persona) => {
     try {
-      localStorage.setItem('darkstori_persona', JSON.stringify(persona));
-      await api.demoLogin(persona);
-      window.location.href = '/cockpit';
+      setGlobalRole(persona.role);
+      await demoLogin({
+        id: persona.id,
+        role: persona.role,
+        title: persona.title,
+        city: persona.city
+      });
+      navigate(persona.targetRoute, { replace: true });
     } catch (e) {
-      setErrors({ submit: e?.response?.data?.detail || 'Failed to initialize operator session.' });
+      setErrors({ submit: e?.message || 'Failed to initialize operator session.' });
     }
   };
 
@@ -170,11 +198,11 @@ export default function AuthPage() {
       <div className="auth-top-bar">
         <Link to="/" className="back-home-link">
           <ChevronLeft size={16} />
-          <span>Back to Landing Page</span>
+          <span>Back to Product Story</span>
         </Link>
         <div className="auth-brand-badge">
           <span className="brand-dot-pulse" />
-          <span>Darkstori Identity Gateway</span>
+          <span>Darkstori Identity Gateway 5.0</span>
         </div>
       </div>
 
@@ -191,154 +219,179 @@ export default function AuthPage() {
               className={`auth-tab-btn ${authMode === 'login' ? 'active' : ''}`}
               onClick={() => { setAuthMode('login'); setErrors({}); }}
             >
-              Sign In
+              Returning Operator
             </button>
             <button
               className={`auth-tab-btn ${authMode === 'register' ? 'active' : ''}`}
               onClick={() => { setAuthMode('register'); setErrors({}); }}
             >
-              Register Hub
+              New Hub Provisioning
             </button>
             <button
               className={`auth-tab-btn ${authMode === 'demo' ? 'active' : ''}`}
               onClick={() => { setAuthMode('demo'); setErrors({}); }}
             >
               <Sparkles size={14} className="sparkle-gold" />
-              <span>Operator Profiles</span>
+              <span>Fast-Pass Roles</span>
             </button>
           </div>
 
-          {/* Mode 1: Sign In / Register / Forgot Password */}
-          {authMode !== 'demo' && (
+          {/* NEW USER ONBOARDING SUCCESS MODAL */}
+          {onboardingSuccess && (
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/40">
+                <CheckCircle2 size={32} />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Hub Successfully Provisioned!</h2>
+              <p className="text-sm text-white/70 max-w-md mx-auto">
+                Welcome <strong className="text-white">{onboardingSuccess.fullName}</strong>. Your organization <strong className="text-white">{onboardingSuccess.organization}</strong> has been calibrated for the <strong className="text-[#FFB703]">{onboardingSuccess.city}</strong> market.
+              </p>
+              <div className="p-4 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-mono text-left max-w-sm mx-auto space-y-2">
+                <div className="flex justify-between text-white/60">
+                  <span>Assigned Operational Lens:</span>
+                  <span className="text-white font-bold uppercase">{onboardingSuccess.role}</span>
+                </div>
+                <div className="flex justify-between text-white/60">
+                  <span>Primary Workspace:</span>
+                  <span className="text-[#00F0FF] font-bold">{onboardingSuccess.targetRoute}</span>
+                </div>
+                <div className="flex justify-between text-white/60">
+                  <span>Theme Active:</span>
+                  <span className="text-emerald-400 font-bold">Autonomous Dynamic Color</span>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate(onboardingSuccess.targetRoute, { replace: true })}
+                className="w-full max-w-sm mx-auto py-3 rounded-xl bg-gradient-to-r from-[#FF9F1C] to-[#FFB703] text-black font-bold text-xs tracking-wide shadow-lg shadow-[#FF9F1C]/25 flex items-center justify-center gap-2"
+              >
+                <span>Enter Tailored Workspace</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* STANDARD SIGN IN / REGISTER FORM */}
+          {!onboardingSuccess && authMode !== 'demo' && (
             <div className="auth-form-wrapper">
               <div className="auth-form-header">
                 <h2>
-                  {authMode === 'login' && 'Partner Portal Sign In'}
-                  {authMode === 'register' && 'Onboard New Dark Store Hub'}
+                  {authMode === 'login' && 'Sign In to Darkstori'}
+                  {authMode === 'register' && 'Provision Enterprise Hub'}
                   {authMode === 'forgot' && 'Reset Access Credentials'}
                 </h2>
                 <p>
-                  {authMode === 'login' && 'Enter your credentials to access the prescriptive intelligence cockpit.'}
-                  {authMode === 'register' && 'Create your enterprise partner account for hyperlocal network telemetry.'}
-                  {authMode === 'forgot' && 'Enter your verified work email to receive password reset instructions.'}
+                  {authMode === 'login' && 'Enter your credentials to resume your dark store operational shift.'}
+                  {authMode === 'register' && 'Configure organization details, primary focus metro, and operational lens.'}
+                  {authMode === 'forgot' && 'We will send a password reset verification link to your email.'}
                 </p>
               </div>
 
-              <AnimatePresence mode="wait">
-                {errors.submit && (
-                  <motion.div
-                    key="error"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="auth-error-banner"
-                  >
-                    <AlertCircle size={16} />
-                    <span>{errors.submit}</span>
-                  </motion.div>
-                )}
+              {errors.submit && (
+                <div className="auth-error-banner">
+                  <AlertCircle size={16} />
+                  <span>{errors.submit}</span>
+                </div>
+              )}
 
-                {resetSent && (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="auth-success-banner"
-                  >
-                    <CheckCircle2 size={16} />
-                    <span>Reset link sent to {email}. Check your inbox.</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <form onSubmit={handleSubmit} className="auth-inner-form">
+              <form onSubmit={handleSubmit} className="auth-form-fields">
                 {authMode === 'register' && (
                   <>
-                    <div className="auth-field">
-                      <label>Full Name</label>
-                      <div className="auth-input-wrap">
-                        <User size={16} className="field-ico" />
-                        <input
-                          type="text"
-                          placeholder="e.g. Aaditya Uniyal"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className={errors.fullName ? 'has-error' : ''}
-                        />
+                    <div className="input-group-row">
+                      <div className="input-wrap">
+                        <label>Full Name</label>
+                        <div className="input-with-icon">
+                          <User size={16} className="field-icon" />
+                          <input
+                            type="text"
+                            placeholder="e.g. Aaditya Uniyal"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                          />
+                        </div>
+                        {errors.fullName && <span className="field-error">{errors.fullName}</span>}
                       </div>
-                      {errors.fullName && <span className="err-txt">{errors.fullName}</span>}
+
+                      <div className="input-wrap">
+                        <label>Company / Hub Name</label>
+                        <div className="input-with-icon">
+                          <Building2 size={16} className="field-icon" />
+                          <input
+                            type="text"
+                            placeholder="e.g. Zepto Partner Network"
+                            value={organization}
+                            onChange={(e) => setOrganization(e.target.value)}
+                          />
+                        </div>
+                        {errors.organization && <span className="field-error">{errors.organization}</span>}
+                      </div>
                     </div>
 
-                    <div className="auth-field">
-                      <label>Organization / Dark Store Brand</label>
-                      <div className="auth-input-wrap">
-                        <Building2 size={16} className="field-ico" />
-                        <input
-                          type="text"
-                          placeholder="e.g. Instamart Hub #4, Blinkit Partner"
-                          value={organization}
-                          onChange={(e) => setOrganization(e.target.value)}
-                          className={errors.organization ? 'has-error' : ''}
-                        />
+                    <div className="input-group-row">
+                      <div className="input-wrap">
+                        <label>Primary Focus Metro</label>
+                        <select
+                          value={selectedCity}
+                          onChange={(e) => setSelectedCity(e.target.value)}
+                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0071E3]"
+                        >
+                          <option value="Bangalore">Bangalore (HSR, Indiranagar, Whitefield)</option>
+                          <option value="Mumbai">Mumbai (Bandra West, Andheri East, BKC)</option>
+                          <option value="Delhi">Delhi-NCR (Saket, Hauz Khas, Gurugram)</option>
+                          <option value="Hyderabad">Hyderabad (Gachibowli, Hitec City)</option>
+                          <option value="Pune">Pune (Kothrud, Baner, Viman Nagar)</option>
+                        </select>
                       </div>
-                      {errors.organization && <span className="err-txt">{errors.organization}</span>}
+
+                      <div className="input-wrap">
+                        <label>Operational Role Lens</label>
+                        <select
+                          value={selectedRole}
+                          onChange={(e) => setSelectedRole(e.target.value)}
+                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0071E3]"
+                        >
+                          <option value="executive">Executive (Expansion, CapEx & ROI)</option>
+                          <option value="store-gm">Store GM (Floor Throughput & Zero-Waste)</option>
+                          <option value="fleet-commander">Fleet Commander (10-Min VRP SLA Radar)</option>
+                        </select>
+                      </div>
                     </div>
                   </>
                 )}
 
-                <div className="auth-field">
+                <div className="input-wrap">
                   <label>Work Email</label>
-                  <div className="auth-input-wrap">
-                    <Mail size={16} className="field-ico" />
+                  <div className="input-with-icon">
+                    <Mail size={16} className="field-icon" />
                     <input
                       type="email"
-                      placeholder="name@darkstore.io"
+                      placeholder="operator@darkstori.io"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={errors.email ? 'has-error' : ''}
                     />
                   </div>
-                  {errors.email && <span className="err-txt">{errors.email}</span>}
+                  {errors.email && <span className="field-error">{errors.email}</span>}
                 </div>
 
                 {authMode !== 'forgot' && (
-                  <div className="auth-field">
-                    <div className="field-header-row">
-                      <label>Password</label>
-                      {authMode === 'login' && (
-                        <button
-                          type="button"
-                          onClick={() => setAuthMode('forgot')}
-                          className="forgot-link"
-                        >
-                          Forgot password?
-                        </button>
-                      )}
-                    </div>
-                    <div className="auth-input-wrap">
-                      <Lock size={16} className="field-ico" />
+                  <div className="input-wrap">
+                    <label>Password</label>
+                    <div className="input-with-icon">
+                      <Lock size={16} className="field-icon" />
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
+                        placeholder="••••••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={errors.password ? 'has-error' : ''}
                       />
                       <button
                         type="button"
+                        className="toggle-password"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="eye-toggle"
-                        tabIndex={-1}
                       >
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
-                    {errors.password ? (
-                      <span className="err-txt">{errors.password}</span>
-                    ) : authMode === 'register' ? (
-                      <span className="auth-hint-txt">Must be at least 8 characters with 1 uppercase letter and 1 number.</span>
-                    ) : null}
+                    {errors.password && <span className="field-error">{errors.password}</span>}
                   </div>
                 )}
 
@@ -348,73 +401,78 @@ export default function AuthPage() {
                   className="auth-submit-btn"
                 >
                   {authMutation.isPending ? (
-                    <span className="btn-loading">
-                      <Loader2 size={16} className="spin" />
-                      <span>Authenticating...</span>
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      Authenticating...
                     </span>
                   ) : (
                     <span>
-                      {authMode === 'login' && 'Sign In to Cockpit'}
-                      {authMode === 'register' && 'Create Hub Account'}
-                      {authMode === 'forgot' && 'Send Reset Link'}
+                      {authMode === 'login' && 'Sign In to Workspace'}
+                      {authMode === 'register' && 'Deploy & Enter Hub'}
+                      {authMode === 'forgot' && 'Send Reset Instructions'}
                     </span>
                   )}
                 </button>
               </form>
-
-              {authMode === 'forgot' && (
-                <div className="auth-form-footer">
-                  <button onClick={() => setAuthMode('login')} className="back-login-btn">
-                    Return to Sign In
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
-          {/* Mode 2: Instant Operator Workspace Profiles */}
-          {authMode === 'demo' && (
-            <div className="demo-persona-wrapper">
-              <div className="demo-header">
-                <div className="demo-badge">
-                  <Sparkles size={14} />
-                  <span>OPERATOR PROFILES</span>
-                </div>
-                <h2>Select Your Operator Workspace</h2>
-                <p>Enter the dark store operational network across 5 Indian metros with pre-configured role permissions.</p>
+          {/* FAST-PASS ROLES MODE */}
+          {!onboardingSuccess && authMode === 'demo' && (
+            <div className="p-6 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-bold text-white">Instant Role Fast-Pass</h3>
+                <p className="text-xs text-white/60 mt-1">
+                  Experience Darkstori instantly through verified persona credentials with dedicated telemetry.
+                </p>
               </div>
 
-              <div className="personas-list">
-                {PERSONAS.map((p) => (
-                  <div
-                    key={p.id}
-                    className={`persona-card ${selectedPersona.id === p.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedPersona(p)}
-                  >
-                    <div className="persona-top">
-                      <div className="persona-title-wrap">
-                        <h4>{p.title}</h4>
-                        <span className="persona-badge">{p.badge}</span>
-                      </div>
-                      <div className="persona-metro">
-                        <MapPin size={12} />
-                        <span>{p.city}</span>
-                      </div>
-                    </div>
-                    <p className="persona-desc">{p.description}</p>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLaunchDemoPersona(p);
-                      }}
-                      className="persona-launch-btn"
+              <div className="space-y-3">
+                {UNIFIED_PERSONAS.map((persona) => {
+                  const Icon = persona.icon;
+                  return (
+                    <div
+                      key={persona.id}
+                      onClick={() => handleLaunchPersona(persona)}
+                      className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-between group"
                     >
-                      <span>Launch as {p.title}</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-3.5">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${persona.accentColor}20`, color: persona.accentColor }}
+                        >
+                          <Icon size={20} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-white group-hover:text-amber-400 transition-colors">
+                              {persona.title}
+                            </span>
+                            <span
+                              className="px-2 py-0.5 rounded text-[10px] font-mono"
+                              style={{ backgroundColor: `${persona.accentColor}15`, color: persona.accentColor }}
+                            >
+                              {persona.city}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-white/50 mt-0.5 max-w-md line-clamp-1">
+                            {persona.description}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight size={16} className="text-white/40 group-hover:text-white transition-all transform group-hover:translate-x-1" />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-4 text-center">
+                <button
+                  onClick={() => setAuthMode('login')}
+                  className="text-xs text-white/50 hover:text-white underline transition-colors"
+                >
+                  Return to email / password sign in
+                </button>
               </div>
             </div>
           )}

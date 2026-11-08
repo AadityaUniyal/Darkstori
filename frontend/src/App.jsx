@@ -17,6 +17,10 @@ const LocalEvents      = lazy(() => import('./pages/LocalEvents'));
 const Playbooks        = lazy(() => import('./pages/Playbooks'));
 const AuthPage         = lazy(() => import('./pages/AuthPage'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
+const DarkStoreFloorMode = lazy(() => import('./components/DarkStoreFloorMode'));
+const VisionPackDock   = lazy(() => import('./pages/VisionPackDock'));
+const PublicPassportVerification = lazy(() => import('./pages/PublicPassportVerification'));
+const StoreFleetManager = lazy(() => import('./pages/StoreFleetManager'));
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -29,6 +33,7 @@ import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 import ProductTourModal from './components/ProductTourModal';
 import { useRole } from './context/RoleContext';
 import OperationsPulse from './components/OperationsPulse';
+import IndustrialStatusBar from './components/IndustrialStatusBar';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
 import { RoleProvider } from './context/RoleContext';
@@ -82,6 +87,7 @@ function AppContent() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/auth' || location.pathname === '/register';
   const isLandingPage = location.pathname === '/' || location.pathname === '/welcome';
+  const isVerifyPage = location.pathname.startsWith('/verify');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const { setRole } = useRole();
@@ -127,6 +133,21 @@ function AppContent() {
     );
   }
 
+  if (isVerifyPage) {
+    return (
+      <Suspense fallback={<RangoliLoader />}>
+        <AnimatePresence mode="wait">
+          <AnimatedPage key={location.pathname}>
+            <Routes location={location}>
+              <Route path="/verify" element={<PublicPassportVerification />} />
+              <Route path="/verify/:passport_qr" element={<PublicPassportVerification />} />
+            </Routes>
+          </AnimatedPage>
+        </AnimatePresence>
+      </Suspense>
+    );
+  }
+
   if (isAuthPage) {
     return (
       <Suspense fallback={<RangoliLoader />}>
@@ -157,17 +178,23 @@ function AppContent() {
           <Suspense fallback={<RangoliLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/cockpit"       element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                {/* 4 Core Workspaces */}
                 <Route path="/dashboard"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
-                <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><ResilienceCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><Simulator /></AnimatedPage></PrivateRoute>} />
-                <Route path="/neighborhoods" element={<PrivateRoute><AnimatedPage><Neighborhoods /></AnimatedPage></PrivateRoute>} />
-                <Route path="/analytics"     element={<PrivateRoute><AnimatedPage><Analytics /></AnimatedPage></PrivateRoute>} />
-                <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Forecast /></AnimatedPage></PrivateRoute>} />
-                <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><AlgorithmLab /></AnimatedPage></PrivateRoute>} />
-                <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><Recommendations /></AnimatedPage></PrivateRoute>} />
-                <Route path="/events"        element={<PrivateRoute><AnimatedPage><LocalEvents /></AnimatedPage></PrivateRoute>} />
-                <Route path="/playbooks"     element={<PrivateRoute><AnimatedPage><Playbooks /></AnimatedPage></PrivateRoute>} />
+                <Route path="/floor"         element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
+                <Route path="/cockpit"       element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/network"       element={<PrivateRoute><AnimatedPage><StoreFleetManager /></AnimatedPage></PrivateRoute>} />
+
+                {/* Graceful Legacy Route Aliases */}
+                <Route path="/vision-pack"   element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
+                <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
+                <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/neighborhoods" element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/analytics"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
+                <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
+                <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><StoreFleetManager /></AnimatedPage></PrivateRoute>} />
+                <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/events"        element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
+                <Route path="/playbooks"     element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
                 <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
                 <Route path="*"              element={<Navigate to="/not-found" replace />} />
               </Routes>
@@ -175,6 +202,7 @@ function AppContent() {
           </Suspense>
         </main>
       </div>
+      <IndustrialStatusBar />
     </div>
   );
 }

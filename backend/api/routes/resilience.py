@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
@@ -104,17 +104,17 @@ async def get_batches(
     city: Optional[str] = None,
     category: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(require_roles("admin", "store-gm", "store_gm")),
+    payload: dict = Depends(require_roles("admin", "director", "executive", "store-gm", "store_gm", "gm", "datascience", "franchise", "user")),
 ):
     """Retrieve active perishable produce batches."""
     query = _scope_batch_query(select(ProductBatch), payload)
 
     # Filter by city (requires joining DarkStore)
     if city:
-        query = query.where(DarkStore.city == city)
+        query = query.where(func.lower(DarkStore.city) == func.lower(city))
 
     if category:
-        query = query.where(ProductBatch.category == category)
+        query = query.where(func.lower(ProductBatch.category) == func.lower(category))
 
     result = await db.execute(query)
     batches = result.scalars().all()
@@ -125,7 +125,7 @@ async def get_batches(
 async def create_batch(
     req: BatchCreate,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(require_roles("admin", "store-gm", "store_gm")),
+    payload: dict = Depends(require_roles("admin", "director", "executive", "store-gm", "store_gm", "gm")),
 ):
     """Add a new inventory batch to track for perishable dynamic markdown."""
     import time

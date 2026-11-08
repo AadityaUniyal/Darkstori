@@ -21,7 +21,12 @@ import {
   X,
   ArrowRight,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  Package,
+  Webhook,
+  UploadCloud,
+  Eye,
+  ShieldCheck
 } from 'lucide-react';
 import { useCity } from '../context/CityContext';
 import { useRole } from '../context/RoleContext';
@@ -103,6 +108,9 @@ export default function CommandPalette({ isOpen, onClose }) {
     { id: 'nav-res', type: 'Navigation', icon: Leaf, title: 'Zero-Waste Resilience', subtitle: 'Sigmoid salvage decay & QR crate photo verification', action: () => navigate('/resilience') },
     { id: 'nav-ev', type: 'Navigation', icon: Calendar, title: 'Local Events & Demand Surges', subtitle: 'Festivals, IPL matches, and weather event modifiers', action: () => navigate('/events') },
     { id: 'nav-pb', type: 'Navigation', icon: Workflow, title: 'Automated Playbooks', subtitle: 'Trigger-condition-action workflow automation engine', action: () => navigate('/playbooks') },
+    { id: 'nav-floor', type: 'Navigation', icon: Package, title: 'Floor Terminal (Handheld)', subtitle: 'High-contrast mobile picker terminal, GRN put-away, and rider handoff', action: () => navigate('/floor') },
+    { id: 'nav-vision', type: 'Navigation', icon: Eye, title: 'VisionPack AI™ (Optical Dock)', subtitle: 'In-browser optical produce AI, freshness grading & bagging passport', action: () => navigate('/vision-pack') },
+    { id: 'nav-dispute', type: 'Navigation', icon: ShieldCheck, title: 'Proof-of-Pack Dispute Portal', subtitle: 'Public customer & refund dispute verification engine', action: () => navigate('/verify') },
 
     // City Quick Switch
     { id: 'city-blr', type: 'Switch City', icon: Map, title: 'Switch to Bengaluru', subtitle: 'Active Tier 1 Hub · 24 Pincodes', action: () => { setCity('Bangalore'); toast.success('Switched to Bengaluru'); } },
@@ -112,6 +120,26 @@ export default function CommandPalette({ isOpen, onClose }) {
     { id: 'city-pune', type: 'Switch City', icon: Map, title: 'Switch to Pune', subtitle: 'Active Tier 2 Hub · 14 Pincodes', action: () => { setCity('Pune'); toast.success('Switched to Pune'); } },
 
     // Quick Actions
+    {
+      id: 'act-import-csv',
+      type: 'Action',
+      icon: UploadCloud,
+      title: 'Import Catalog / Inventory CSV',
+      subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into Darkstori',
+      action: () => {
+        window.dispatchEvent(new CustomEvent('darkstori:open-importer'));
+      }
+    },
+    {
+      id: 'act-webhooks',
+      type: 'Action',
+      icon: Webhook,
+      title: 'Storefront Webhooks & Compliance',
+      subtitle: 'Configure real-time price sync, stockout hooks, GSTIN, and FSSAI credentials',
+      action: () => {
+        window.dispatchEvent(new CustomEvent('darkstori:open-settings'));
+      }
+    },
     {
       id: 'act-tour',
       type: 'Action',

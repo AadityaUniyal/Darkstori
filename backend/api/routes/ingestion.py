@@ -1,7 +1,12 @@
 """Authenticated ingestion endpoints for operator-owned operational events."""
 
-from datetime import datetime
-from typing import Any, List, Literal
+from datetime import datetime, timezone
+import hashlib
+import hmac
+import json
+import time
+from typing import Any, List, Literal, Optional
+import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
@@ -241,3 +246,77 @@ async def sync_inventory_batches_bulk(
         res = await sync_inventory_batch(item=item, db=db, payload=payload)
         results.append(res)
     return {"total": len(results), "synced": results}
+
+
+class WebhookTestIn(BaseModel):
+    webhook_url: str = Field(min_length=8, description="Target storefront webhook URL")
+    hmac_secret: Optional[str] = Field(default=None, description="Secret key for signing HMAC-SHA256 headers")
+    event_type: str = Field(default="inventory.price_update")
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/storefront/webhook/test", status_code=status.HTTP_200_OK)
+async def test_storefront_webhook(
+    item: WebhookTestIn,
+    payload: dict = Depends(require_roles("admin", "regional_head", "store-gm", "store_gm", "gm")),
+):
+    """Deliver a test webhook payload to consumer storefront (Shopify, WooCommerce, Blinkit, custom app)."""
+    now = datetime.now(timezone.utc)
+    test_body = {
+        "event": item.event_type,
+        "timestamp": now.isoformat(),
+        "storefront_environment": "production",
+        "data": item.payload or {
+            "sku": "SKU-AMUL-500ML",
+            "name": "Amul Taaza Toned Milk 500ml",
+            "base_price": 27.0,
+            "current_price": 27.0,
+            "discount_pct": 0,
+            "freshness_score": 1.0,
+            "inventory_available": 142,
+            "out_of_stock": False,
+        },
+    }
+
+    raw_json = json.dumps(test_body, sort_keys=True)
+    secret = (item.hmac_secret or "darkstori_webhook_secret_key").encode("utf-8")
+    signature = hmac.new(secret, raw_json.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Darkstori-Event": item.event_type,
+        "X-Darkstori-Signature": f"sha256={signature}",
+        "X-Darkstori-Timestamp": now.isoformat(),
+    }
+
+    start_time = time.perf_counter()
+    status_str = "simulated"
+    code = 200
+    detail = "Webhook payload signed and verified. Destination test simulated successfully."
+
+    # If it's a real external HTTPS/HTTP URL, attempt a real ping with 4s timeout
+    if item.webhook_url.startswith("http://") or item.webhook_url.startswith("https://"):
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                res = await client.post(item.webhook_url, content=raw_json, headers=headers)
+                code = res.status_code
+                status_str = "delivered" if res.is_success else "http_error"
+                detail = f"Received HTTP {code} from storefront endpoint."
+        except Exception as err:
+            status_str = "unreachable"
+            code = 504
+            detail = f"Could not reach {item.webhook_url}: {str(err)}"
+
+    latency_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
+
+    return {
+        "status": status_str,
+        "status_code": code,
+        "target_url": item.webhook_url,
+        "event_type": item.event_type,
+        "hmac_signature": f"sha256={signature}",
+        "latency_ms": latency_ms,
+        "timestamp": now.isoformat(),
+        "detail": detail,
+        "sample_payload": test_body,
+    }

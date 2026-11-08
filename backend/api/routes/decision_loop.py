@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.routes.resilience import calculate_sigmoid_discount
@@ -147,14 +147,14 @@ async def get_decision_queue(
         target_id
         for target_id, state in applied_rows.all()
         if isinstance(state, dict)
-        and state.get("city") == city
+        and str(state.get("city", "")).lower() == city.lower()
         and state.get("recommendation_id") not in completed_outcome_keys
     }
     query = (
         select(ProductBatch, DarkStore)
         .join(DarkStore, ProductBatch.store_id == DarkStore.id)
         .where(
-            DarkStore.city == city,
+            func.lower(DarkStore.city) == func.lower(city),
             or_(
                 and_(
                     ProductBatch.quantity > 0,

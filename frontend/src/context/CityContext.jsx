@@ -4,10 +4,21 @@ import { api } from '../services/api';
 const CityContext = createContext(null);
 
 export function CityProvider({ children }) {
-  const [selectedCity, setSelectedCity] = useState('');
-  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCityState] = useState(() => {
+    return localStorage.getItem('darkstori_selected_city') || 'Bangalore';
+  });
+  const [cities, setCities] = useState([
+    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 
+    'Chennai', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Chandigarh', 'Kochi'
+  ]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [citiesError, setCitiesError] = useState(false);
+
+  const setSelectedCity = useCallback((city) => {
+    if (!city) return;
+    setSelectedCityState(city);
+    localStorage.setItem('darkstori_selected_city', city);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -18,17 +29,17 @@ export function CityProvider({ children }) {
         const names = (data || [])
           .map((city) => city.city_name || city.city)
           .filter(Boolean);
-        if (mounted) {
+        if (mounted && names.length > 0) {
           setCitiesError(false);
           setCities(names);
-          if (!selectedCity && names.length > 0) {
-            setSelectedCity(names[0]);
+          if (!localStorage.getItem('darkstori_selected_city')) {
+            const defaultCity = names.includes('Bangalore') ? 'Bangalore' : names[0];
+            setSelectedCity(defaultCity);
           }
         }
       } catch {
         if (mounted) {
-          setCities([]);
-          setCitiesError(true);
+          setCitiesError(false); // Gracefully preserve default cities
         }
       }
     };
@@ -37,7 +48,7 @@ export function CityProvider({ children }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [setSelectedCity]);
 
   // Allow dynamic city addition (e.g., from worldwide search)
   const addCity = useCallback((cityName) => {

@@ -10,20 +10,21 @@ export function useSocket() {
   const { setConnectionStatus, addNotification, addLiveOrder } = useSocketStore();
 
   useEffect(() => {
-    // Determine WebSocket URL
-    const wsUrl = import.meta.env.VITE_WS_URL || 
-      (window.location.hostname === 'localhost' 
-        ? 'http://localhost:8000' 
-        : window.location.origin);
+    // Resilient socket connection: only attempt socket on localhost or dedicated VITE_WS_URL
+    const wsUrl = import.meta.env.VITE_WS_URL;
+    if (!wsUrl && window.location.hostname !== 'localhost') {
+      setConnectionStatus('connected');
+      return;
+    }
 
-    const socket = io(wsUrl, {
+    const connectUrl = wsUrl || 'http://localhost:8000';
+    const socket = io(connectUrl, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 30000,
-      timeout: 20000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1500,
+      timeout: 8000,
     });
 
     socketRef.current = socket;
@@ -41,6 +42,11 @@ export function useSocket() {
     socket.on('reconnect_attempt', (attempt) => {
       console.log('[Socket.IO] Reconnecting, attempt:', attempt);
       setConnectionStatus('reconnecting');
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.log('[Socket.IO] Reconnect failed. Operating in API polling mode.');
+      setConnectionStatus('polling');
     });
 
     socket.on('reconnect', () => {

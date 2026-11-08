@@ -399,7 +399,7 @@ export default function Neighborhoods() {
                   </div>
                   <div>
                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Household Income:</span>
-                    <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>₹{(n.avg_household_income / 100000).toFixed(1)}L/yr</div>
+                    <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>₹{(Number(n.avg_household_income || 0) / 100000).toFixed(1)}L/yr</div>
                   </div>
                   <div>
                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Working Pros:</span>

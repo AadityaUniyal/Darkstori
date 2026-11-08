@@ -19,7 +19,7 @@
 
 .main-content {
   flex: 1;
-  padding: 2.5rem 3rem 5rem 3rem;
+  padding: 1.25rem 2rem 3.5rem 2rem;
   background: var(--color-bg);
   transition: background var(--transition-base);
   min-width: 0;
@@ -99,13 +99,13 @@
 
 @media (max-width: 1280px) {
   .main-content {
-    padding: 2rem 2rem 5rem 2rem;
+    padding: 1.25rem 1.5rem 3.5rem 1.5rem;
   }
 }
 
 @media (max-width: 1024px) {
   .main-content {
-    padding: 1.75rem 1.5rem 5rem 1.5rem;
+    padding: 1rem 1.25rem 3.5rem 1.25rem;
   }
 }
 
@@ -114,7 +114,7 @@
     flex-direction: column;
   }
   .main-content {
-    padding: 1.25rem 1rem 6rem 1rem;
+    padding: 0.875rem 0.75rem 4.5rem 0.75rem;
   }
   .page-loader {
     min-height: 56vh;
@@ -124,14 +124,14 @@
 
 @media (max-width: 640px) {
   .app {
-    padding-bottom: 64px;
+    padding-bottom: 72px;
   }
   .navbar {
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
   }
   .main-content {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

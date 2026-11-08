@@ -229,9 +229,13 @@ export default function ResilienceCockpit() {
                       <span className="badge" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: 'none' }}>
                         ID: {alt.id}
                       </span>
-                      <a href="#view" style={{ fontSize: '0.8rem', color: 'var(--peacock-500)', fontWeight: 600 }}>
-                        View affected node {'->'}
-                      </a>
+                      <button
+                        type="button"
+                        onClick={() => window.location.href = '/dashboard'}
+                        style={{ fontSize: '0.8rem', color: 'var(--peacock-500)', fontWeight: 600, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        View in Command Center &rarr;
+                      </button>
                     </div>
                   </motion.div>
                 ))}
@@ -563,7 +567,7 @@ export default function ResilienceCockpit() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Clock size={12} />
-                      <span>Decay: {(batch.decay_rate_per_hour * 100).toFixed(1)}%/hr</span>
+                      <span>Decay: {(Number(batch.decay_rate_per_hour || 0) * 100).toFixed(1)}%/hr</span>
                     </div>
                     {batch.qr_code_hash && (
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: '4px' }}>

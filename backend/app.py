@@ -26,6 +26,7 @@ from backend.api.routes import (
     autonomous_grid,
     decision_loop,
     ingestion,
+    vision_pack,
 )
 import asyncio
 import socketio
@@ -429,6 +430,7 @@ app.include_router(analytics_heatmap.router, prefix="/api/v1/analytics", tags=["
 app.include_router(sla.router, prefix="/api/v1/sla", tags=["Delivery SLA"])
 app.include_router(autonomous_grid.router, prefix="/api/v1/autonomous-grid", tags=["Autonomous Grid and War Room"])
 app.include_router(ingestion.router, prefix='/api/v1/ingestion', tags=['Operational Ingestion'])
+app.include_router(vision_pack.router, prefix="/api/v1/vision-pack", tags=["VisionPack AI Dispatch Gatekeeper"])
 app.include_router(decision_loop.router, prefix="/api/v1/decision-loop", tags=["Operator Decision Loop"])
 app.include_router(cohorts.router, prefix="/api/v1/cohorts", tags=["Customer Cohorts"])
 app.include_router(economics.router, prefix="/api/v1/economics", tags=["Unit Economics"])

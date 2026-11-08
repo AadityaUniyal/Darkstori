@@ -1,12 +1,14 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, LogOut, User, ChevronDown, Search } from 'lucide-react';
+import { Bell, LogOut, User, ChevronDown, Search, UploadCloud, Webhook, Scan } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../context/RoleContext';
 import CitySelector from './CitySelector';
 import ConnectionStatus from './ui/connection-status';
 import { ThemeToggle } from './ThemeToggle';
 import { useSocketStore } from '../stores/socketStore';
+import UniversalDataImporter from './UniversalDataImporter';
+import StorefrontSettingsModal from './StorefrontSettingsModal';
 import './Navbar.css';
 import './CitySelector.css';
 
@@ -19,11 +21,18 @@ const Navbar = memo(() => {
 
   // Notifications State & Logic from Store
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [importerOpen, setImporterOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const notifRef = useRef(null);
   const { notifications, markRead, clearNotifications } = useSocketStore();
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
+    const handleOpenImporter = () => setImporterOpen(true);
+    const handleOpenSettings = () => setSettingsOpen(true);
+    window.addEventListener('darkstori:open-importer', handleOpenImporter);
+    window.addEventListener('darkstori:open-settings', handleOpenSettings);
+
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
@@ -33,7 +42,11 @@ const Navbar = memo(() => {
       }
     };
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    return () => {
+      window.removeEventListener('darkstori:open-importer', handleOpenImporter);
+      window.removeEventListener('darkstori:open-settings', handleOpenSettings);
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
   const initials = user?.email ? user.email.charAt(0).toUpperCase() : 'A';
@@ -41,7 +54,7 @@ const Navbar = memo(() => {
   return (
     <nav className="navbar">
       <div className="navbar-brand" onClick={() => navigate('/')}>
-        <span className="brand-text">Darkstori</span>
+        <span className="brand-text">DarkStori</span>
         <span className="brand-pulse-dot" />
       </div>
       <div className="navbar-actions">
@@ -60,6 +73,30 @@ const Navbar = memo(() => {
             </button>
             
             <CitySelector />
+            <button
+              onClick={() => navigate('/vision-pack')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 text-[#00F0FF] border border-[#00F0FF]/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)]"
+              title="Launch VisionPack AI Optical Dock"
+            >
+              <Scan size={14} className="animate-pulse" />
+              <span className="hidden sm:inline">VisionPack AI</span>
+            </button>
+            <button
+              onClick={() => setImporterOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-sm"
+              title="Upload CSV Catalog & Inventory"
+            >
+              <UploadCloud size={14} />
+              <span className="hidden lg:inline">Import CSV</span>
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 text-xs font-bold transition-all shadow-sm"
+              title="Storefront & Webhooks Integration"
+            >
+              <Webhook size={14} />
+              <span className="hidden xl:inline">Webhooks</span>
+            </button>
             <ConnectionStatus />
             <ThemeToggle />
             
@@ -114,6 +151,24 @@ const Navbar = memo(() => {
                     )}
                   </div>
                 </div>
+              )}
+            </div>
+
+            <div className="hidden lg:flex items-center">
+              {activeRole === 'executive' && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#0071E3]/20 text-[#0071E3] border border-[#0071E3]/40 tracking-wide">
+                  Executive Lens
+                </span>
+              )}
+              {activeRole === 'store-gm' && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FF9F1C]/20 text-[#FF9F1C] border border-[#FF9F1C]/40 tracking-wide">
+                  Store GM Lens
+                </span>
+              )}
+              {activeRole === 'fleet-commander' && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40 tracking-wide">
+                  Fleet Commander Lens
+                </span>
               )}
             </div>
 
@@ -173,6 +228,8 @@ const Navbar = memo(() => {
           </button>
         )}
       </div>
+      <UniversalDataImporter isOpen={importerOpen} onClose={() => setImporterOpen(false)} />
+      <StorefrontSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </nav>
   );
 });

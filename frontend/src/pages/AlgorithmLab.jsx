@@ -27,33 +27,33 @@ const CORE_ENGINES = [
     id: 'forecasting',
     name: 'Walk-Forward Demand Forecaster',
     category: 'Demand & Revenue',
-    accuracy: '96.4%',
-    status: 'Optimal',
-    description: 'Predicts SKU-level hourly order volume factoring in local weather and seasonal events.'
+    type: 'Heuristic & Historical Average',
+    status: 'Operational',
+    description: 'Estimates SKU-level order velocity factoring in local weather, time-of-day peaks, and day-of-week trends.'
   },
   {
     id: 'greenfield',
     name: 'Greenfield Placement & Cannibalization Radar',
     category: 'Spatial Intelligence',
-    accuracy: '94.8%',
-    status: 'Optimal',
+    type: 'PostGIS DBSCAN + Circuity',
+    status: 'Operational',
     description: 'Evaluates pincode demographic density and protects existing hubs from revenue cannibalization.'
   },
   {
     id: 'sigmoid',
     name: 'Dynamic Sigmoid Markdown Engine',
     category: 'Margin Preservation',
-    accuracy: '98.2%',
+    type: 'Shelf-Life Sigmoid Rule',
     status: 'Active',
-    description: 'Continuously clears perishable stock before expiry at maximum consumer willingness-to-pay.'
+    description: 'Continuously suggests clearance markdowns for perishable stock before expiry with cost margin protection.'
   },
   {
     id: 'vrp',
     name: '10-Minute Multi-Drop Fleet Dispatcher',
     category: 'Logistics Optimization',
-    accuracy: '99.1%',
+    type: 'Clarke-Wright Savings',
     status: 'Active',
-    description: 'Clusters proximate drops into sub-10-minute multi-stop delivery routes.'
+    description: 'Clusters proximate customer drops into sub-10-minute multi-stop delivery routes at the hub dispatch dock.'
   }
 ];
 
@@ -77,23 +77,13 @@ export default function AlgorithmLab() {
 
   const handleRunCalibration = async () => {
     setIsCalibrating(true);
-    setCalibrationStep('Gathering multi-metro telemetry...');
+    setCalibrationStep('Submitting model calibration task to backend...');
     try {
-      await api.trainModel();
-      setTimeout(() => {
-        setCalibrationStep('Optimizing spatial clustering & demand weights...');
-      }, 1200);
-
-      setTimeout(() => {
-        setCalibrationStep('Finalizing predictive parameters...');
-      }, 2400);
-
-      setTimeout(async () => {
-        await refetchJobs();
-        setIsCalibrating(false);
-        setCalibrationStep('');
-        toast.success('System Intelligence engines successfully calibrated!');
-      }, 3500);
+      const res = await api.trainModel();
+      await refetchJobs();
+      setIsCalibrating(false);
+      setCalibrationStep('');
+      toast.success(res?.message || 'Model calibration routine executed successfully.');
     } catch {
       setIsCalibrating(false);
       setCalibrationStep('');
@@ -181,7 +171,7 @@ export default function AlgorithmLab() {
                       {eng.name}
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', border: '1px solid rgba(52, 199, 89, 0.3)' }}>
-                      {eng.accuracy} Accuracy
+                      {eng.type}
                     </span>
                   </div>
                   <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--color-text-secondary)', lineHeight: '1.4' }}>

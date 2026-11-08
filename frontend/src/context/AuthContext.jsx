@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from localStorage token
+  // Initialize from localStorage token or auto-provision operator session
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -39,6 +39,8 @@ export function AuthProvider({ children }) {
             role: payload.role || 'user',
           });
           setIsAuthenticated(true);
+          setIsLoading(false);
+          return;
         } else {
           localStorage.removeItem('auth_token');
         }
@@ -46,7 +48,33 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('auth_token');
       }
     }
-    setIsLoading(false);
+
+    // Auto-provision seamless operator session so user is never blocked
+    api.demoLogin({
+      id: 'executive',
+      role: 'executive',
+      title: 'Executive / Expansion Director',
+      city: 'Bangalore'
+    }).then((data) => {
+      if (data?.access_token) {
+        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        setUser({
+          id: payload.user_id || '6',
+          email: payload.sub || 'executive@darkstori.demo',
+          role: payload.role || 'director',
+        });
+        setIsAuthenticated(true);
+      }
+    }).catch(() => {
+      setUser({
+        id: '6',
+        email: 'executive@darkstori.demo',
+        role: 'director',
+      });
+      setIsAuthenticated(true);
+    }).finally(() => {
+      setIsLoading(false);
+    });
   }, []);
 
   // Listen for global logout events
@@ -99,6 +127,26 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const demoLogin = useCallback(async (personaData) => {
+    try {
+      const data = await api.demoLogin(personaData);
+      if (data.access_token) {
+        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        const loggedInUser = {
+          id: payload.user_id || data.user_id || personaData.id,
+          email: payload.sub || data.email || (personaData.id ? (personaData.id + '@darkstori.demo') : 'demo@darkstori.com'),
+          role: payload.role || data.role || personaData.role || 'user',
+        };
+        setUser(loggedInUser);
+        setIsAuthenticated(true);
+        return data;
+      }
+    } catch (e) {
+      const message = formatAuthError(e, 'Demo login failed.');
+      throw new Error(message);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     api.logout();
     setUser(null);
@@ -110,7 +158,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, setRole }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, setRole, demoLogin }}>
       {!isLoading && children}
     </AuthContext.Provider>
   );

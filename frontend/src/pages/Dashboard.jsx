@@ -6,7 +6,7 @@ import {
   TrendingUp, MapPin, Building2, Zap, CloudRain,
   Eye, Compass, ShieldCheck, Clock, Percent, ArrowRight,
   Sparkles, Layers, Sliders, CheckCircle2, ChevronRight,
-  BarChart2, Radio, Activity, AlertTriangle
+  BarChart2, Radio, Activity, AlertTriangle, Package
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useCity } from '../context/CityContext';
@@ -21,6 +21,7 @@ import DecisionQueue from '../components/DecisionQueue';
 import DarkStorePipelineMonitor from '../components/DarkStorePipelineMonitor';
 import DarkStoreDigitalTwin from '../components/DarkStoreDigitalTwin';
 import GodsEyeWarRoom from '../components/GodsEyeWarRoom';
+import DarkStoreFloorMode from '../components/DarkStoreFloorMode';
 import ApplePersonaSelector from '../components/ApplePersonaSelector';
 import AppleDynamicIsland from '../components/AppleDynamicIsland';
 import AmbientBackground from '../components/AmbientBackground';
@@ -37,7 +38,7 @@ export default function Dashboard() {
   const { activeRole, setRole: setGlobalRole } = useRole();
   const [activePersona, setActivePersona] = useState(activeRole || 'executive');
   const [primaryCanvas, setPrimaryCanvas] = useState(
-    activeRole === 'store-gm' ? 'digital-twin' : activeRole === 'fleet-commander' ? 'war-room' : 'map'
+    activeRole === 'store-gm' ? 'floor-mode' : activeRole === 'fleet-commander' ? 'war-room' : 'map'
   );
   const [deepAnalyticsTab, setDeepAnalyticsTab] = useState('roi'); // 'roi' | 'sentiment' | 'pipeline'
 
@@ -76,7 +77,7 @@ export default function Dashboard() {
     if (activeRole && activeRole !== activePersona) {
       setActivePersona(activeRole);
       if (activeRole === 'executive') setPrimaryCanvas('map');
-      else if (activeRole === 'store-gm') setPrimaryCanvas('digital-twin');
+      else if (activeRole === 'store-gm') setPrimaryCanvas('floor-mode');
       else if (activeRole === 'fleet-commander') setPrimaryCanvas('war-room');
     }
   }, [activeRole]);
@@ -87,7 +88,7 @@ export default function Dashboard() {
     if (personaId === 'executive') {
       setPrimaryCanvas('map');
     } else if (personaId === 'store-gm') {
-      setPrimaryCanvas('digital-twin');
+      setPrimaryCanvas('floor-mode');
     } else if (personaId === 'fleet-commander') {
       setPrimaryCanvas('war-room');
     }
@@ -229,6 +230,13 @@ export default function Dashboard() {
             <div className="studio-stage-nav">
               <div className="stage-pill-group">
                 <button
+                  onClick={() => setPrimaryCanvas('floor-mode')}
+                  className={`stage-nav-pill ${primaryCanvas === 'floor-mode' ? 'stage-nav-pill-active' : ''}`}
+                >
+                  <Package size={14} />
+                  <span>Store Floor Mode</span>
+                </button>
+                <button
                   onClick={() => setPrimaryCanvas('map')}
                   className={`stage-nav-pill ${primaryCanvas === 'map' ? 'stage-nav-pill-active' : ''}`}
                 >
@@ -266,6 +274,12 @@ export default function Dashboard() {
 
             {/* Active Canvas Stage Container */}
             <div className="studio-stage-body">
+              {primaryCanvas === 'floor-mode' && (
+                <div className="stage-canvas-wrapper">
+                  <DarkStoreFloorMode city={selectedCity} activeStoreId={activeStoreId} />
+                </div>
+              )}
+
               {primaryCanvas === 'map' && (
                 <div className="stage-canvas-wrapper">
                   <LazyMapView

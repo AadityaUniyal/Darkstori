@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCity } from '../context/CityContext';
 import { api } from '../services/api';
@@ -9,8 +9,59 @@ import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, GeoJsonLayer } from '@deck.gl/layers';
 import { Maximize2, Minimize2, Layers, Loader2, Navigation } from 'lucide-react';
 
-// This is only the initial viewport. It is not an operational location or data point.
+// City Coordinates Registry for smooth instant focusing
+const CITY_COORDINATES = {
+  bangalore: { lng: 77.5946, lat: 12.9716, zoom: 12 },
+  mumbai: { lng: 72.8777, lat: 19.0760, zoom: 12 },
+  delhi: { lng: 77.1025, lat: 28.7041, zoom: 11.5 },
+  'delhi-ncr': { lng: 77.1025, lat: 28.7041, zoom: 11.5 },
+  hyderabad: { lng: 78.4867, lat: 17.3850, zoom: 12 },
+  pune: { lng: 73.8567, lat: 18.5204, zoom: 12 },
+  chennai: { lng: 80.2565, lat: 13.0418, zoom: 12 },
+  kolkata: { lng: 88.3639, lat: 22.5726, zoom: 12 },
+  ahmedabad: { lng: 72.5080, lat: 23.0370, zoom: 12 },
+  jaipur: { lng: 75.7873, lat: 26.9124, zoom: 12 },
+  lucknow: { lng: 80.9462, lat: 26.8467, zoom: 12 },
+  chandigarh: { lng: 76.7650, lat: 30.7250, zoom: 12 },
+  kochi: { lng: 76.3650, lat: 10.0120, zoom: 12 },
+};
+
 const INDIA_OVERVIEW = { lat: 22.5, lng: 79, zoom: 4.2 };
+
+const MAP_STYLES = {
+  dark: {
+    label: 'Tactical Dark',
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  },
+  streets: {
+    label: 'Google Streets',
+    style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+  },
+  satellite: {
+    label: 'Satellite',
+    style: {
+      version: 8,
+      sources: {
+        'esri-satellite': {
+          type: 'raster',
+          tiles: [
+            'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          ],
+          tileSize: 256,
+        },
+      },
+      layers: [
+        {
+          id: 'esri-satellite-layer',
+          type: 'raster',
+          source: 'esri-satellite',
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    },
+  },
+};
 
 function coordinatesOf(item) {
   const lng = Number(item?.lng ?? item?.longitude ?? item?.centroid_lng);
@@ -59,6 +110,7 @@ export default function MapView({
   const { selectedCity, selectedLocation } = useCity();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLayers, setShowLayers] = useState(true);
+  const [mapTheme, setMapTheme] = useState('dark');
   const [selectedPoint, setSelectedPoint] = useState(null);
 
   const { data: dynamicStores, isLoading: storesLoading, isError: storesError } = useQuery({
@@ -90,45 +142,95 @@ export default function MapView({
 
   const autoBounds = useMemo(() => boundsFromPoints(allPoints), [allPoints]);
 
-  // Controlled Viewport State
-  const [viewState, setViewState] = useState({
-    longitude: INDIA_OVERVIEW.lng,
-    latitude: INDIA_OVERVIEW.lat,
-    zoom: zoom || INDIA_OVERVIEW.zoom,
-    pitch: 0,
-    bearing: 0,
-  });
-
-  // Search selections carry exact geocoded coordinates; other maps start at an India-wide view.
-  useEffect(() => {
-    let targetLng = selectedLocation?.lng ?? INDIA_OVERVIEW.lng;
-    let targetLat = selectedLocation?.lat ?? INDIA_OVERVIEW.lat;
-    let targetZoom = zoom || (selectedLocation ? 14 : INDIA_OVERVIEW.zoom);
+  // Controlled Viewport State - Initialized directly to active city / center
+  const [viewState, setViewState] = useState(() => {
+    let initialLng = INDIA_OVERVIEW.lng;
+    let initialLat = INDIA_OVERVIEW.lat;
+    let initialZoom = zoom || INDIA_OVERVIEW.zoom;
 
     if (Array.isArray(center) && center.length >= 2 && Number.isFinite(Number(center[0])) && Number.isFinite(Number(center[1]))) {
-      targetLng = center[1];
-      targetLat = center[0];
+      initialLng = Number(center[1]);
+      initialLat = Number(center[0]);
+      initialZoom = zoom || 12;
     } else if (center && Number.isFinite(Number(center.lng)) && Number.isFinite(Number(center.lat))) {
-      targetLng = center.lng;
-      targetLat = center.lat;
-    } else if (!selectedLocation && autoBounds) {
-      targetLng = (autoBounds.minLng + autoBounds.maxLng) / 2;
-      targetLat = (autoBounds.minLat + autoBounds.maxLat) / 2;
-      targetZoom = 10;
+      initialLng = Number(center.lng);
+      initialLat = Number(center.lat);
+      initialZoom = zoom || 12;
+    } else if (selectedLocation && Number.isFinite(Number(selectedLocation.lng))) {
+      initialLng = Number(selectedLocation.lng);
+      initialLat = Number(selectedLocation.lat);
+      initialZoom = zoom || 14;
+    } else if (selectedCity && CITY_COORDINATES[selectedCity.toLowerCase()]) {
+      const coord = CITY_COORDINATES[selectedCity.toLowerCase()];
+      initialLng = coord.lng;
+      initialLat = coord.lat;
+      initialZoom = zoom || coord.zoom;
     }
 
-    setViewState((prev) => {
-      if (prev.longitude === targetLng && prev.latitude === targetLat && prev.zoom === targetZoom) return prev;
-      return { ...prev, longitude: targetLng, latitude: targetLat, zoom: targetZoom };
-    });
-  }, [center, selectedCity, selectedLocation, autoBounds, zoom]);
+    return {
+      longitude: initialLng,
+      latitude: initialLat,
+      zoom: initialZoom,
+      pitch: 0,
+      bearing: 0,
+    };
+  });
+
+  const lastCityRef = useRef(selectedCity);
+  const lastLocRef = useRef(selectedLocation);
+  const lastCenterRef = useRef(center);
+  const initializedRef = useRef(false);
+
+  // Search selections carry exact geocoded coordinates; city selections target city centers; free navigation is preserved.
+  useEffect(() => {
+    const cityChanged = lastCityRef.current !== selectedCity;
+    const locChanged = lastLocRef.current !== selectedLocation;
+    const centerChanged = JSON.stringify(lastCenterRef.current) !== JSON.stringify(center);
+
+    if (!initializedRef.current || cityChanged || locChanged || centerChanged) {
+      lastCityRef.current = selectedCity;
+      lastLocRef.current = selectedLocation;
+      lastCenterRef.current = center;
+      initializedRef.current = true;
+
+      let targetLng = selectedLocation?.lng ?? INDIA_OVERVIEW.lng;
+      let targetLat = selectedLocation?.lat ?? INDIA_OVERVIEW.lat;
+      let targetZoom = zoom || (selectedLocation ? 14 : INDIA_OVERVIEW.zoom);
+
+      if (Array.isArray(center) && center.length >= 2 && Number.isFinite(Number(center[0])) && Number.isFinite(Number(center[1]))) {
+        targetLng = center[1];
+        targetLat = center[0];
+      } else if (center && Number.isFinite(Number(center.lng)) && Number.isFinite(Number(center.lat))) {
+        targetLng = center.lng;
+        targetLat = center.lat;
+      } else if (selectedCity) {
+        const c = CITY_COORDINATES[selectedCity.toLowerCase()];
+        if (c) {
+          targetLng = c.lng;
+          targetLat = c.lat;
+          targetZoom = c.zoom;
+        } else if (autoBounds) {
+          targetLng = (autoBounds.minLng + autoBounds.maxLng) / 2;
+          targetLat = (autoBounds.minLat + autoBounds.maxLat) / 2;
+          targetZoom = 11;
+        }
+      }
+
+      setViewState((prev) => ({
+        ...prev,
+        longitude: targetLng,
+        latitude: targetLat,
+        zoom: targetZoom,
+      }));
+    }
+  }, [center, selectedCity, selectedLocation]);
 
   const handleDeckClick = useCallback(
     (info) => {
       if (info.object) {
         const position = coordinatesOf(info.object);
         if (position) setSelectedPoint({ lng: position[0], lat: position[1], source: 'recorded_feature' });
-        onSelect(info.object);
+        onSelect?.(info.object);
       } else if (info.coordinate && Array.isArray(info.coordinate) && info.coordinate.length >= 2) {
         const point = { lng: info.coordinate[0], lat: info.coordinate[1], source: 'map_click' };
         setSelectedPoint(point);
@@ -238,6 +340,20 @@ export default function MapView({
       onClick: ({ object }) => onSelect && object && onSelect(object),
     });
 
+    const selectedLocationHaloLayer = new ScatterplotLayer({
+      id: 'selected-location-halo',
+      data: [selectedPoint || selectedLocation].filter(Boolean),
+      getPosition: coordinatesOf,
+      getRadius: 2000,
+      stroked: true,
+      filled: true,
+      getFillColor: [255, 159, 28, 25],
+      getLineColor: [255, 159, 28, 200],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      pickable: false,
+    });
+
     const selectedLocationLayer = new ScatterplotLayer({
       id: 'selected-map-location',
       data: [selectedPoint || selectedLocation].filter(Boolean),
@@ -253,7 +369,7 @@ export default function MapView({
       pickable: false,
     });
 
-    return [neighborhoodLayer, competitorLayer, activeStoreLayer, heatLayer, serviceCircleLayer, liveOrderLayer, externalPointLayer, selectedLocationLayer].filter(Boolean);
+    return [neighborhoodLayer, competitorLayer, activeStoreLayer, heatLayer, serviceCircleLayer, liveOrderLayer, externalPointLayer, selectedLocationHaloLayer, selectedLocationLayer].filter(Boolean);
   }, [neighborhoods, stores, zones, liveOrders, externalPoints, showHeatmap, showLayers, onSelect, selectedPoint, selectedLocation]);
 
   const mapHeight = isFullscreen ? '80vh' : height;
@@ -265,6 +381,23 @@ export default function MapView({
           Store data is unavailable. The basemap remains usable; no store markers are being inferred.
         </div>
       )}
+
+      {/* Map Theme Switcher: Dark | Streets | Satellite */}
+      <div className="absolute top-3 left-3 z-10 flex items-center bg-[#0E121A]/90 backdrop-blur-xl p-1 rounded-xl border border-white/10 shadow-lg text-xs gap-1">
+        {Object.entries(MAP_STYLES).map(([key, config]) => (
+          <button
+            key={key}
+            onClick={() => setMapTheme(key)}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+              mapTheme === key
+                ? 'bg-[#0071E3] text-white shadow-sm'
+                : 'text-[#86868B] hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {config.label}
+          </button>
+        ))}
+      </div>
 
       {/* Loading overlay */}
       {isLoading && (
@@ -342,8 +475,10 @@ export default function MapView({
         }}
       >
         <Map
+          {...viewState}
+          style={{ width: '100%', height: '100%' }}
           mapLib={maplibregl}
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+          mapStyle={MAP_STYLES[mapTheme]?.style || MAP_STYLES.dark.style}
           reuseMaps
           preventStyleDiffing={true}
         />

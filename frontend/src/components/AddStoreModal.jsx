@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, MapPin, X, Loader2, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
@@ -13,8 +14,10 @@ const CITY_COORDS = {
   Pune: { lat: 18.5204, lng: 73.8567, pincode: '411001' },
 };
 
-export default function AddStoreModal({ isOpen, onClose }) {
+export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [createdStore, setCreatedStore] = useState(null);
 
   const [storeName, setStoreName] = useState('');
   const [platform, setPlatform] = useState('Darkstori');
@@ -25,6 +28,25 @@ export default function AddStoreModal({ isOpen, onClose }) {
   const [storageSqft, setStorageSqft] = useState(1500);
   const [dailyCapacity, setDailyCapacity] = useState(600);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) setCreatedStore(null);
+    if (isOpen && initialData) {
+      if (initialData.store_name || initialData.storeName) {
+        setStoreName(initialData.store_name || initialData.storeName);
+      }
+      if (initialData.city) setCity(initialData.city);
+      if (initialData.pincode) setPincode(initialData.pincode);
+      if (initialData.lat != null) setLatitude(Number(initialData.lat));
+      if (initialData.lng != null) setLongitude(Number(initialData.lng));
+      if (initialData.storageSqft) setStorageSqft(Number(initialData.storageSqft));
+      if (initialData.dailyCapacity) setDailyCapacity(Number(initialData.dailyCapacity));
+      setError(null);
+    } else if (isOpen && !initialData) {
+      setStoreName('');
+      setError(null);
+    }
+  }, [isOpen, initialData]);
 
   const handleCityChange = (newCity) => {
     setCity(newCity);
@@ -40,11 +62,12 @@ export default function AddStoreModal({ isOpen, onClose }) {
       return await api.createStore(payload);
     },
     onSuccess: (data) => {
-      toast.success(`Dark Store "${data.store_name || storeName}" created successfully!`);
+      toast.success(`Dark Store "${data.store_name || storeName}" established in Neon DB!`);
       queryClient.invalidateQueries({ queryKey: ['stores-list'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['expansion-opportunities'] });
-      onClose();
+      queryClient.invalidateQueries({ queryKey: ['stores'] });
+      setCreatedStore(data);
     },
     onError: (err) => {
       setError(err?.response?.data?.detail || err?.message || 'Failed to create dark store.');
@@ -108,6 +131,56 @@ export default function AddStoreModal({ isOpen, onClose }) {
           </div>
         )}
 
+        {createdStore ? (
+          <div className="py-4 space-y-5 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center">
+              <CheckCircle2 size={36} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white font-display">Dark Store Established!</h3>
+              <p className="text-xs text-white/60 mt-1 max-w-sm mx-auto">
+                {createdStore.store_name || storeName} ({createdStore.city}) is now active in Neon DB with live 2.0 km 10-minute delivery halos.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/[0.04] border border-white/10 text-left text-xs font-mono space-y-2">
+              <div className="flex justify-between"><span className="text-white/40">HUB ID</span><span className="text-amber-400">DS-HUB-#{createdStore.id}</span></div>
+              <div className="flex justify-between"><span className="text-white/40">PINCODE</span><span className="text-white">{createdStore.pincode || pincode}</span></div>
+              <div className="flex justify-between"><span className="text-white/40">DAILY CAPACITY</span><span className="text-emerald-400">{dailyCapacity} Orders/Day</span></div>
+              <div className="flex justify-between"><span className="text-white/40">CAPEX BENCHMARK</span><span className="text-white">₹21.5L (Payback 4.2 mo)</span></div>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate(`/floor?store_id=${createdStore.id}&store_name=${encodeURIComponent(createdStore.store_name || storeName)}&city=${encodeURIComponent(createdStore.city || city)}`);
+                }}
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
+              >
+                <span>🏭 Open Floor Operations & WMS (Pick/Pack) →</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/network');
+                }}
+                className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
+              >
+                <span>🚚 Inspect Store Fleet & War Room →</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-xs text-white/40 hover:text-white pt-1 transition-colors"
+              >
+                Close and stay in Expansion Cockpit
+              </button>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Hub / Store Name</label>
@@ -234,6 +307,7 @@ export default function AddStoreModal({ isOpen, onClose }) {
             </button>
           </div>
         </form>
+        )}
       </motion.div>
     </div>
   );

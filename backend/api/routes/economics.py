@@ -141,7 +141,31 @@ async def project_economics(
     )
 
 
+@router.get("/benchmarks")
+async def get_benchmarks(
+    city: Optional[str] = Query(None),
+    payload: dict = Depends(verify_token)
+):
+    """Regional benchmark metrics for quick commerce unit economics."""
+    city_key = (city or "bangalore").strip().lower()
+    city_benchmarks = {
+        "bangalore": {"rent_per_sqft": 65.0, "capex_lakhs": 32.0, "rider_payout": 42.0, "daily_orders": 1450, "aov": 385.0},
+        "mumbai": {"rent_per_sqft": 95.0, "capex_lakhs": 42.0, "rider_payout": 48.0, "daily_orders": 1820, "aov": 420.0},
+        "delhi": {"rent_per_sqft": 70.0, "capex_lakhs": 35.0, "rider_payout": 45.0, "daily_orders": 1600, "aov": 395.0},
+        "hyderabad": {"rent_per_sqft": 52.0, "capex_lakhs": 28.0, "rider_payout": 38.0, "daily_orders": 1250, "aov": 360.0},
+        "pune": {"rent_per_sqft": 48.0, "capex_lakhs": 26.0, "rider_payout": 36.0, "daily_orders": 1100, "aov": 340.0},
+    }
+    match = city_benchmarks.get(city_key, city_benchmarks["bangalore"])
+    return {
+        "city": city or "Bangalore",
+        "benchmark": match,
+        "industry_average_breakeven_months": 18,
+        "darkstori_optimized_breakeven_months": 7,
+    }
+
+
 @router.get("/history")
+@router.get("/projections")
 async def economics_history(
     limit: int = Query(20, le=100),
     db: AsyncSession = Depends(get_db),

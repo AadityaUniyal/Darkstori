@@ -73,8 +73,89 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "cv02" 1, "cv03" 1, "cv04" 1;
     overflow-x: hidden;
     color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* High-density tabular numbers for all telemetry and operational figures */
+  .tabular-nums,
+  .font-mono,
+  [data-numeric],
+  .stat-value,
+  .metric-value,
+  code,
+  kbd {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+/* Tactile Micro-Physics & Industrial Control Elevation */
+@layer components {
+  .btn-tactile {
+    position: relative;
+    user-select: none;
+    transition: all 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+  .btn-tactile:hover {
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 2px 4px rgba(0, 0, 0, 0.45);
+  }
+  .btn-tactile:active {
+    transform: translateY(1px) scale(0.99);
+    box-shadow: 
+      inset 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 0 1px rgba(0, 0, 0, 0.2);
+  }
+
+  /* High contrast industrial card */
+  .card-tactile {
+    background: #0D121D;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 4px 16px -2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Micro-scrollbars for dense operational consoles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+
+/* Role-Specific Design Personas & Semantic Themes */
+[data-role="executive"] {
+  --primary: 211 100% 45%; /* Cupertino Deep Sapphire Blue #0071E3 */
+  --ring: 211 100% 45%;
+  --accent: 42 100% 51%; /* Champagne Gold #FFB703 */
+}
+
+[data-role="store-gm"] {
+  --primary: 34 100% 55%; /* Industrial Saffron #FF9F1C */
+  --ring: 34 100% 55%;
+  --accent: 152 76% 40%; /* High-Vis Emerald #10B981 */
+}
+
+[data-role="fleet-commander"] {
+  --primary: 184 100% 50%; /* Tactical Cyber Cyan #00F0FF */
+  --ring: 184 100% 50%;
+  --destructive: 0 84% 60%; /* Crimson Alert #EF4444 */
 }

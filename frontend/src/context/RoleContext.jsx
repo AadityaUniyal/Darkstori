@@ -10,19 +10,35 @@ export const OPERATIONAL_ROLES = {
 
 export function RoleProvider({ children }) {
   const [activeRole, setActiveRoleState] = useState(() => {
-    return localStorage.getItem('darkstori_operational_lens') || OPERATIONAL_ROLES.EXECUTIVE;
+    const saved = localStorage.getItem('darkstori_operational_lens') || OPERATIONAL_ROLES.EXECUTIVE;
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-role', saved);
+    }
+    return saved;
   });
 
   const setRole = useCallback((newRole) => {
     setActiveRoleState(newRole);
     localStorage.setItem('darkstori_operational_lens', newRole);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-role', newRole);
+    }
     window.dispatchEvent(new CustomEvent('darkstori:role-change', { detail: { role: newRole } }));
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-role', activeRole);
+    }
+  }, [activeRole]);
 
   useEffect(() => {
     const handleExternalChange = (e) => {
       if (e.detail?.role && e.detail.role !== activeRole) {
         setActiveRoleState(e.detail.role);
+        if (typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-role', e.detail.role);
+        }
       }
     };
     window.addEventListener('darkstori:role-change', handleExternalChange);
@@ -39,7 +55,6 @@ export function RoleProvider({ children }) {
 export function useRole() {
   const context = useContext(RoleContext);
   if (!context) {
-    // Graceful fallback if consumed outside provider
     return {
       activeRole: OPERATIONAL_ROLES.EXECUTIVE,
       setRole: () => {},

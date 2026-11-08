@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { MapPin, BarChart3, ShieldCheck, ClipboardList, RefreshCw, Search, Radar } from 'lucide-react';
+import { MapPin, BarChart3, ShieldCheck, ClipboardList, RefreshCw, Search, Radar, X, Store } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
 import { useCity } from '../context/CityContext';
@@ -41,6 +41,41 @@ export default function ExpansionCockpit() {
   const [resolvedPoint, setResolvedPoint] = useState(null);
   const [activeTab, setActiveTab] = useState('sites');
   const [isAddStoreOpen, setIsAddStoreOpen] = useState(false);
+  const [pinnedLocation, setPinnedLocation] = useState(null);
+  const [initialStoreData, setInitialStoreData] = useState(null);
+
+  const handleMapPinClick = async (point) => {
+    try {
+      const rev = await api.reverseLocation(point.lat, point.lng);
+      const addr = rev?.address || {};
+      const street = addr.road || addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || 'Proposed Hub';
+      const cityName = addr.city || addr.town || addr.county || addr.state_district || selectedCity || 'Bangalore';
+      const pincode = addr.postcode || '';
+      const displayName = rev?.display_name || `Site @ ${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`;
+
+      setPinnedLocation({
+        lat: point.lat,
+        lng: point.lng,
+        displayName,
+        street,
+        city: cityName,
+        pincode,
+      });
+      setResolvedPoint({ lat: point.lat, lng: point.lng, display_name: displayName });
+      selectLocation?.({ lat: point.lat, lng: point.lng });
+    } catch {
+      setPinnedLocation({
+        lat: point.lat,
+        lng: point.lng,
+        displayName: `Site @ ${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`,
+        street: 'Proposed Hub',
+        city: selectedCity || 'Bangalore',
+        pincode: '',
+      });
+      setResolvedPoint(point);
+      selectLocation?.(point);
+    }
+  };
 
   const { data: storesList = [] } = useQuery({
     queryKey: ['stores-list', selectedCity],
@@ -61,6 +96,12 @@ export default function ExpansionCockpit() {
     queryKey: ['expansion-opportunities', selectedCity],
     queryFn: () => api.getExpansionOpportunities(selectedCity, 8),
     staleTime: 120000,
+  });
+
+  const { data: cityCompetitors = [] } = useQuery({
+    queryKey: ['city-competitors', selectedCity],
+    queryFn: () => api.getCompetitors(selectedCity),
+    staleTime: 60000,
   });
 
   const { data: ledger = [], isLoading: ledgerLoading, isError: ledgerError, refetch: refetchLedger } = useQuery({
@@ -254,19 +295,28 @@ export default function ExpansionCockpit() {
               height="420px"
               center={analysisCenter}
               zoom={locationAnalysis ? 11 : undefined}
-              externalPoints={locationAnalysis?.competitors?.map((s) => ({
-                lat: s.lat,
-                lng: s.lng,
-                platform: s.platform,
-                store_name: s.name,
-              })) || []}
+              externalPoints={
+                locationAnalysis?.competitors?.length
+                  ? locationAnalysis.competitors.map((s) => ({
+                      lat: s.lat,
+                      lng: s.lng,
+                      platform: s.platform,
+                      store_name: s.name,
+                    }))
+                  : (cityCompetitors || []).map((c) => ({
+                      lat: c.latitude,
+                      lng: c.longitude,
+                      platform: c.platform,
+                      store_name: c.store_name,
+                    }))
+              }
               showHeatmap={true}
               onSelect={(nb) => {
                 if (nb?.neighborhood_id) {
                   setSelectedOpportunity(opportunities.find((o) => o.neighborhood_id === nb.neighborhood_id) || null);
+                  setPinnedLocation(null);
                 } else if (Number.isFinite(Number(nb?.lat)) && Number.isFinite(Number(nb?.lng))) {
-                  setResolvedPoint(nb);
-                  selectLocation?.(nb);
+                  handleMapPinClick(nb);
                 }
               }}
             />
@@ -313,6 +363,118 @@ export default function ExpansionCockpit() {
         </AnimatedCard>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {pinnedLocation && (
+            <AnimatedCard className="glass-card" style={{
+              padding: 20,
+              background: 'linear-gradient(135deg, rgba(255, 159, 28, 0.12) 0%, rgba(14, 18, 26, 0.9) 100%)',
+              border: '1px solid rgba(255, 159, 28, 0.45)',
+              boxShadow: '0 8px 32px rgba(255, 159, 28, 0.18)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: '#FF9F1C', display: 'grid', placeItems: 'center', color: '#000' }}>
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#FF9F1C' }}>
+                      Interactive Pin Dropped
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
+                      {pinnedLocation.street}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPinnedLocation(null)}
+                  style={{ background: 'transparent', border: 'none', color: '#86868B', cursor: 'pointer', padding: 4 }}
+                  title="Dismiss pin"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4, marginBottom: 14 }}>
+                {pinnedLocation.displayName}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, padding: '12px 0', borderTop: '1px solid rgba(255, 255, 255, 0.08)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#86868B', textTransform: 'uppercase' }}>10-Min SLA Halo</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#38BDF8' }}>2.0 km Ring</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#86868B', textTransform: 'uppercase' }}>Competitor POIs</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#FF3B30' }}>
+                    {locationAnalysis?.competitor_count ?? (isAnalyzing ? '...' : 0)} Nearby
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#86868B', textTransform: 'uppercase' }}>PIN Code</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#34C759' }}>
+                    {pinnedLocation.pincode || 'Auto-Detected'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pan-India Dark Store Unit Economics Feasibility Card */}
+              <div style={{ background: 'rgba(0, 0, 0, 0.4)', borderRadius: '12px', padding: '12px 14px', marginBottom: 16, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <BarChart3 size={13} /> Quick-Commerce Feasibility & Unit Economics
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 12 }}>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)' }}>Setup Capex:</span>{' '}
+                    <strong style={{ color: '#fff' }}>₹21.5 Lakhs</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)' }}>Monthly Opex:</span>{' '}
+                    <strong style={{ color: '#fff' }}>₹1.45 Lakhs/mo</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)' }}>Daily Capacity:</span>{' '}
+                    <strong style={{ color: '#34C759' }}>850 - 1,200 orders</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)' }}>Payback Period:</span>{' '}
+                    <strong style={{ color: '#FF9F1C' }}>Month 4.2</strong>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setInitialStoreData({
+                    storeName: `Darkstori - ${pinnedLocation.street}`,
+                    city: pinnedLocation.city,
+                    pincode: pinnedLocation.pincode || '560001',
+                    lat: pinnedLocation.lat,
+                    lng: pinnedLocation.lng,
+                  });
+                  setIsAddStoreOpen(true);
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  background: '#FF9F1C',
+                  color: '#000',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(255, 159, 28, 0.4)'
+                }}
+              >
+                <Plus size={18} /> Establish Dark Store Here
+              </button>
+            </AnimatedCard>
+          )}
+
           <AnimatedCard className="glass-card" style={{ padding: 20 }}>
             <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: '1.15rem' }}>Simulation Panel</h2>
             {!activeOpportunity ? (
@@ -481,7 +643,7 @@ export default function ExpansionCockpit() {
           </AnimatedCard>
         </div>
       </div>
-      <AddStoreModal isOpen={isAddStoreOpen} onClose={() => setIsAddStoreOpen(false)} />
+      <AddStoreModal isOpen={isAddStoreOpen} onClose={() => { setIsAddStoreOpen(false); setInitialStoreData(null); }} initialData={initialStoreData} />
     </div>
   );
 }

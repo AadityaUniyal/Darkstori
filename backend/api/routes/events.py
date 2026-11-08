@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
@@ -54,7 +54,7 @@ async def get_events(
     query = select(LocalEvent).order_by(LocalEvent.event_date.asc())
 
     if city:
-        query = query.where(LocalEvent.city == city)
+        query = query.where(func.lower(LocalEvent.city) == func.lower(city))
     if pincode:
         query = query.where(LocalEvent.pincode == pincode)
 

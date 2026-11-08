@@ -664,8 +664,8 @@ export default function Simulator() {
             {activeTab === 'simulate' && (
               drafts.length === 0 ? (
                 <EmptyState
-                  title="Simulation Mode Idle"
-                  description="Enable Placement Mode and click on the map grid to run localized projection."
+                  title="Expansion Projection Idle"
+                  description="Enable Placement Mode and click on the map grid to run localized ROI & Capex projection."
                 />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
@@ -710,11 +710,11 @@ export default function Simulator() {
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
                           <span style={{ color: 'var(--color-text-secondary)' }}>Route Transit Time:</span>
-                          <strong style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.routing_mins.toFixed(1)} mins</strong>
+                          <strong style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>{Number(activeDraft.metrics?.routing_mins ?? 0).toFixed(1)} mins</strong>
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '6px' }}>
                           <span style={{ color: 'var(--color-text-secondary)' }}>ROI 12 Months:</span>
-                          <strong style={{ color: activeDraft.metrics.roi_pct > 15 ? '#34C759' : '#FF9500', fontFamily: 'var(--font-mono)' }}>{activeDraft.metrics.roi_pct.toFixed(1)}%</strong>
+                          <strong style={{ color: (activeDraft.metrics?.roi_pct ?? 0) > 15 ? '#34C759' : '#FF9500', fontFamily: 'var(--font-mono)' }}>{Number(activeDraft.metrics?.roi_pct ?? 0).toFixed(1)}%</strong>
                         </div>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
                           <span style={{ color: 'var(--color-text-secondary)' }}>Estimated Breakeven:</span>

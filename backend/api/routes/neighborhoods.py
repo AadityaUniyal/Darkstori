@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import verify_token
+from backend.core.security import verify_token, verify_token_optional
 from backend.database.connection import get_db
 from backend.database.models.models import FocusCity, Neighborhood, NeighborhoodDNA
 
@@ -83,8 +83,15 @@ class DNAResponse(BaseModel):
 async def get_focus_cities(
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve all focus cities."""
-    query = select(FocusCity).order_by(FocusCity.city_name.asc())
+    """Retrieve all focus cities with flagship metros prioritized."""
+    from sqlalchemy import case
+    priority_cities = {
+        'Bangalore': 1, 'Mumbai': 2, 'Delhi': 3, 'Hyderabad': 4,
+        'Pune': 5, 'Chennai': 6, 'Kolkata': 7, 'Ahmedabad': 8,
+        'Jaipur': 9, 'Lucknow': 10, 'Chandigarh': 11, 'Kochi': 12
+    }
+    whens = [(FocusCity.city_name == name, rank) for name, rank in priority_cities.items()]
+    query = select(FocusCity).order_by(case(*whens, else_=99).asc(), FocusCity.city_name.asc())
     result = await db.execute(query)
     cities = result.scalars().all()
 
@@ -95,15 +102,19 @@ async def get_focus_cities(
 @router.get("/", response_model=List[NeighborhoodResponse], include_in_schema=False)
 async def get_neighborhoods(
     city_id: Optional[int] = Query(None),
+    city: Optional[str] = Query(None),
     limit: int = Query(50, le=200),
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Get neighborhoods, optionally filtered by city."""
     from sqlalchemy.orm import selectinload
+    from sqlalchemy import func
     query = select(Neighborhood).options(selectinload(Neighborhood.city))
     if city_id is not None:
         query = query.where(Neighborhood.city_id == city_id)
+    elif city:
+        query = query.join(FocusCity, Neighborhood.city_id == FocusCity.city_id).where(func.lower(FocusCity.city_name) == func.lower(city))
     query = query.limit(limit)
 
     result = await db.execute(query)

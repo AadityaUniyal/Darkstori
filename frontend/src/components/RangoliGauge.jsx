@@ -8,8 +8,9 @@ import React from 'react';
  * @param {number} size - Size in pixels (default 64)
  */
 export default function RangoliGauge({ value = 0, max = 10, type = 'opportunity', size = 64 }) {
-  const normalizedValue = Math.max(0, Math.min(value, max));
-  const fillFraction = normalizedValue / max;
+  const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+  const normalizedValue = Math.max(0, Math.min(safeValue, max));
+  const fillFraction = max > 0 ? normalizedValue / max : 0;
   const numPetals = 8;
   const activePetals = Math.round(fillFraction * numPetals);
 
@@ -89,7 +90,7 @@ export default function RangoliGauge({ value = 0, max = 10, type = 'opportunity'
         color: 'var(--color-text-primary)',
         pointerEvents: 'none',
       }}>
-        {type === 'opportunity' ? value.toFixed(1) : `${Math.round(value)}%`}
+        {type === 'opportunity' ? safeValue.toFixed(1) : `${Math.round(safeValue)}%`}
       </div>
     </div>
   );

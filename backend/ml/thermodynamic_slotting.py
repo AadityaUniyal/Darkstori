@@ -32,24 +32,24 @@ class ThermodynamicSlottingEngine:
         }
         self.staging_bay = (0.0, 0.0)
 
-        # Base catalog of 16 high-velocity SKUs
+        # Base catalog of 16 high-velocity Indian Quick-Commerce SKUs
         self.default_skus = [
-            {"id": "SKU-01", "name": "Farm Fresh Whole Milk", "category": "Dairy", "velocity": 92},
-            {"id": "SKU-02", "name": "Artisanal Sourdough", "category": "Bakery", "velocity": 85},
-            {"id": "SKU-03", "name": "Espresso Dark Roast", "category": "Beverages", "velocity": 78},
-            {"id": "SKU-04", "name": "Greek Honey Yogurt", "category": "Dairy", "velocity": 74},
-            {"id": "SKU-05", "name": "Organic Hass Avocado", "category": "Produce", "velocity": 68},
-            {"id": "SKU-06", "name": "Salted Butter Block", "category": "Dairy", "velocity": 65},
-            {"id": "SKU-07", "name": "Organic Bananas 1kg", "category": "Produce", "velocity": 88},
-            {"id": "SKU-08", "name": "Sparkling Mineral Water", "category": "Beverages", "velocity": 60},
-            {"id": "SKU-09", "name": "Crunchy Peanut Butter", "category": "Pantry", "velocity": 52},
-            {"id": "SKU-10", "name": "Dark Chocolate 85%", "category": "Snacks", "velocity": 58},
-            {"id": "SKU-11", "name": "Cold Brew Concentrate", "category": "Beverages", "velocity": 63},
-            {"id": "SKU-12", "name": "Organic Strawberries", "category": "Produce", "velocity": 71},
-            {"id": "SKU-13", "name": "Multigrain Croissants", "category": "Bakery", "velocity": 49},
-            {"id": "SKU-14", "name": "Free-Range Eggs 6pk", "category": "Dairy", "velocity": 82},
-            {"id": "SKU-15", "name": "Almond Milk Unsweetened", "category": "Dairy", "velocity": 56},
-            {"id": "SKU-16", "name": "Sea Salt Potato Crisps", "category": "Snacks", "velocity": 62},
+            {"id": "SKU-01", "name": "Amul Taaza Toned Milk 500ml", "category": "Dairy", "velocity": 98},
+            {"id": "SKU-02", "name": "Modern White Bread 400g", "category": "Bakery", "velocity": 92},
+            {"id": "SKU-03", "name": "Brooke Bond Red Label Tea 250g", "category": "Beverages", "velocity": 84},
+            {"id": "SKU-04", "name": "Amul Masti Dahi Pouch 400g", "category": "Dairy", "velocity": 88},
+            {"id": "SKU-05", "name": "Fresh Hybrid Tomatoes 1kg", "category": "Produce", "velocity": 89},
+            {"id": "SKU-06", "name": "Amul Salted Butter 100g", "category": "Dairy", "velocity": 80},
+            {"id": "SKU-07", "name": "Fresh Red Onions 1kg", "category": "Produce", "velocity": 93},
+            {"id": "SKU-08", "name": "Bisleri Packaged Water 1L", "category": "Beverages", "velocity": 75},
+            {"id": "SKU-09", "name": "Aashirvaad Shudh Chakki Atta 5kg", "category": "Staples", "velocity": 82},
+            {"id": "SKU-10", "name": "Cadbury Dairy Milk Silk 60g", "category": "Snacks", "velocity": 70},
+            {"id": "SKU-11", "name": "Maggi 2-Minute Masala Noodles 280g", "category": "Snacks", "velocity": 91},
+            {"id": "SKU-12", "name": "Fresh Coriander (Dhaniya) 100g", "category": "Produce", "velocity": 95},
+            {"id": "SKU-13", "name": "Fresh Green Chilies (Hari Mirch) 100g", "category": "Produce", "velocity": 90},
+            {"id": "SKU-14", "name": "Farm Fresh Eggs 6pk", "category": "Dairy", "velocity": 96},
+            {"id": "SKU-15", "name": "Fortune Sunlite Sunflower Oil 1L", "category": "Staples", "velocity": 77},
+            {"id": "SKU-16", "name": "Lay's India's Magic Masala 50g", "category": "Snacks", "velocity": 85},
         ]
 
     def _euclidean_dist(self, p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
@@ -64,17 +64,17 @@ class ThermodynamicSlottingEngine:
         sku_ids = [s["id"] for s in self.default_skus]
         affinity: Dict[str, Dict[str, float]] = {s: {o: 0.05 for o in sku_ids} for s in sku_ids}
 
-        # Strong cross-affinities (Breakfast / Daily staples)
+        # Strong cross-affinities (Breakfast, Chai, Gravy base, Evening snacks)
         strong_pairs = [
-            ("SKU-01", "SKU-02", 0.88),  # Milk + Bread
-            ("SKU-01", "SKU-03", 0.82),  # Milk + Coffee
-            ("SKU-01", "SKU-14", 0.91),  # Milk + Eggs
-            ("SKU-02", "SKU-06", 0.79),  # Bread + Butter
-            ("SKU-03", "SKU-11", 0.65),  # Coffee + Cold Brew
-            ("SKU-04", "SKU-12", 0.84),  # Yogurt + Strawberries
-            ("SKU-05", "SKU-07", 0.72),  # Avocado + Bananas
-            ("SKU-10", "SKU-16", 0.67),  # Chocolate + Crisps
-            ("SKU-02", "SKU-13", 0.70),  # Bread + Croissant
+            ("SKU-01", "SKU-02", 0.94),  # Milk + Bread
+            ("SKU-01", "SKU-03", 0.90),  # Milk + Chai
+            ("SKU-01", "SKU-14", 0.92),  # Milk + Eggs
+            ("SKU-02", "SKU-06", 0.88),  # Bread + Butter
+            ("SKU-05", "SKU-07", 0.95),  # Tomatoes + Onions (Gravy base)
+            ("SKU-12", "SKU-13", 0.93),  # Coriander + Green Chilies (Fresh Produce pair)
+            ("SKU-09", "SKU-15", 0.86),  # Atta + Cooking Oil (Monthly staples)
+            ("SKU-11", "SKU-16", 0.78),  # Maggi + Chips (Evening snack)
+            ("SKU-04", "SKU-07", 0.72),  # Dahi + Onions (Raita bundle)
         ]
 
         for s1, s2, aff in strong_pairs:

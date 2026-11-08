@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ENCRYPTION_KEY: str = ""
     SEED_DEMO_DATA: bool = False
+    ALLOW_DEMO_LOGIN: bool = True
 
     # CORS (override via env var as JSON array or comma-separated)
     ALLOWED_ORIGINS: Union[List[str], str] = [

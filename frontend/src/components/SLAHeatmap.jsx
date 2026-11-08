@@ -113,14 +113,14 @@ export default function SLAHeatmap() {
                       padding: '3px 8px',
                       borderRadius: '12px'
                     }}>
-                      {m.sla_breach_pct.toFixed(1)}% breach
+                      {Number(m.sla_breach_pct ?? 0).toFixed(1)}% breach
                     </span>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '8px', fontSize: '0.78rem' }}>
                     <div>
                       <span style={{ color: '#6b7280' }}>Avg ETA:</span>
-                      <strong style={{ color: '#e2e8f0', marginLeft: '4px' }}>{m.avg_eta_min.toFixed(1)}m</strong>
+                      <strong style={{ color: '#e2e8f0', marginLeft: '4px' }}>{Number(m.avg_eta_min ?? 0).toFixed(1)}m</strong>
                     </div>
                     <div>
                       <span style={{ color: '#6b7280' }}>Peak ETA:</span>

@@ -21,6 +21,7 @@ from backend.database.models.models import ApiKey, RefreshToken, User
 import bcrypt
 
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 def hash_password(password: str) -> str:
@@ -151,6 +152,23 @@ async def verify_token(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
 
     return payload
+
+
+async def verify_token_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[Dict]:
+    """Verify access token if provided, gracefully returning None otherwise."""
+    if not credentials or not credentials.credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        exp = payload.get("exp")
+        if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+            return None
+        return payload
+    except Exception:
+        return None
 
 
 async def verify_refresh_token(token_str: str, db: AsyncSession) -> Dict:

@@ -3,17 +3,11 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Compass,
-  BarChart2,
-  TrendingUp,
-  MapPin,
-  FlaskConical,
-  Cpu,
-  Leaf,
+  Package,
+  Building2,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  Calendar,
-  Workflow,
+  ShieldCheck,
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import './Sidebar.css';
@@ -41,37 +35,24 @@ const Sidebar = memo(() => {
     {
       title: 'OPERATIONS',
       items: [
-        { path: '/cockpit',     icon: Compass,         label: 'Network Cockpit' },
-        { path: '/dashboard',   icon: LayoutDashboard, label: 'Performance Overview' },
-        { path: '/resilience',  icon: Leaf,            label: 'Freshness & Pricing' },
+        { path: '/dashboard',   icon: LayoutDashboard, label: 'Fleet War Room' },
+        { path: '/floor',       icon: Package,         label: 'Floor & Quality Gate' },
       ]
     },
     {
-      title: 'INTELLIGENCE & EXPANSION',
+      title: 'NETWORK & EXPANSION',
       items: [
-        { path: '/forecast',      icon: TrendingUp,      label: 'Demand Forecast' },
-        { path: '/neighborhoods', icon: MapPin,          label: 'City Exploration' },
-        { path: '/simulator',     icon: FlaskConical,    label: 'Store Simulator' },
-        { path: '/analytics',     icon: BarChart2,       label: 'Coverage & SLA' },
-      ]
-    },
-    {
-      title: 'AUTOMATION & ADVISORY',
-      items: [
-        { path: '/playbooks',     icon: Workflow,        label: 'Automation Rules' },
-        { path: '/events',        icon: Calendar,        label: 'Surge Events' },
-        { path: '/recommendations', icon: Sparkles,      label: 'Smart Insights' },
-        { path: '/algorithm-lab', icon: Cpu,             label: 'System Intelligence' },
+        { path: '/cockpit',     icon: Compass,         label: 'Site Expansion' },
+        { path: '/network',     icon: Building2,       label: 'Store Fleet & Settings' },
       ]
     }
   ];
 
   const mobileRoutes = [
-    { path: '/cockpit',     icon: Compass,         label: 'Cockpit' },
-    { path: '/dashboard',   icon: LayoutDashboard, label: 'Overview' },
-    { path: '/resilience',  icon: Leaf,            label: 'Freshness' },
-    { path: '/forecast',    icon: TrendingUp,      label: 'Forecast' },
-    { path: '/playbooks',   icon: Workflow,        label: 'Rules' },
+    { path: '/dashboard',   icon: LayoutDashboard, label: 'War Room' },
+    { path: '/floor',       icon: Package,         label: 'Floor' },
+    { path: '/cockpit',     icon: Compass,         label: 'Expansion' },
+    { path: '/network',     icon: Building2,       label: 'Fleet' },
   ];
 
   // Mobile navigation below 640px

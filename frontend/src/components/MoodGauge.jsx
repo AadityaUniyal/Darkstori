@@ -28,14 +28,14 @@ export default function MoodGauge({ neighborhoodId }) {
           <Flame size={15} className="text-[var(--saffron-500)]" />
           Neighborhood Mood
         </h3>
-        <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[rgba(255,255,255,0.05)] border border-[var(--glass-border)] ${getLabelColor(moodData.mood_label)}`}>
-          {moodData.mood_label}
+        <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[rgba(255,255,255,0.05)] border border-[var(--glass-border)] ${getLabelColor(moodData.mood_label || '')}`}>
+          {moodData.mood_label || 'NEUTRAL'}
         </span>
       </div>
 
       <div className="flex items-center gap-5">
         <div className="relative flex items-center justify-center w-16 h-16 rounded-full border-2 border-[var(--glass-border)]">
-          <span className="text-xl font-bold">{moodData.mood_score.toFixed(0)}</span>
+          <span className="text-xl font-bold">{Number(moodData.mood_score ?? 0).toFixed(0)}</span>
           <span className="absolute bottom-0 text-[10px] text-[var(--text-muted)]">/100</span>
         </div>
         <div className="flex-1 space-y-1">

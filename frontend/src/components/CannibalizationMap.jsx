@@ -131,7 +131,7 @@ export default function CannibalizationMap() {
                 </div>
                 <div className="p-3 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg">
                   <span className="block text-xs text-[var(--text-muted)]">Est. Monthly Profit</span>
-                  <span className="text-lg font-bold">₹{(result.portfolio_impact.net_monthly_pnl / 100000).toFixed(1)}L</span>
+                  <span className="text-lg font-bold">₹{(Number(result?.portfolio_impact?.net_monthly_pnl ?? 0) / 100000).toFixed(1)}L</span>
                 </div>
               </div>
 

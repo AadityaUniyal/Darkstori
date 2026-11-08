@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
@@ -165,8 +165,12 @@ async def analyze_cannibalization(
     existing_stores = []
     total_current_orders = 0
     for store, dist in nearby_stores:
-        sqft = getattr(store, "storage_capacity_sqft", None) or getattr(store, "estimated_size_sqft", None)
-        orders = getattr(store, "estimated_daily_orders", None) or getattr(store, "daily_order_capacity", None)
+        sqft = getattr(store, "storage_capacity_sqft", None) or getattr(store, "estimated_size_sqft", None) or 2000
+        orders = (
+            getattr(store, "estimated_daily_orders", None)
+            or getattr(store, "daily_order_capacity", None)
+            or int(sqft * 0.65)
+        )
         if not sqft or not orders:
             raise HTTPException(
                 status_code=422,
@@ -362,7 +366,7 @@ async def get_cannibalization_history(
         .limit(limit)
     )
     if city:
-        query = query.where(CannibalizationSimulation.proposed_city == city)
+        query = query.where(func.lower(CannibalizationSimulation.proposed_city) == func.lower(city))
 
     result = await db.execute(query)
     sims = result.scalars().all()

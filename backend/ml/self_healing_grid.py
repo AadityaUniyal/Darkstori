@@ -31,10 +31,10 @@ class SelfHealingGridEngine:
                 "lon": 77.6245,
                 "capacity_utilization": 0.88,
                 "inventory": {
-                    "Organic Milk 1L": {"stock": 64, "spoilage_hazard_6h": 0.72, "unit_price": 75.0},
-                    "Artisanal Sourdough": {"stock": 42, "spoilage_hazard_6h": 0.80, "unit_price": 120.0},
-                    "Greek Honey Yogurt": {"stock": 18, "spoilage_hazard_6h": 0.25, "unit_price": 95.0},
-                    "Avocados Hass": {"stock": 35, "spoilage_hazard_6h": 0.65, "unit_price": 140.0},
+                    "Amul Taaza Toned Milk 500ml": {"stock": 64, "spoilage_hazard_6h": 0.72, "unit_price": 27.0},
+                    "Modern White Bread 400g": {"stock": 42, "spoilage_hazard_6h": 0.80, "unit_price": 45.0},
+                    "Amul Masti Dahi 400g": {"stock": 18, "spoilage_hazard_6h": 0.25, "unit_price": 35.0},
+                    "Farm Fresh Eggs 6pk": {"stock": 35, "spoilage_hazard_6h": 0.65, "unit_price": 54.0},
                 }
             },
             "HUB-IND": {
@@ -43,10 +43,10 @@ class SelfHealingGridEngine:
                 "lon": 77.6412,
                 "capacity_utilization": 0.94,
                 "inventory": {
-                    "Organic Milk 1L": {"stock": 4, "spoilage_hazard_6h": 0.05, "unit_price": 75.0},  # CRITICAL STOCKOUT
-                    "Artisanal Sourdough": {"stock": 6, "spoilage_hazard_6h": 0.10, "unit_price": 120.0}, # HIGH DEFICIT
-                    "Greek Honey Yogurt": {"stock": 55, "spoilage_hazard_6h": 0.60, "unit_price": 95.0},
-                    "Avocados Hass": {"stock": 8, "spoilage_hazard_6h": 0.15, "unit_price": 140.0},
+                    "Amul Taaza Toned Milk 500ml": {"stock": 4, "spoilage_hazard_6h": 0.05, "unit_price": 27.0},  # CRITICAL STOCKOUT
+                    "Modern White Bread 400g": {"stock": 6, "spoilage_hazard_6h": 0.10, "unit_price": 45.0}, # HIGH DEFICIT
+                    "Amul Masti Dahi 400g": {"stock": 55, "spoilage_hazard_6h": 0.60, "unit_price": 35.0},
+                    "Farm Fresh Eggs 6pk": {"stock": 8, "spoilage_hazard_6h": 0.15, "unit_price": 54.0},
                 }
             },
             "HUB-HSR": {
@@ -55,10 +55,10 @@ class SelfHealingGridEngine:
                 "lon": 77.6389,
                 "capacity_utilization": 0.76,
                 "inventory": {
-                    "Organic Milk 1L": {"stock": 25, "spoilage_hazard_6h": 0.20, "unit_price": 75.0},
-                    "Artisanal Sourdough": {"stock": 15, "spoilage_hazard_6h": 0.30, "unit_price": 120.0},
-                    "Greek Honey Yogurt": {"stock": 30, "spoilage_hazard_6h": 0.35, "unit_price": 95.0},
-                    "Avocados Hass": {"stock": 40, "spoilage_hazard_6h": 0.70, "unit_price": 140.0},
+                    "Amul Taaza Toned Milk 500ml": {"stock": 25, "spoilage_hazard_6h": 0.20, "unit_price": 27.0},
+                    "Modern White Bread 400g": {"stock": 15, "spoilage_hazard_6h": 0.30, "unit_price": 45.0},
+                    "Amul Masti Dahi 400g": {"stock": 30, "spoilage_hazard_6h": 0.35, "unit_price": 35.0},
+                    "Farm Fresh Eggs 6pk": {"stock": 40, "spoilage_hazard_6h": 0.70, "unit_price": 54.0},
                 }
             },
             "HUB-WFD": {
@@ -67,10 +67,10 @@ class SelfHealingGridEngine:
                 "lon": 77.7280,
                 "capacity_utilization": 0.82,
                 "inventory": {
-                    "Organic Milk 1L": {"stock": 30, "spoilage_hazard_6h": 0.30, "unit_price": 75.0},
-                    "Artisanal Sourdough": {"stock": 22, "spoilage_hazard_6h": 0.40, "unit_price": 120.0},
-                    "Greek Honey Yogurt": {"stock": 20, "spoilage_hazard_6h": 0.20, "unit_price": 95.0},
-                    "Avocados Hass": {"stock": 15, "spoilage_hazard_6h": 0.25, "unit_price": 140.0},
+                    "Amul Taaza Toned Milk 500ml": {"stock": 30, "spoilage_hazard_6h": 0.30, "unit_price": 27.0},
+                    "Modern White Bread 400g": {"stock": 22, "spoilage_hazard_6h": 0.40, "unit_price": 45.0},
+                    "Amul Masti Dahi 400g": {"stock": 20, "spoilage_hazard_6h": 0.20, "unit_price": 35.0},
+                    "Farm Fresh Eggs 6pk": {"stock": 15, "spoilage_hazard_6h": 0.25, "unit_price": 54.0},
                 }
             }
         }
@@ -102,8 +102,8 @@ class SelfHealingGridEngine:
 
         # Candidate items for transfer
         transfer_items = [
-            {"sku": "Organic Milk 1L", "transfer_units": 32, "unit_price": 75.0, "spoilage_prob": 0.72},
-            {"sku": "Artisanal Sourdough", "transfer_units": 18, "unit_price": 120.0, "spoilage_prob": 0.80},
+            {"sku": "Amul Taaza Toned Milk 500ml", "transfer_units": 32, "unit_price": 27.0, "spoilage_prob": 0.72},
+            {"sku": "Modern White Bread 400g", "transfer_units": 18, "unit_price": 45.0, "spoilage_prob": 0.80},
         ]
 
         pair_spoilage_value = sum(i["transfer_units"] * i["unit_price"] * i["spoilage_prob"] for i in transfer_items)
@@ -133,7 +133,7 @@ class SelfHealingGridEngine:
         total_stockout_gmv_saved += pair_stockout_gmv
         total_ev_cost += ev_cost
 
-        # Second pair: HSR Layout (Surplus Avocados) -> Indiranagar
+        # Second pair: HSR Layout (Surplus Farm Fresh Eggs) -> Indiranagar
         src2 = self.hubs["HUB-HSR"]
         dst2 = self.hubs["HUB-IND"]
         dist_km2 = round(self._haversine_km(src2["lat"], src2["lon"], dst2["lat"], dst2["lon"]), 2)
@@ -141,10 +141,10 @@ class SelfHealingGridEngine:
         ev_cost2 = round(10.0 + (dist_km2 * 4.2), 2)
 
         transfer_items2 = [
-            {"sku": "Avocados Hass", "transfer_units": 16, "unit_price": 140.0, "spoilage_prob": 0.70}
+            {"sku": "Farm Fresh Eggs 6pk", "transfer_units": 24, "unit_price": 54.0, "spoilage_prob": 0.70}
         ]
-        spoil_val2 = 16 * 140.0 * 0.70
-        stockout_gmv2 = 16 * 140.0
+        spoil_val2 = 24 * 54.0 * 0.70
+        stockout_gmv2 = 24 * 54.0
         net_roi2 = round(spoil_val2 + stockout_gmv2 - ev_cost2, 2)
 
         transshipments.append({

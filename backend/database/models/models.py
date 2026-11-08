@@ -945,3 +945,40 @@ class ExpansionDecision(Base):
         Index("idx_expansion_decision_city_status", "city", "status"),
         Index("idx_expansion_decision_created", "created_at"),
     )
+
+
+class PackingVerification(Base):
+    """Optical Proof-of-Pack verification certificate for Indian dark store bagging docks."""
+    __tablename__ = "packing_verifications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
+    store_id = Column(Integer, ForeignKey("dark_stores.id"), nullable=False, index=True)
+    order_id = Column(String(100), nullable=False, index=True)
+    packer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    station_code = Column(String(50), default="DOCK-VISION-01")
+
+    # Optical Inspection Results
+    detected_items = Column(JSONB, nullable=False, default=list)
+    overall_freshness_score = Column(Float, nullable=False, default=0.95)
+    detected_defects = Column(JSONB, nullable=False, default=list)
+
+    # Scale Weight Reconciliation
+    measured_weight_grams = Column(Float, nullable=False, default=0.0)
+    target_weight_grams = Column(Float, nullable=False, default=0.0)
+    weight_tolerance_passed = Column(Boolean, default=True)
+
+    # Cryptographic Proof
+    snapshot_hash = Column(String(64), nullable=False)
+    snapshot_image_url = Column(Text, nullable=False)
+    passport_qr = Column(String(120), unique=True, index=True, nullable=False)
+    status = Column(String(30), nullable=False, default="VERIFIED")  # VERIFIED, FLAGGED_DEFECT, OVERRIDDEN
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_packing_verif_order", "order_id"),
+        Index("idx_packing_verif_passport", "passport_qr"),
+        Index("idx_packing_verif_created", "created_at"),
+    )

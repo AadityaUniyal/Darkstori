@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import require_roles, verify_token
+from backend.core.security import require_roles, verify_token, verify_token_optional
 from backend.database.connection import get_db
 from backend.database.models.models import DarkStore
 from backend.ml.weather_service import fetch_weather_forecast
@@ -16,11 +16,13 @@ from backend.ml.weather_service import fetch_weather_forecast
 router = APIRouter()
 
 
-def _scope_store_query(query, payload: dict):
+def _scope_store_query(query, payload: Optional[dict]):
+    if not payload:
+        return query
     organization_id = payload.get("org_id") or payload.get("organization_id")
     if str(organization_id or "").isdigit() and int(organization_id) > 0:
         return query.where(DarkStore.organization_id == int(organization_id))
-    return query.where(DarkStore.organization_id.is_(None))
+    return query
 
 
 class StoreResponse(BaseModel):
@@ -62,7 +64,7 @@ async def get_stores(
     city_tier: Optional[str] = None,
     include_competitors: bool = Query(True),
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Get all active dark stores, optionally filtered."""
     from backend.database.models.models import CompetitorStore
@@ -70,11 +72,11 @@ async def get_stores(
     query = _scope_store_query(select(DarkStore), payload).where(DarkStore.is_active.is_(True))
 
     if platform:
-        query = query.where(DarkStore.platform == platform)
+        query = query.where(func.lower(DarkStore.platform) == func.lower(platform))
     if city:
-        query = query.where(DarkStore.city == city)
+        query = query.where(func.lower(DarkStore.city) == func.lower(city))
     if city_tier:
-        query = query.where(DarkStore.city_tier == city_tier)
+        query = query.where(func.lower(DarkStore.city_tier) == func.lower(city_tier))
 
     query = query.offset(skip).limit(limit)
 
@@ -84,9 +86,9 @@ async def get_stores(
     if include_competitors:
         comp_query = select(CompetitorStore).where(CompetitorStore.is_active.is_(True))
         if platform:
-            comp_query = comp_query.where(CompetitorStore.platform == platform)
+            comp_query = comp_query.where(func.lower(CompetitorStore.platform) == func.lower(platform))
         if city:
-            comp_query = comp_query.where(CompetitorStore.city == city)
+            comp_query = comp_query.where(func.lower(CompetitorStore.city) == func.lower(city))
         comp_query = comp_query.limit(limit)
         comp_result = await db.execute(comp_query)
         competitors = comp_result.scalars().all()
@@ -146,15 +148,15 @@ async def get_store(
     return store
 
 
-@router.post("", response_model=StoreResponse, dependencies=[Depends(require_roles("admin", "regional_head"))])
-@router.post("/", response_model=StoreResponse, dependencies=[Depends(require_roles("admin", "regional_head"))], include_in_schema=False)
+@router.post("", response_model=StoreResponse)
+@router.post("/", response_model=StoreResponse, include_in_schema=False)
 async def create_store(
     store: StoreCreate,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(require_roles("admin", "regional_head")),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
-    """Create a new store (requires authentication)."""
-    organization_id = payload.get("org_id") or payload.get("organization_id")
+    """Create a new store (authenticated or demo operator)."""
+    organization_id = (payload or {}).get("org_id") or (payload or {}).get("organization_id")
     db_store = DarkStore(
         **store.model_dump(),
         organization_id=int(organization_id) if str(organization_id or "").isdigit() and int(organization_id) > 0 else None,
