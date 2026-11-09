@@ -27,9 +27,9 @@ const ALL_8_FEATURES = [
       { path: '/directory',  icon: Globe,      label: 'Pan-India Geo-Directory', featureNum: 'MAP', role: 'executive' },
       { path: '/noc',        icon: Radio,      label: 'Metro NOC & Pod Mesh',   featureNum: 'NOC', role: 'executive' },
       { path: '/expansion',  icon: Compass,    label: 'Catchment & Expansion', featureNum: '01', role: 'executive' },
-      { path: '/inventory',  icon: Package,    label: 'Demand & Replenishment', featureNum: '02', role: 'store-gm' },
+      { path: '/inventory',  icon: Package,    label: 'Demand & Inbound Dock', featureNum: '02', role: 'store-gm' },
       { path: '/floor',      icon: Layers,     label: 'Floor Twin & Heatmap',   featureNum: '03', role: 'store-gm' },
-      { path: '/dispatch',   icon: Truck,      label: 'Dispatch & Rider Swarm', featureNum: '04', role: 'fleet-commander' },
+      { path: '/dispatch',   icon: Truck,      label: 'Dispatch & COD Vault',   featureNum: '04', role: 'fleet-commander' },
     ]
   },
   {
@@ -38,7 +38,7 @@ const ALL_8_FEATURES = [
       { path: '/terminal',   icon: Smartphone, label: 'Handheld Picker PWA',   featureNum: 'HHT', role: 'store-gm' },
       { path: '/competitor', icon: BarChart3,  label: 'Competitor Radar & Intel', featureNum: '05', role: 'executive' },
       { path: '/playbooks',  icon: ShieldAlert,label: 'Disruption Playbooks',   featureNum: '06', role: 'fleet-commander' },
-      { path: '/economics',  icon: DollarSign, label: 'Unit Economics & EBITDA', featureNum: '07', role: 'executive' },
+      { path: '/economics',  icon: DollarSign, label: 'EBITDA & Board Dossier', featureNum: '07', role: 'executive' },
       { path: '/vision',     icon: Scan,       label: 'Vision Packing & QA',     featureNum: '08', role: 'store-gm' },
     ]
   }

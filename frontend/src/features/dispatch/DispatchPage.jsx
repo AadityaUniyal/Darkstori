@@ -24,6 +24,8 @@ import { useCity } from '../../context/CityContext';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import CodVaultRegister from './CodVaultRegister';
+import { Banknote, CloudRain } from 'lucide-react';
 
 const AVAILABLE_RIDERS = [
   { id: 'RD-SURESH-08', name: 'Suresh Kumar', status: 'Available', batchedOrders: 0, battery: '92%' },
@@ -42,6 +44,8 @@ export default function DispatchPage() {
   const [surgeActive, setSurgeActive] = useState(false);
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
   const [selectedOrderForReassign, setSelectedOrderForReassign] = useState(null);
+  const [dispatchViewMode, setDispatchViewMode] = useState('live-swarm');
+  const [monsoonThrottleActive, setMonsoonThrottleActive] = useState(false);
 
   // Live Queue state with countdown timers
   const [dispatchQueue, setDispatchQueue] = useState([
@@ -153,7 +157,29 @@ export default function DispatchPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                floorAudio.success();
+                const nextState = !monsoonThrottleActive;
+                setMonsoonThrottleActive(nextState);
+                if (nextState) {
+                  floorAudio.playErrorMismatch();
+                  toast.warning('Pre-emptive Monsoon Throttle Activated: Delivery radius contracted to 1.5km, 1.4x rider surge applied.');
+                } else {
+                  floorAudio.playSuccessPick();
+                  toast.info('Monsoon Throttle Deactivated: Standard 2.8km catchment restored.');
+                }
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                monsoonThrottleActive
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                  : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+              }`}
+            >
+              <CloudRain className="w-3.5 h-3.5 text-amber-400" />
+              <span>{monsoonThrottleActive ? 'Corridor Throttle ACTIVE (1.5km)' : 'Trigger Monsoon Throttle'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                floorAudio.playSuccessPick();
                 toast.success('All staged corridor batches dispatched to active fleet!');
                 setDispatchQueue([]);
               }}
@@ -175,6 +201,46 @@ export default function DispatchPage() {
         )}
       </div>
 
+      {/* VIEW MODE TOGGLE (Live Swarm vs COD Vault) */}
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+        <button
+          onClick={() => { setDispatchViewMode('live-swarm'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dispatchViewMode === 'live-swarm'
+              ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Truck className="w-3.5 h-3.5" />
+          <span>Live Swarm & Corridor Batches</span>
+        </button>
+        <button
+          onClick={() => { setDispatchViewMode('cod-vault'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dispatchViewMode === 'cod-vault'
+              ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Banknote className="w-3.5 h-3.5" />
+          <span>COD Cash Vault Register</span>
+        </button>
+      </div>
+
+      {monsoonThrottleActive && (
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs text-amber-200">
+          <div className="flex items-center gap-2.5">
+            <CloudRain className="w-4 h-4 text-amber-400 shrink-0" />
+            <span><strong>Weather Warning Protocol Active:</strong> Flood-prone street corridors throttled. Maximum catchment restricted to 1.5km. Customer delivery ETA shifted to 25 mins.</span>
+          </div>
+          <span className="font-mono text-amber-400 font-bold">SURGE 1.4x</span>
+        </div>
+      )}
+
+      {dispatchViewMode === 'cod-vault' ? (
+        <CodVaultRegister />
+      ) : (
+        <>
       {/* 2. FLEET & SLA KPI RIBBON */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div whileHover={{ y: -2 }} className="kpi-card p-5 rounded-2xl bg-white/[0.02] border border-white/10">
@@ -420,6 +486,8 @@ export default function DispatchPage() {
             </div>
           </motion.div>
         </div>
+      )}
+    </>
       )}
     </div>
   );

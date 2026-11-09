@@ -96,21 +96,19 @@ export default function CommandPalette({ isOpen, onClose }) {
       }
     },
 
-    // Navigation
-    { id: 'nav-exp', type: 'Navigation', icon: Compass, title: 'Expansion Cockpit', subtitle: 'Greenfield location finder & cannibalization simulation', action: () => navigate('/') },
-    { id: 'nav-dash', type: 'Navigation', icon: LayoutDashboard, title: 'Operations Dashboard', subtitle: 'Live telemetry, rider SLA, and store capacity', action: () => navigate('/dashboard') },
-    { id: 'nav-an', type: 'Navigation', icon: BarChart2, title: 'Advanced Analytics', subtitle: 'Competitive moves, market share, and sentiment metrics', action: () => navigate('/analytics') },
-    { id: 'nav-fc', type: 'Navigation', icon: TrendingUp, title: 'Demand Forecast', subtitle: 'XGBoost multi-horizon time-series forecasting', action: () => navigate('/forecast') },
-    { id: 'nav-nb', type: 'Navigation', icon: MapPin, title: 'Neighborhood DNA Explorer', subtitle: 'Demographic clusters, income, and store saturation', action: () => navigate('/neighborhoods') },
-    { id: 'nav-sim', type: 'Navigation', icon: FlaskConical, title: 'Dark Store Simulator', subtitle: 'ROI calculator, Capex/Opex modeling, and layout planner', action: () => navigate('/simulator') },
-    { id: 'nav-alg', type: 'Navigation', icon: Cpu, title: 'Algorithm Lab', subtitle: 'Model retraining, KS-drift telemetry, and weights', action: () => navigate('/algorithm-lab') },
-    { id: 'nav-rec', type: 'Navigation', icon: Sparkles, title: 'Recommendations Engine', subtitle: 'Prescriptive space allocation and category mix', action: () => navigate('/recommendations') },
-    { id: 'nav-res', type: 'Navigation', icon: Leaf, title: 'Zero-Waste Resilience', subtitle: 'Sigmoid salvage decay & QR crate photo verification', action: () => navigate('/resilience') },
-    { id: 'nav-ev', type: 'Navigation', icon: Calendar, title: 'Local Events & Demand Surges', subtitle: 'Festivals, IPL matches, and weather event modifiers', action: () => navigate('/events') },
-    { id: 'nav-pb', type: 'Navigation', icon: Workflow, title: 'Automated Playbooks', subtitle: 'Trigger-condition-action workflow automation engine', action: () => navigate('/playbooks') },
-    { id: 'nav-floor', type: 'Navigation', icon: Package, title: 'Floor Terminal (Handheld)', subtitle: 'High-contrast mobile picker terminal, GRN put-away, and rider handoff', action: () => navigate('/floor') },
-    { id: 'nav-vision', type: 'Navigation', icon: Eye, title: 'VisionPack AI™ (Optical Dock)', subtitle: 'In-browser optical produce AI, freshness grading & bagging passport', action: () => navigate('/vision-pack') },
-    { id: 'nav-dispute', type: 'Navigation', icon: ShieldCheck, title: 'Proof-of-Pack Dispute Portal', subtitle: 'Public customer & refund dispute verification engine', action: () => navigate('/verify') },
+    // Flagship Features & Views
+    { id: 'nav-exp', type: 'Navigation', icon: Compass, title: 'Catchment & Expansion Cockpit', subtitle: 'Feature 01: Greenfield site finder, 10m isochrones & Huff gravity', action: () => navigate('/expansion') },
+    { id: 'nav-inv', type: 'Navigation', icon: Package, title: 'Demand & Inbound Receiving Dock (GRN)', subtitle: 'Feature 02: Micro-replenishment, wholesale truck intake & debit notes', action: () => navigate('/inventory') },
+    { id: 'nav-floor', type: 'Navigation', icon: LayoutDashboard, title: 'Micro-Warehouse Floor Twin & TSP Heatmap', subtitle: 'Feature 03: 2D Aisle digital twin, congestion-free pick paths & slotting', action: () => navigate('/floor') },
+    { id: 'nav-dispatch', type: 'Navigation', icon: Zap, title: 'Dispatch Swarm & COD Cash Vault', subtitle: 'Feature 04: Clarke-Wright batching, corridor weather throttles & cash register', action: () => navigate('/dispatch') },
+    { id: 'nav-comp', type: 'Navigation', icon: BarChart2, title: 'Competitor Intelligence Radar', subtitle: 'Feature 05: Real-time price tracking across Blinkit, Zepto & Instamart', action: () => navigate('/competitor') },
+    { id: 'nav-playbooks', type: 'Navigation', icon: Workflow, title: 'Disruption & Incident Playbooks', subtitle: 'Feature 06: IoT cold-chain alerts, flash flood containment & geofence contraction', action: () => navigate('/playbooks') },
+    { id: 'nav-econ', type: 'Navigation', icon: TrendingUp, title: 'EBITDA Waterfall & Executive Board Dossier', subtitle: 'Feature 07: Single-store unit economics & 8-pod portfolio rollup PDF', action: () => navigate('/economics') },
+    { id: 'nav-vision', type: 'Navigation', icon: Eye, title: 'Vision Packing Station & WebSerial Scale', subtitle: 'Feature 08: Client YOLOv8 optical QA, USB scale delta & Quality Passports', action: () => navigate('/vision') },
+    { id: 'nav-terminal', type: 'Navigation', icon: Smartphone, title: 'Handheld Picker Mobile PWA', subtitle: 'HHT Terminal: Multi-order wave picking into color-coded totes with Web Audio', action: () => navigate('/terminal') },
+    { id: 'nav-noc', type: 'Navigation', icon: Activity, title: 'Metro NOC & Pod Mesh Radar', subtitle: 'Supervisory overview of store pods, health telemetry and live feeds', action: () => navigate('/noc') },
+    { id: 'nav-directory', type: 'Navigation', icon: MapPin, title: 'Pan-India Geo-Directory', subtitle: 'Catalog of 4,500+ Indian dark stores across tier-1 & tier-2 metros', action: () => navigate('/directory') },
+    { id: 'nav-dispute', type: 'Navigation', icon: ShieldCheck, title: 'Proof-of-Pack Public Verification', subtitle: 'Customer dispute passport verification portal', action: () => navigate('/verify') },
 
     // City Quick Switch
     { id: 'city-blr', type: 'Switch City', icon: Map, title: 'Switch to Bengaluru', subtitle: 'Active Tier 1 Hub · 24 Pincodes', action: () => { setCity('Bangalore'); toast.success('Switched to Bengaluru'); } },
