@@ -15,14 +15,17 @@ describe('Navigation and Sidebar Component Tests', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Network Cockpit')).toBeInTheDocument();
-    expect(screen.getByText('Performance Overview')).toBeInTheDocument();
-    expect(screen.getByText('Freshness & Pricing')).toBeInTheDocument();
-    expect(screen.getByText('Demand Forecast')).toBeInTheDocument();
-    expect(screen.getByText('City Exploration')).toBeInTheDocument();
-    expect(screen.getByText('Store Simulator')).toBeInTheDocument();
-    expect(screen.getByText('System Intelligence')).toBeInTheDocument();
-    expect(screen.getByText('Automation Rules')).toBeInTheDocument();
+    expect(screen.getByText('Pan-India Geo-Directory')).toBeInTheDocument();
+    expect(screen.getByText('Metro NOC & Pod Mesh')).toBeInTheDocument();
+    expect(screen.getByText('Catchment & Expansion')).toBeInTheDocument();
+    expect(screen.getByText('Demand & Replenishment')).toBeInTheDocument();
+    expect(screen.getByText('Floor Twin & Heatmap')).toBeInTheDocument();
+    expect(screen.getByText('Dispatch & Rider Swarm')).toBeInTheDocument();
+    expect(screen.getByText('Handheld Picker PWA')).toBeInTheDocument();
+    expect(screen.getByText('Competitor Radar & Intel')).toBeInTheDocument();
+    expect(screen.getByText('Disruption Playbooks')).toBeInTheDocument();
+    expect(screen.getByText('Unit Economics & EBITDA')).toBeInTheDocument();
+    expect(screen.getByText('Vision Packing & QA')).toBeInTheDocument();
   });
 
   it('renders Navbar brand and operational controls', () => {
@@ -36,6 +39,6 @@ describe('Navigation and Sidebar Component Tests', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/darkstor/i)).toBeInTheDocument();
+    expect(screen.getByText(/DarkStori/i)).toBeInTheDocument();
   });
 });

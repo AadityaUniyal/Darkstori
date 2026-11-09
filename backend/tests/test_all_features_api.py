@@ -22,7 +22,7 @@ async def run_suite():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver", follow_redirects=True) as client:
         print("=" * 65)
-        print("DARKSTOR FULL-STACK BACKEND LOGIC VERIFICATION SUITE")
+        print("DARKSTORI FULL-STACK BACKEND LOGIC VERIFICATION SUITE")
         print("=" * 65)
 
         # 0. Health & Core Branding
@@ -32,7 +32,7 @@ async def run_suite():
 
         res = await client.get("/")
         assert res.status_code == 200, f"Root API failed: {res.status_code}"
-        assert "Darkstor" in res.json().get("message", ""), "Branding mismatch"
+        assert "darkstori" in res.json().get("message", "").lower(), "Branding mismatch"
         print(f"[PASS] Root API Branding: {res.status_code} ({res.json().get('message')})")
 
         # 1. Feature 01: Expansion & Greenfield Site Selection (/expansion)
