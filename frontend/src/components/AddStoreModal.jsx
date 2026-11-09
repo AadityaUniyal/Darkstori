@@ -104,7 +104,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg bg-[#0E121A] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden relative backdrop-blur-2xl"
+        className="w-full max-w-lg bg-[#0E121A] border border-white/15 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] relative backdrop-blur-2xl"
       >
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
@@ -189,7 +189,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
               placeholder="e.g. Indiranagar Primary Hub #04"
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
-              className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs transition-colors"
               required
             />
           </div>
@@ -200,9 +200,9 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-emerald-500"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs"
               >
-                <option value="DarkStor">DarkStor Direct</option>
+                <option value="DarkStor">DarkStori Direct</option>
                 <option value="Swiggy Instamart">Swiggy Instamart</option>
                 <option value="Blinkit">Blinkit</option>
                 <option value="Zepto">Zepto</option>
@@ -216,7 +216,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
               <select
                 value={city}
                 onChange={(e) => handleCityChange(e.target.value)}
-                className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-emerald-500"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs"
               >
                 <option value="Bangalore">Bangalore</option>
                 <option value="Mumbai">Mumbai</option>
@@ -244,7 +244,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
                 step="0.0001"
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-400 text-xs"
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
                 step="0.0001"
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-400 text-xs"
               />
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
                 type="number"
                 value={storageSqft}
                 onChange={(e) => setStorageSqft(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-400 text-xs"
               />
             </div>
             <div>
@@ -275,7 +275,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
                 type="number"
                 value={dailyCapacity}
                 onChange={(e) => setDailyCapacity(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-400 text-xs"
               />
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-5 py-2 rounded-xl bg-[#FF9F1C] text-white font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-amber-500 text-black font-bold font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-amber-400 transition-all flex items-center gap-1.5"
             >
               {createMutation.isPending ? (
                 <>

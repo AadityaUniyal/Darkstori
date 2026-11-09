@@ -79,12 +79,12 @@ export default function CitySelector() {
     <div className="relative" ref={containerRef}>
       <div className="flex items-center gap-1">
         {/* City dropdown */}
-        <div className="flex items-center gap-1.5 bg-card/50 border border-border rounded-lg px-2.5 py-1.5 cursor-pointer hover:bg-accent/40 transition-colors">
-          <MapPin size={14} className="text-emerald-500 shrink-0" />
+        <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-full px-3 py-1.5 cursor-pointer hover:bg-white/[0.08] transition-colors shadow-sm">
+          <MapPin size={13} className="text-amber-400 shrink-0" />
           <select
-              value={selectedCity}
+            value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
-            className="bg-transparent text-sm text-foreground outline-none cursor-pointer appearance-none pr-4 max-w-[120px]"
+            className="input-seamless bg-transparent text-xs font-semibold text-white/90 outline-none cursor-pointer appearance-none pr-2 max-w-[120px]"
           >
             {!cities.length && <option value="">{citiesError ? 'Market list unavailable' : 'No configured markets'}</option>}
             {cities.map((city) => {

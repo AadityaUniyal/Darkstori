@@ -264,7 +264,7 @@ export default function PanIndiaDirectoryPage() {
                     onClick={() => handleSelectStore(store)}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
                       isSelected
-                        ? 'bg-amber-500/10 border-amber-400/60 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                        ? 'bg-amber-500/10 border-amber-400/60 shadow-md shadow-amber-500/10'
                         : isDarkStori
                         ? 'bg-white/[0.03] border-white/15 hover:border-amber-400/30'
                         : 'bg-black/40 border-white/10 hover:border-white/20'

@@ -31,7 +31,7 @@ const GradientMesh = () => {
           left: -10%;
           width: 50vw;
           height: 50vw;
-          background: radial-gradient(circle, hsla(var(--primary)/0.15) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
           border-radius: 50%;
           animation: float-1 20s infinite ease-in-out;
         }
@@ -41,7 +41,7 @@ const GradientMesh = () => {
           right: -10%;
           width: 60vw;
           height: 60vw;
-          background: radial-gradient(circle, hsla(var(--saffron-500)/0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
           border-radius: 50%;
           animation: float-2 25s infinite ease-in-out reverse;
         }
@@ -51,7 +51,7 @@ const GradientMesh = () => {
           left: 40%;
           width: 40vw;
           height: 40vw;
-          background: radial-gradient(circle, hsla(var(--peacock-500)/0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
           border-radius: 50%;
           animation: float-3 22s infinite ease-in-out;
         }

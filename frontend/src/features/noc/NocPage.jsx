@@ -300,7 +300,7 @@ export default function NocPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setTransferModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-400 hover:bg-amber-300 text-black transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)] cursor-pointer flex items-center gap-2 active:scale-95"
+              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-400 hover:bg-amber-300 text-black transition-all shadow-md shadow-amber-500/10 cursor-pointer flex items-center gap-2 active:scale-95"
             >
               <ArrowRightLeft className="w-4 h-4" />
               <span>Inter-Store Stock Transfer</span>
@@ -626,7 +626,7 @@ export default function NocPage() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md p-6 rounded-2xl bg-surface border border-white/15 shadow-2xl space-y-4"
+            className="w-full max-w-md p-6 rounded-2xl bg-[#0E131F] border border-white/15 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-base font-bold text-white flex items-center gap-2">

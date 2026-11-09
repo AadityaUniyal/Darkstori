@@ -18,7 +18,7 @@ export const ROLE_CONFIGS = {
     accentGlow: 'rgba(245, 158, 11, 0.25)',
     allowedTabs: ['/expansion', '/economics', '/competitor', '/playbooks', '/dashboard'],
     firstTimeTitle: 'Executive Portfolio Calibration',
-    firstTimeDesc: 'Welcome to Darkstor Executive Suite. Calibrate city expansion targets, CapEx payback thresholds, and risk bounds.',
+    firstTimeDesc: 'Welcome to DarkStori Executive Suite. Calibrate city expansion targets, CapEx payback thresholds, and risk bounds.',
     returningTitle: 'Executive Morning Briefing',
     returningDesc: 'Overnight GMV delta, portfolio EBITDA margin variance, and competitor encroachment alerts.',
   },

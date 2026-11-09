@@ -238,7 +238,7 @@ export default function ExpansionPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleCommitSite}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-400 hover:bg-amber-300 text-black transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)] cursor-pointer flex items-center gap-2 active:scale-95"
+              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-400 hover:bg-amber-300 text-black transition-all shadow-md shadow-amber-500/10 cursor-pointer flex items-center gap-2 active:scale-95"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Commit Store Site</span>

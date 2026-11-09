@@ -84,7 +84,7 @@ export default function OperationsPulse() {
             </div>
 
             <div className="pt-1 border-t border-border/20 flex items-center justify-between text-[10px] text-muted-foreground">
-              <span>Darkstor Engine v{healthData.version || '3.0.0'}</span>
+              <span>DarkStori Engine v{healthData.version || '3.0.0'}</span>
               <span>SLO 99.9%</span>
             </div>
           </div>

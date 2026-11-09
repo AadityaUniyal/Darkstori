@@ -21,7 +21,7 @@ const TOUR_STEPS = [
     title: 'Three Dedicated Operational Lenses',
     subtitle: 'Role-Optimized Control Centers',
     description:
-      'Darkstor dynamically reorganizes its telemetry depending on who is at the helm. Switch between Executive (Preserved Capital & Spoilage Alpha), Store GM (In-Store Digital Twin & Rack Slotting), and Fleet Commander (10-Min Swarm Intercept & VRP Dispatch).',
+      'DarkStori dynamically reorganizes its telemetry depending on who is at the helm. Switch between Executive (Preserved Capital & Spoilage Alpha), Store GM (In-Store Digital Twin & Rack Slotting), and Fleet Commander (10-Min Swarm Intercept & VRP Dispatch).',
     icon: Compass,
     color: '#FF9F1C',
     highlights: [
@@ -63,7 +63,7 @@ const TOUR_STEPS = [
     title: 'Autonomous Self-Healing Mesh & VRP',
     subtitle: 'Zero-Waste Transshipments & Rider Dispatch',
     description:
-      'When perishable SKUs reach critical shelf-life thresholds, Darkstor computes Sigmoid markdown prices and automatically coordinates inter-hub EV transshipment runners across adjacent hubs before food spoils.',
+      'When perishable SKUs reach critical shelf-life thresholds, DarkStori computes Sigmoid markdown prices and automatically coordinates inter-hub EV transshipment runners across adjacent hubs before food spoils.',
     icon: Zap,
     color: '#EF4444',
     highlights: [
@@ -133,7 +133,7 @@ export default function ProductTourModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-            className="w-full max-w-xl bg-card border border-border/80 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] overflow-hidden ring-1 ring-white/10"
+            className="w-full max-w-xl bg-[#0E131F] border border-white/15 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] overflow-y-auto max-h-[90vh] ring-1 ring-white/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Step Counter and Skip Tour Button */}
@@ -147,7 +147,7 @@ export default function ProductTourModal() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-foreground">Darkstor Onboarding</span>
+                    <span className="font-semibold text-sm text-foreground">DarkStori Onboarding</span>
                     <span
                       className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
                       style={{

@@ -383,7 +383,7 @@ export default function DispatchPage() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-sm p-6 rounded-2xl bg-surface border border-white/15 shadow-2xl space-y-4"
+            className="w-full max-w-sm p-6 rounded-2xl bg-[#0E131F] border border-white/15 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-base font-bold text-white flex items-center gap-2">

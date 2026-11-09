@@ -36,12 +36,12 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }) {
           style={{
             width: '100%',
             maxWidth: '540px',
-            background: 'rgba(18, 24, 38, 0.9)',
+            background: '#0E131F',
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '24px',
             boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08)',
             color: '#FFFFFF',
-            overflow: 'hidden',
+            overflowY: 'auto', maxHeight: '90vh',
             position: 'relative'
           }}
         >

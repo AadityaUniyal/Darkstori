@@ -283,7 +283,7 @@ export default function CommandPalette({ isOpen, onClose }) {
                 placeholder="Search corridors, actions, metrics, or metros (e.g. 'forecast', 'mumbai', 'decay')..."
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-                className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground/60 text-sm md:text-base focus:outline-none"
+                className="flex-1 input-seamless bg-transparent border-none text-foreground placeholder:text-muted-foreground/60 text-sm md:text-base focus:outline-none"
               />
               {query && (
                 <button

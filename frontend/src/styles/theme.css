@@ -39,8 +39,9 @@
   --color-bg-alt: #0E121A;
   --color-bg-card: rgba(18, 24, 38, 0.7);
   --color-bg-card-hover: rgba(26, 34, 52, 0.85);
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-hover: rgba(255, 255, 255, 0.065);
+  --color-surface: #0E131F;
+  --color-surface-hover: #141A28;
+  --color-surface-tint: rgba(255, 255, 255, 0.035);
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-hover: rgba(255, 255, 255, 0.16);
   --color-border-glow: rgba(255, 255, 255, 0.12);

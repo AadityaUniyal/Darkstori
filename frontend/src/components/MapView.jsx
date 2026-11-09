@@ -71,17 +71,17 @@ function coordinatesOf(item) {
     : null;
 }
 
-/* ── Apple-grade Color Semantics ─────────────────────────────────── */
+/* ── DarkStori Brand & Operational Color Semantics ──────────────── */
 const COLORS = {
-  highScore:    [0, 113, 227, 220],    // Darkstor Hyper-Cobalt
-  medScore:     [56, 189, 248, 200],   // Radiant Cyan
-  lowScore:     [142, 142, 147, 160],  // Cupertino System Gray
-  competitor:   [255, 59, 48, 210],    // Apple Red
-  activeStore:  [52, 199, 89, 240],    // Apple Green
-  heatHigh:     [0, 113, 227, 170],    // Cobalt Glow
-  heatMed:      [56, 189, 248, 140],   // Cyan Glow
-  serviceCircle:[255, 255, 255, 35],
-  label:        [245, 245, 247, 210],
+  highScore:    [245, 158, 11, 230],   // DarkStori Hyper-Volt Amber
+  medScore:     [251, 191, 36, 190],   // Amber Gold
+  lowScore:     [100, 116, 139, 160],  // Slate Titanium
+  competitor:   [239, 68, 68, 220],    // Alarm Crimson
+  activeStore:  [16, 185, 129, 240],   // Fresh Emerald
+  heatHigh:     [245, 158, 11, 175],   // Amber Thermal
+  heatMed:      [251, 191, 36, 130],   // Warm Gold
+  serviceCircle:[245, 158, 11, 30],
+  label:        [248, 250, 252, 220],
 };
 
 function boundsFromPoints(points) {

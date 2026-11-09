@@ -59,10 +59,10 @@ const UNIFIED_PERSONAS = [
     id: 'fleet-commander',
     role: 'fleet-commander',
     title: 'Fleet Commander / NOC Chief',
-    badge: 'Tactical Cyber Cyan & Crimson',
+    badge: 'Last-Mile Swarm Fleet',
     city: 'NOC War Room (5 Cities)',
     icon: Truck,
-    accentColor: '#00F0FF',
+    accentColor: '#10B981',
     targetRoute: '/dispatch',
     description: '10-minute SLA radar, Clarke-Wright multi-drop VRP dispatch, live Doppler monsoon flood protection.'
   }

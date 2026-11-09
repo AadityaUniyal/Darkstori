@@ -224,7 +224,7 @@ export default function PickerTerminalPage() {
           key={currentItem.id}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-2xl bg-surface border border-purple-500/30 shadow-2xl space-y-4 relative overflow-hidden"
+          className="p-5 rounded-2xl bg-[#0E131F] border border-purple-500/30 shadow-xl space-y-4 relative overflow-hidden"
         >
           {/* Location Badge */}
           <div className="p-3 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center justify-between">

@@ -83,42 +83,42 @@ const Navbar = memo(() => {
           <>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
-              className="flex items-center justify-between bg-white/[0.05] hover:bg-white/[0.08] hover:border-[#FF9F1C]/40 border border-white/10 rounded-full px-3.5 py-1.5 md:w-60 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_16px_rgba(255,159,28,0.15)] backdrop-blur-xl"
+              className="flex items-center justify-between bg-white/[0.05] hover:bg-white/[0.08] hover:border-amber-500/40 border border-white/10 rounded-full px-3.5 py-1.5 md:w-56 cursor-pointer transition-all duration-200 text-left group shadow-sm backdrop-blur-xl"
               title="Search corridors, metrics, actions (⌘K)"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <Search className="text-white/40 group-hover:text-[#FF9F1C] transition-colors w-[15px] h-[15px] shrink-0" />
+                <Search className="text-white/40 group-hover:text-amber-400 transition-colors w-[15px] h-[15px] shrink-0" />
                 <span className="hidden md:inline text-xs text-white/55 group-hover:text-white transition-colors truncate">Spotlight search...</span>
               </div>
-              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-white/[0.06] text-white/40 border border-white/10 group-hover:border-[#FF9F1C]/30 group-hover:text-[#FF9F1C] transition-colors shrink-0">⌘K</kbd>
+              <kbd className="hidden md:inline text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-white/[0.06] text-white/40 border border-white/10 group-hover:border-amber-500/30 group-hover:text-amber-400 transition-colors shrink-0">⌘K</kbd>
             </button>
             
             <CitySelector />
             
             <button
               onClick={() => navigate('/vision')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 text-[#00F0FF] border border-[#00F0FF]/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Launch VisionPack AI Optical Dock"
             >
-              <Scan size={14} className="animate-pulse" />
+              <Scan size={14} className="text-amber-400" />
               <span className="hidden sm:inline">VisionPack</span>
             </button>
             
             <button
               onClick={() => setImporterOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Upload CSV Catalog & Inventory"
             >
-              <UploadCloud size={14} />
+              <UploadCloud size={14} className="text-emerald-400" />
               <span className="hidden lg:inline">Import CSV</span>
             </button>
             
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Storefront & Webhooks Integration"
             >
-              <Webhook size={14} />
+              <Webhook size={14} className="text-violet-400" />
               <span className="hidden xl:inline">Webhooks</span>
             </button>
             
@@ -211,7 +211,7 @@ const Navbar = memo(() => {
                     <select
                       value={activeRole}
                       onChange={(e) => setOperationalRole(e.target.value)}
-                      className="w-full bg-surface border border-border text-foreground rounded px-2 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-full bg-[#0A0D14] border border-white/15 text-white rounded-lg px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none focus:border-amber-400"
                     >
                       <option value="executive">Executive</option>
                       <option value="store-gm">Store GM</option>

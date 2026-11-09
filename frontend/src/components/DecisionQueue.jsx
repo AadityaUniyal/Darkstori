@@ -172,10 +172,10 @@ export default function DecisionQueue({ city }) {
                 </div>
               </div>
 
-              {/* Darkstor Sigmoid */}
+              {/* DarkStori Sigmoid */}
               <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/[0.05] p-3">
                 <div className="flex items-center justify-between">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Darkstor Dynamic</span>
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">DarkStori Dynamic</span>
                   <span className="rounded-full bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">PROVEN</span>
                 </div>
                 <p className="mt-1 text-xs font-medium text-emerald-100">Sigmoid Freshness Rule</p>

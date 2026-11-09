@@ -76,6 +76,7 @@ function AnimatedPage({ children }) {
       initial={prefersReducedMotion ? false : 'initial'}
       animate={prefersReducedMotion ? undefined : 'animate'}
       exit={prefersReducedMotion ? undefined : 'exit'}
+      className="w-full flex-1 flex flex-col items-center"
     >
       {children}
     </motion.div>

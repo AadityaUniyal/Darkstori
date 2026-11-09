@@ -78,7 +78,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-[#0E121A] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden relative backdrop-blur-2xl"
+        className="w-full max-w-md bg-[#0E121A] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] relative backdrop-blur-2xl"
       >
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
           <div className="flex items-center gap-2.5">
@@ -116,7 +116,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
               <select
                 value={storeId}
                 onChange={(event) => setStoreId(event.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs text-xs"
                 required
               >
                 {stores.map((store) => <option key={store.id} value={store.id}>{store.store_name || `Store ${store.id}`}</option>)}
@@ -130,7 +130,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
               placeholder="e.g. Organic Roma Tomatoes (1kg)"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] focus:ring-1 focus:ring-[#FF9F1C]/50 transition-colors text-xs"
+              className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs focus:ring-1 focus:ring-[#FF9F1C]/50 transition-colors text-xs"
               required
             />
           </div>
@@ -141,7 +141,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs text-xs"
               >
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
@@ -159,7 +159,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
                 step="0.5"
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs text-xs"
                 required
               />
             </div>
@@ -172,7 +172,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs text-xs"
                 required
               />
             </div>
@@ -183,7 +183,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
                 type="number"
                 value={shelfLifeHours}
                 onChange={(e) => setShelfLifeHours(e.target.value)}
-                className="w-full bg-[#141A24] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF9F1C] text-xs"
+                className="w-full bg-[#0A0D14] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs text-xs"
                 required
               />
             </div>
@@ -200,7 +200,7 @@ export default function AddBatchModal({ isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={createBatchMutation.isPending || storesLoading || stores.length === 0}
-              className="px-5 py-2 rounded-xl bg-[#FF9F1C] text-white font-semibold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-[#0A84FF] transition-all flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-amber-500 text-black font-bold text-xs shadow-lg shadow-[#FF9F1C]/25 hover:bg-amber-400 transition-all flex items-center gap-1.5"
             >
               {createBatchMutation.isPending ? (
                 <>

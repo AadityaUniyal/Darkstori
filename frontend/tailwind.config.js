@@ -22,6 +22,12 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: {
+          DEFAULT: "#0E131F",
+          elevated: "#141A28",
+          hover: "#1A2234",
+          border: "rgba(255, 255, 255, 0.08)",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
