@@ -1,6 +1,6 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, LogOut, User, ChevronDown, Search, UploadCloud, Webhook, Scan } from 'lucide-react';
+import { Bell, LogOut, User, ChevronDown, Search, UploadCloud, Webhook, Scan, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../context/RoleContext';
 import CitySelector from './CitySelector';
@@ -32,8 +32,8 @@ const Navbar = memo(() => {
   useEffect(() => {
     const handleOpenImporter = () => setImporterOpen(true);
     const handleOpenSettings = () => setSettingsOpen(true);
-    window.addEventListener('darkstor:open-importer', handleOpenImporter);
-    window.addEventListener('darkstor:open-settings', handleOpenSettings);
+    window.addEventListener('darkstori:open-importer', handleOpenImporter);
+    window.addEventListener('darkstori:open-settings', handleOpenSettings);
 
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -45,25 +45,44 @@ const Navbar = memo(() => {
     };
     document.addEventListener('mousedown', handleClick);
     return () => {
-      window.removeEventListener('darkstor:open-importer', handleOpenImporter);
-      window.removeEventListener('darkstor:open-settings', handleOpenSettings);
+      window.removeEventListener('darkstori:open-importer', handleOpenImporter);
+      window.removeEventListener('darkstori:open-settings', handleOpenSettings);
       document.removeEventListener('mousedown', handleClick);
     };
   }, []);
 
-  const initials = user?.email ? user.email.charAt(0).toUpperCase() : 'A';
+  const initials = user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'O');
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand" onClick={() => navigate('/')}>
-        <span className="brand-text">Darkstor</span>
-        <span className="brand-pulse-dot" />
+      <div className="flex items-center gap-3">
+        <div className="navbar-brand cursor-pointer" onClick={() => navigate('/')}>
+          <span className="brand-text">DarkStori</span>
+          <span className="brand-pulse-dot" />
+        </div>
+
+        {/* Real User Active Dark Store Pod Pill */}
+        {isAuthenticated && user?.store && (
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300 font-mono shadow-sm">
+            <Store size={13} className="text-amber-400 shrink-0" />
+            <span className="font-bold truncate max-w-[160px] text-white/90">{user.store.name}</span>
+            <span className="text-white/40">·</span>
+            <span className="text-amber-400 font-semibold">{user.store.city}</span>
+            {user.store.sla && (
+              <>
+                <span className="text-white/40">·</span>
+                <span className="text-emerald-400 font-bold">{user.store.sla} SLA</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
+
       <div className="navbar-actions">
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <>
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('darkstor:open-command-palette'))}
+              onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
               className="flex items-center justify-between bg-white/[0.05] hover:bg-white/[0.08] hover:border-[#FF9F1C]/40 border border-white/10 rounded-full px-3.5 py-1.5 md:w-60 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_16px_rgba(255,159,28,0.15)] backdrop-blur-xl"
               title="Search corridors, metrics, actions (⌘K)"
             >
@@ -75,30 +94,34 @@ const Navbar = memo(() => {
             </button>
             
             <CitySelector />
+            
             <button
-              onClick={() => navigate('/vision-pack')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 text-[#00F0FF] border border-[#00F0FF]/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)]"
+              onClick={() => navigate('/vision')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00F0FF]/15 hover:bg-[#00F0FF]/25 text-[#00F0FF] border border-[#00F0FF]/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)] cursor-pointer"
               title="Launch VisionPack AI Optical Dock"
             >
               <Scan size={14} className="animate-pulse" />
-              <span className="hidden sm:inline">VisionPack AI</span>
+              <span className="hidden sm:inline">VisionPack</span>
             </button>
+            
             <button
               onClick={() => setImporterOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
               title="Upload CSV Catalog & Inventory"
             >
               <UploadCloud size={14} />
               <span className="hidden lg:inline">Import CSV</span>
             </button>
+            
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 text-xs font-bold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
               title="Storefront & Webhooks Integration"
             >
               <Webhook size={14} />
               <span className="hidden xl:inline">Webhooks</span>
             </button>
+            
             <ConnectionStatus />
             <ThemeToggle />
             
@@ -168,18 +191,23 @@ const Navbar = memo(() => {
             <div className="user-menu" ref={menuRef}>
               <button className="user-button" onClick={() => setMenuOpen((v) => !v)}>
                 <span className="user-avatar">{initials}</span>
-                <span className="hidden sm:inline user-name">{user?.email?.split('@')[0] || 'User'}</span>
+                <span className="hidden sm:inline user-name">{user?.full_name || user?.email?.split('@')[0] || 'Operator'}</span>
                 <ChevronDown size={14} className={`user-chevron ${menuOpen ? 'open' : ''}`} />
               </button>
               {menuOpen && (
                 <div className="user-dropdown">
                   <div className="user-dropdown-header">
                     <span className="user-dropdown-email">{user?.email}</span>
-                    <span className="user-dropdown-role">Role: <strong>{user?.role}</strong></span>
+                    <span className="user-dropdown-role">Lens: <strong className="uppercase">{user?.role}</strong></span>
+                    {user?.store?.name && (
+                      <div className="text-[10px] text-amber-400 font-mono mt-1">
+                        Pod: {user.store.name}
+                      </div>
+                    )}
                   </div>
                   <div className="user-dropdown-divider" />
                   <div className="px-4 py-2">
-                    <label className="text-[0.75rem] text-muted-foreground block mb-1">Operational Role:</label>
+                    <label className="text-[0.75rem] text-muted-foreground block mb-1">Switch Operational Lens:</label>
                     <select
                       value={activeRole}
                       onChange={(e) => setOperationalRole(e.target.value)}
@@ -194,16 +222,16 @@ const Navbar = memo(() => {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      window.dispatchEvent(new CustomEvent('darkstor:open-tour'));
+                      window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
                     }}
                     className="user-dropdown-item w-full text-left flex items-center justify-between"
                   >
-                    <span>Product Tour</span>
+                    <span>System Tour</span>
                     <span className="text-[10px] text-amber-500 font-mono">Guide</span>
                   </button>
                   <div className="user-dropdown-divider" />
                   <button
-                    className="user-dropdown-item"
+                    className="user-dropdown-item text-rose-400 hover:text-rose-300"
                     onClick={() => { logout(); navigate('/login'); }}
                   >
                     <LogOut size={16} />
@@ -213,12 +241,19 @@ const Navbar = memo(() => {
               )}
             </div>
           </>
-        )}
-        {!isAuthenticated && (
-          <button className="login-btn" onClick={() => navigate('/login')}>
-            <User size={16} />
-            <span>Sign In</span>
-          </button>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <button className="login-btn cursor-pointer" onClick={() => navigate('/login')}>
+              <User size={14} />
+              <span>Sign In</span>
+            </button>
+            <button
+              className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#FF9F1C] to-[#FFB703] text-black text-xs font-bold hover:brightness-110 transition-all shadow-md shadow-[#FF9F1C]/20 cursor-pointer"
+              onClick={() => navigate('/register')}
+            >
+              <span>Register Hub</span>
+            </button>
+          </div>
         )}
       </div>
       <UniversalDataImporter isOpen={importerOpen} onClose={() => setImporterOpen(false)} />

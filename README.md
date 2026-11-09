@@ -1,4 +1,4 @@
-# Darkstor — The Autonomous Quick-Commerce Operating System
+# DarkStori — The Autonomous Quick-Commerce Operating System
 
 > Sub-10-minute grocery delivery built on mathematical order, spatial physics, and unit profitability.
 
@@ -6,7 +6,7 @@
 
 ## 1. Overview
 
-**Darkstor** is an enterprise-grade operating system designed for high-velocity quick-commerce dark store networks. It unifies four critical pillars of hyperlocal fulfillment into a single, closed-loop platform:
+**DarkStori** is an enterprise-grade operating system designed for high-velocity quick-commerce dark store networks. It unifies four critical pillars of hyperlocal fulfillment into a single, closed-loop platform:
 1. **Strategic Greenfield Expansion:** Huff gravity catchment models, road network friction analysis, and cannibalization scoring.
 2. **Inside-The-4-Walls Micro-WMS:** Digital twin store layouts, Golden Zone slotting, and collision-free picker routing (<45s pick-to-bag).
 3. **Autonomous Swarm Dispatch:** Dynamic multi-order batching preserving sub-10 minute SLAs while maximizing drops per rider per hour.
@@ -19,7 +19,7 @@
 The workspace is organized into three clean, production-ready domains:
 
 ```
-Darkstore/
+DarkStorie/
 ├── backend/                  # High-Performance FastAPI Application
 │   ├── api/                  # Modular API routers (v1)
 │   ├── core/                 # Config, security, auth, caching, logging
@@ -79,7 +79,7 @@ Darkstore/
 
 ## 4. Operational Roles & Chromatic Palettes
 
-Darkstor dynamically reconfigures its navigation, telemetry ribbons, and chromatic themes based on the user's operational lens:
+DarkStori dynamically reconfigures its navigation, telemetry ribbons, and chromatic themes based on the user's operational lens:
 
 1. **Executive Lens (`#F59E0B` Liquid Amber Gold):**  
    Prioritizes capital allocation, expansion approvals, competitor radar, and network EBITDA.
@@ -119,7 +119,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` to explore Darkstor!
+Visit `http://localhost:5173` to explore DarkStori!
 
 ---
 
@@ -133,4 +133,4 @@ Visit `http://localhost:5173` to explore Darkstor!
 
 ## 7. License & Credits
 
-Built with precision by the Darkstor Systems Engineering Team. Copyright © 2026 Darkstor. All rights reserved.
+Built with precision by the DarkStori Systems Engineering Team. Copyright © 2026 DarkStori. All rights reserved.

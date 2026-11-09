@@ -5,7 +5,7 @@ const CityContext = createContext(null);
 
 export function CityProvider({ children }) {
   const [selectedCity, setSelectedCityState] = useState(() => {
-    return localStorage.getItem('darkstor_selected_city') || 'Bangalore';
+    return localStorage.getItem('darkstori_selected_city') || localStorage.getItem('darkstor_selected_city') || 'Bangalore';
   });
   const [cities, setCities] = useState([
     'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 
@@ -17,6 +17,7 @@ export function CityProvider({ children }) {
   const setSelectedCity = useCallback((city) => {
     if (!city) return;
     setSelectedCityState(city);
+    localStorage.setItem('darkstori_selected_city', city);
     localStorage.setItem('darkstor_selected_city', city);
   }, []);
 
@@ -32,7 +33,7 @@ export function CityProvider({ children }) {
         if (mounted && names.length > 0) {
           setCitiesError(false);
           setCities(names);
-          if (!localStorage.getItem('darkstor_selected_city')) {
+          if (!localStorage.getItem('darkstori_selected_city') && !localStorage.getItem('darkstor_selected_city')) {
             const defaultCity = names.includes('Bangalore') ? 'Bangalore' : names[0];
             setSelectedCity(defaultCity);
           }
@@ -50,28 +51,18 @@ export function CityProvider({ children }) {
     };
   }, [setSelectedCity]);
 
-  // Allow dynamic city addition (e.g., from worldwide search)
-  const addCity = useCallback((cityName) => {
-    if (!cityName) return;
-    setCities((prev) => {
-      if (prev.includes(cityName)) return prev;
-      return [...prev, cityName];
-    });
-  }, []);
-
-  const selectLocation = useCallback((location) => {
-    if (!location || !Number.isFinite(Number(location.lat)) || !Number.isFinite(Number(location.lng))) return;
-    setSelectedLocation({ ...location, lat: Number(location.lat), lng: Number(location.lng) });
-    const cityName = location.address?.city || location.address?.town || location.address?.municipality;
-    if (cityName) {
-      setSelectedCity(cityName);
-      setCities((prev) => prev.includes(cityName) ? prev : [...prev, cityName]);
-    }
-  }, []);
-
   const value = useMemo(
-    () => ({ selectedCity, currentCity: selectedCity, activeCity: selectedCity, setSelectedCity, setCity: setSelectedCity, cities, citiesError, addCity, selectedLocation, setSelectedLocation, selectLocation }),
-    [selectedCity, cities, citiesError, addCity, selectedLocation, selectLocation]
+    () => ({
+      selectedCity,
+      setSelectedCity,
+      activeCity: selectedCity,
+      setActiveCity: setSelectedCity,
+      cities,
+      selectedLocation,
+      setSelectedLocation,
+      citiesError,
+    }),
+    [selectedCity, setSelectedCity, cities, selectedLocation, citiesError]
   );
 
   return <CityContext.Provider value={value}>{children}</CityContext.Provider>;

@@ -26,55 +26,40 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from localStorage token or auto-provision operator session
+  // Initialize from existing real session in localStorage
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 > Date.now()) {
+          const savedStoreRaw = localStorage.getItem('darkstori_active_store');
+          const savedStore = savedStoreRaw ? JSON.parse(savedStoreRaw) : null;
           setUser({
             id: payload.user_id,
             email: payload.sub,
             role: payload.role || 'user',
+            organization_id: payload.organization_id || null,
+            store: savedStore,
+            isDemo: Boolean(payload.sub?.includes('demo')),
           });
           setIsAuthenticated(true);
           setIsLoading(false);
           return;
         } else {
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
         }
       } catch (e) {
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
       }
     }
 
-    // Auto-provision seamless operator session so user is never blocked
-    api.demoLogin({
-      id: 'executive',
-      role: 'executive',
-      title: 'Executive / Expansion Director',
-      city: 'Bangalore'
-    }).then((data) => {
-      if (data?.access_token) {
-        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
-        setUser({
-          id: payload.user_id || '6',
-          email: payload.sub || 'executive@darkstor.demo',
-          role: payload.role || 'director',
-        });
-        setIsAuthenticated(true);
-      }
-    }).catch(() => {
-      setUser({
-        id: '6',
-        email: 'executive@darkstor.demo',
-        role: 'director',
-      });
-      setIsAuthenticated(true);
-    }).finally(() => {
-      setIsLoading(false);
-    });
+    // Default to clean unauthenticated state — user must register or sign in
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsLoading(false);
   }, []);
 
   // Listen for global logout events
@@ -82,6 +67,9 @@ export function AuthProvider({ children }) {
     const handleLogout = () => {
       setUser(null);
       setIsAuthenticated(false);
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('darkstori_active_store');
     };
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
@@ -92,17 +80,31 @@ export function AuthProvider({ children }) {
       const data = await api.login(credentials);
       if (data.access_token) {
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        const storeData = data.store_name ? {
+          id: data.store_id,
+          name: data.store_name,
+          city: data.city
+        } : null;
+
+        if (storeData) {
+          localStorage.setItem('darkstori_active_store', JSON.stringify(storeData));
+          if (data.city) localStorage.setItem('darkstori_selected_city', data.city);
+        }
+
         const loggedInUser = {
           id: payload.user_id || data.user_id,
           email: payload.sub || data.email,
           role: payload.role || data.role || 'user',
+          organization_id: data.organization_id || payload.organization_id || null,
+          store: storeData,
+          isDemo: false
         };
         setUser(loggedInUser);
         setIsAuthenticated(true);
         return data;
       }
     } catch (e) {
-      const message = formatAuthError(e, 'Login failed. Please check your credentials and try again.');
+      const message = formatAuthError(e, 'Login failed. Please verify your email and password.');
       throw new Error(message);
     }
   }, []);
@@ -112,17 +114,34 @@ export function AuthProvider({ children }) {
       const data = await api.register(userData);
       if (data.access_token) {
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        const storeData = {
+          id: data.store_id || 1,
+          name: userData.store_name || `DarkStori - ${userData.organization || 'My Hub'} Pod 01`,
+          city: userData.city || 'Bangalore',
+          pincode: userData.pincode || '560034',
+          sla: userData.sla || '10m',
+          fleet: userData.fleet || 12
+        };
+
+        localStorage.setItem('darkstori_active_store', JSON.stringify(storeData));
+        if (userData.city) localStorage.setItem('darkstori_selected_city', userData.city);
+
         const registeredUser = {
           id: payload.user_id || data.user_id,
           email: payload.sub || data.email,
-          role: payload.role || data.role || 'user',
+          role: userData.role || payload.role || 'executive',
+          organization_id: data.organization_id || payload.organization_id || null,
+          full_name: userData.full_name,
+          store: storeData,
+          isDemo: false,
+          isNewUser: true
         };
         setUser(registeredUser);
         setIsAuthenticated(true);
         return data;
       }
     } catch (e) {
-      const message = formatAuthError(e, 'Registration failed. Please try again.');
+      const message = formatAuthError(e, 'Registration failed. Please check password criteria (min 8 chars, 1 uppercase, 1 digit).');
       throw new Error(message);
     }
   }, []);
@@ -132,25 +151,47 @@ export function AuthProvider({ children }) {
       const data = await api.demoLogin(personaData);
       if (data.access_token) {
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        const demoStore = {
+          id: 1,
+          name: `DarkStori - ${personaData.city || 'Bangalore'} Flagship Pod`,
+          city: personaData.city || 'Bangalore',
+          sla: '10m',
+          fleet: 18
+        };
+        localStorage.setItem('darkstori_active_store', JSON.stringify(demoStore));
+        if (personaData.city) localStorage.setItem('darkstori_selected_city', personaData.city);
+
         const loggedInUser = {
           id: payload.user_id || data.user_id || personaData.id,
-          email: payload.sub || data.email || (personaData.id ? (personaData.id + '@darkstor.demo') : 'demo@darkstor.com'),
-          role: payload.role || data.role || personaData.role || 'user',
+          email: payload.sub || data.email || `${personaData.id}@darkstori.demo`,
+          role: payload.role || data.role || personaData.role || 'executive',
+          store: demoStore,
+          isDemo: true
         };
         setUser(loggedInUser);
         setIsAuthenticated(true);
         return data;
       }
     } catch (e) {
-      const message = formatAuthError(e, 'Demo login failed.');
+      const message = formatAuthError(e, 'Demo session initialization failed.');
       throw new Error(message);
     }
   }, []);
 
+  const updateUserStore = useCallback((newStoreData) => {
+    localStorage.setItem('darkstori_active_store', JSON.stringify(newStoreData));
+    if (newStoreData.city) localStorage.setItem('darkstori_selected_city', newStoreData.city);
+    setUser(prev => prev ? { ...prev, store: newStoreData } : null);
+  }, []);
+
   const logout = useCallback(() => {
     api.logout();
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('darkstori_active_store');
     setUser(null);
     setIsAuthenticated(false);
+    window.location.href = '/login';
   }, []);
 
   const setRole = useCallback((newRole) => {
@@ -158,7 +199,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, setRole, demoLogin }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      demoLogin,
+      logout,
+      setRole,
+      updateUserStore
+    }}>
       {!isLoading && children}
     </AuthContext.Provider>
   );

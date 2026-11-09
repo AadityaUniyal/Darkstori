@@ -48,7 +48,7 @@ export default function LandingPage() {
               <span className="logo-symbol">◆</span>
             </div>
             <span className="brand-title tracking-tight text-xl font-bold text-white">
-              Darkstor
+              DarkStori
             </span>
             <span className="brand-pill text-xs uppercase tracking-wider px-2.5 py-0.5 rounded-full font-medium">
               Enterprise OS
@@ -62,20 +62,32 @@ export default function LandingPage() {
             <a href="#roles" className="hover:text-white transition-colors">Operational Lenses</a>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-white/80 hover:text-white px-3 py-2 transition-colors"
-            >
-              Sign In
-            </Link>
-            <button
-              onClick={() => handleLaunch('executive')}
-              className="launch-button-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg cursor-pointer"
-            >
-              <span>Launch Console</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <button
+                onClick={() => navigate('/expansion')}
+                className="launch-button-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg cursor-pointer text-black"
+              >
+                <span>Go to Workspace</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-white/80 hover:text-white px-3 py-2 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="launch-button-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg cursor-pointer text-black"
+                >
+                  <span>Provision New Hub</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -92,7 +104,7 @@ export default function LandingPage() {
           >
             <Sparkles className="w-4 h-4 text-amber-400" />
             <span className="text-xs uppercase tracking-widest text-white/90 font-semibold">
-              Introducing Darkstor
+              Introducing DarkStori
             </span>
           </motion.div>
 
@@ -112,7 +124,7 @@ export default function LandingPage() {
             className="hero-subtext text-lg sm:text-xl text-white/70 max-w-3xl mx-auto font-normal leading-relaxed mb-10"
           >
             Quick-commerce is redefining retail, but negative unit economics, chaotic store floors,
-            and blind rider dispatch threaten the entire industry. Darkstor is the unified operating system
+            and blind rider dispatch threaten the entire industry. DarkStori is the unified operating system
             engineering resilience, micro-warehouse speed, and sustainable profitability across your dark store network.
           </motion.p>
 
@@ -122,20 +134,20 @@ export default function LandingPage() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button
-              onClick={() => handleLaunch('executive')}
+            <Link
+              to="/register"
               className="enter-platform-btn w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-xl text-base font-bold text-black transition-all shadow-2xl cursor-pointer"
             >
-              <span>Enter Darkstor Platform</span>
+              <span>Provision DarkStori Hub</span>
               <ArrowRight className="w-5 h-5" />
-            </button>
-            <a
-              href="#problem"
-              className="view-story-btn w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold text-white/80 hover:text-white border border-white/10 hover:border-white/20 transition-all bg-white/5 cursor-pointer"
+            </Link>
+            <Link
+              to="/login?mode=demo"
+              className="view-story-btn w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold text-white/90 hover:text-white border border-white/15 hover:border-amber-400/40 transition-all bg-white/5 cursor-pointer"
             >
-              <span>The Problem & Story</span>
-              <ChevronRight className="w-4 h-4" />
-            </a>
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Instant Sandbox Demo</span>
+            </Link>
           </motion.div>
 
           {/* Quick Metrics Bar */}
@@ -230,7 +242,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            The Origin of Darkstor
+            The Origin of DarkStori
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-8">
@@ -252,7 +264,7 @@ export default function LandingPage() {
               connecting real estate physics, micro-warehouse ergonomics, and rider dispatch into an integrated closed loop."
             </blockquote>
             <p>
-              That realization became <strong className="text-white">Darkstor</strong>.
+              That realization became <strong className="text-white">DarkStori</strong>.
               We engineered a system where spatial gravity models protect against self-cannibalization,
               shelf slotting algorithms guide pickers to sub-45-second bag seals, and automated playbooks
               instantly contract delivery radiuses the second a monsoon downpour begins.
@@ -267,13 +279,13 @@ export default function LandingPage() {
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              What Darkstor Is
+              What DarkStori Is
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
               The Intelligent Operating System for Quick-Commerce Dark Store Networks.
             </h2>
             <p className="text-white/60 text-base leading-relaxed">
-              Darkstor is not a simulation or a prototype. It is the comprehensive operational platform
+              DarkStori is not a simulation or a prototype. It is the comprehensive operational platform
               powering high-throughput micro-fulfillment across four interconnected pillars.
             </p>
           </div>
@@ -363,7 +375,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-white/60 text-base leading-relaxed">
               An Executive Strategist does not need picker aisle heatmaps, and a Dark Store General Manager
-              does not need city-wide CapEx models. Darkstor adapts its entire navigation, telemetry,
+              does not need city-wide CapEx models. DarkStori adapts its entire navigation, telemetry,
               and color palette to the active role.
             </p>
           </div>
@@ -484,7 +496,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <span className="logo-symbol text-amber-400 text-lg">◆</span>
-                <span className="text-xl font-bold text-white">Darkstor</span>
+                <span className="text-xl font-bold text-white">DarkStori</span>
               </div>
               <p className="text-sm text-white/50 max-w-md">
                 The Enterprise Operating System for Autonomous Quick-Commerce Networks.
@@ -496,13 +508,13 @@ export default function LandingPage() {
                 onClick={() => handleLaunch('executive')}
                 className="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all cursor-pointer"
               >
-                Open Darkstor Console
+                Open DarkStori Console
               </button>
             </div>
           </div>
 
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-white/40 gap-4">
-            <p>© 2026 Darkstor Systems, Inc. All rights reserved.</p>
+            <p>© 2026 DarkStori Systems, Inc. All rights reserved.</p>
             <div className="flex items-center gap-6">
               <span>Zero-Leak Enterprise Security</span>
               <span>Neon PostgreSQL Backed</span>

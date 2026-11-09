@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useRole } from '../../context/RoleContext';
 import { useCity } from '../../context/CityContext';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 
@@ -34,8 +35,9 @@ const AVAILABLE_RIDERS = [
 export default function DispatchPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
   const { activeCity } = useCity();
+  const { user } = useAuth();
 
-  const [activeRidersCount, setActiveRidersCount] = useState(28);
+  const [activeRidersCount, setActiveRidersCount] = useState(() => user?.store?.fleet || 18);
   const [batchingMode, setBatchingMode] = useState('2_order_cluster');
   const [surgeActive, setSurgeActive] = useState(false);
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
@@ -167,7 +169,7 @@ export default function DispatchPage() {
           <div className="mt-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3 text-xs text-emerald-200">
             <Info className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
             <div>
-              <strong>Fleet Commander Onboarding:</strong> Live orders count down against the strict 10:00 SLA. Darkstor clusters orders along the same delivery corridor (e.g. Corridor A) to double rider drop efficiency. Click "Dispatch" on any cluster to release riders.
+              <strong>Fleet Commander Onboarding:</strong> Live orders count down against the strict 10:00 SLA. DarkStori clusters orders along the same delivery corridor (e.g. Corridor A) to double rider drop efficiency. Click "Dispatch" on any cluster to release riders.
             </div>
           </div>
         )}

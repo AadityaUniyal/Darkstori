@@ -125,7 +125,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       type: 'Action',
       icon: UploadCloud,
       title: 'Import Catalog / Inventory CSV',
-      subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into DarkStor',
+      subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into DarkStori',
       action: () => {
         window.dispatchEvent(new CustomEvent('darkstor:open-importer'));
       }
@@ -383,7 +383,7 @@ export default function CommandPalette({ isOpen, onClose }) {
                   <span className="hidden sm:inline">Close</span>
                 </span>
               </div>
-              <span className="text-[11px] font-medium text-amber-500 font-mono">DarkStor Spotlight</span>
+              <span className="text-[11px] font-medium text-amber-500 font-mono">DarkStori Spotlight</span>
             </div>
           </motion.div>
         </motion.div>

@@ -1,4 +1,4 @@
-"""Darkstor API application entry point."""
+"""DarkStori API application entry point."""
 
 import os
 from backend.api.routes import (
@@ -61,7 +61,7 @@ from backend.database.connection import close_db, init_db  # noqa: E402
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown events."""
     # Startup
-    logger.info("Starting Darkstor — Autonomous Quick-Commerce Operating System API...")
+    logger.info("Starting DarkStori — Autonomous Quick-Commerce Operating System API...")
     scheduler_task = None
     heartbeat_task = None
 
@@ -81,10 +81,10 @@ async def lifespan(app: FastAPI):
     if settings.ENVIRONMENT == "development" and settings.SEED_DEMO_DATA:
         try:
             from backend.database.connection import AsyncSessionLocal
-            from backend.database.models.models import DarkStore
+            from backend.database.models.models import DarkStorie
             from sqlalchemy import select
             async with AsyncSessionLocal() as init_session:
-                res = await init_session.execute(select(DarkStore).limit(1))
+                res = await init_session.execute(select(DarkStorie).limit(1))
                 if not res.scalars().first():
                     logger.info("Fresh database detected; executing automatic baseline seed...")
                     from backend.api.routes.seed_data import run_seed_database
@@ -160,12 +160,12 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("MLflow tracking disabled")
 
-    logger.info("[OK] Darkstor API ready — configured markets: %s", len(settings.FOCUS_CITIES))
+    logger.info("[OK] DarkStori API ready — configured markets: %s", len(settings.FOCUS_CITIES))
 
     yield
 
     # Shutdown
-    logger.info("Shutting down Darkstor API...")
+    logger.info("Shutting down DarkStori API...")
 
     if scheduler_task:
         logger.info("Cancelling scheduler task...")
@@ -209,7 +209,7 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Darkstor — Autonomous Quick-Commerce Operating System",
+    title="DarkStori — Autonomous Quick-Commerce Operating System",
     description=(
         "Decision support for dark-store operators. Market coverage depends on "
         "configured operating data and geospatial providers."
@@ -317,7 +317,7 @@ async def readiness_check():
     health_status = {
         "status": "ready",
         "version": "3.0.0",
-        "platform": "Darkstor — Autonomous Quick-Commerce Operating System",
+        "platform": "DarkStori — Autonomous Quick-Commerce Operating System",
         "focus_cities": settings.FOCUS_CITIES,
         "components": {},
     }
@@ -395,7 +395,7 @@ async def metrics():
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "Darkstor — Autonomous Quick-Commerce Operating System API",
+        "message": "DarkStori — Autonomous Quick-Commerce Operating System API",
         "version": "3.0.0",
         "focus_cities": settings.FOCUS_CITIES,
         "docs": "/api/docs",

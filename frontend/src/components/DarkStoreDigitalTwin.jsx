@@ -7,7 +7,7 @@ import {
 import { api } from '../services/api';
 import { toast } from 'sonner';
 
-export default function DarkStoreDigitalTwin() {
+export default function DarkStorieDigitalTwin() {
   const [selectedCategory, setSelectedCategory] = useState('dairy');
   const [dwellSec, setDwellSec] = useState(3.5);
   const [trafficCongestion, setTrafficCongestion] = useState(1.25);
@@ -20,7 +20,7 @@ export default function DarkStoreDigitalTwin() {
     setLoading(true);
     setIsPickerMoving(true);
     try {
-      const res = await api.simulateNeuroSymbolicDarkstore({
+      const res = await api.simulateNeuroSymbolicDarkStorie({
         dwell_events: [
           { category: selectedCategory, dwell_sec: dwellSec },
           { category: selectedCategory === 'dairy' ? 'bakery' : 'dairy', dwell_sec: dwellSec * 0.7 },
@@ -272,7 +272,7 @@ export default function DarkStoreDigitalTwin() {
           </div>
         </div>
 
-        {/* Column 3: The Empirical Proof - Traditional vs. Darkstor Apex (4 Cols) */}
+        {/* Column 3: The Empirical Proof - Traditional vs. DarkStori Apex (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
             <div className="flex items-center justify-between text-xs">
@@ -301,11 +301,11 @@ export default function DarkStoreDigitalTwin() {
                 </div>
               </div>
 
-              {/* Darkstor Apex Benchmark */}
+              {/* DarkStori Apex Benchmark */}
               <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 space-y-1.5 text-xs shadow-lg shadow-emerald-500/5">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-emerald-300 flex items-center gap-1">
-                    <Sparkles size={12} /> Darkstor Apex Closed-Loop
+                    <Sparkles size={12} /> DarkStori Apex Closed-Loop
                   </span>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
                     100% SLA DEFENDED

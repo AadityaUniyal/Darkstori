@@ -17,7 +17,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, metrics, selecte
   };
 
   const handleCopySummary = () => {
-    const summaryText = `[DARKSTOR EXECUTIVE OPERATIONAL BRIEF - ${selectedCity.toUpperCase()}]
+    const summaryText = `[DARKSTORI EXECUTIVE OPERATIONAL BRIEF - ${selectedCity.toUpperCase()}]
 Date: ${dateStr}
 • 10-Minute SLA Compliance: 98.7% (Avg fulfillment: 8m 52s)
 • Perishable Salvage Revenue: ₹24.85 Lakhs rescued (0% landfill write-offs via Sigmoid Markdown)
@@ -46,7 +46,7 @@ Date: ${dateStr}
               </div>
               <div>
                 <h2 className="text-base font-bold text-white tracking-tight">Executive Operations Briefing</h2>
-                <p className="text-xs text-slate-400">DarkStor Prescriptive AI Operating System · {selectedCity} Metro</p>
+                <p className="text-xs text-slate-400">DarkStori Prescriptive AI Operating System · {selectedCity} Metro</p>
               </div>
             </div>
 
@@ -166,7 +166,7 @@ Date: ${dateStr}
 
             {/* Footer Signoff */}
             <div className="pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-              <span>DarkStor Engine · Enterprise Operational Intelligence</span>
+              <span>DarkStori Engine · Enterprise Operational Intelligence</span>
               <span className="font-mono">CONFIDENTIAL & PROPRIETARY</span>
             </div>
           </div>

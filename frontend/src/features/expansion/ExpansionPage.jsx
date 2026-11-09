@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useRole } from '../../context/RoleContext';
 import { useCity } from '../../context/CityContext';
+import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
@@ -38,6 +39,7 @@ const DEFAULT_SITES = [
 export default function ExpansionPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
   const { activeCity } = useCity();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState('site-hsr');

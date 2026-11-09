@@ -57,7 +57,7 @@ export default function PublicPassportVerification() {
   const handleWhatsAppShare = () => {
     if (!certificate) return;
     const text = encodeURIComponent(
-      `*DarkStor Verified Proof-of-Pack*\n` +
+      `*DarkStori Verified Proof-of-Pack*\n` +
       `Order: ${certificate.order_id}\n` +
       `Store: ${certificate.store_name}\n` +
       `Certified Weight: ${certificate.measured_weight_grams}g\n` +
@@ -85,7 +85,7 @@ export default function PublicPassportVerification() {
               <ShieldCheck size={18} />
             </div>
             <div>
-              <div className="text-xs font-mono font-bold tracking-wider text-slate-400">DARKSTOR OPERATING SYSTEM</div>
+              <div className="text-xs font-mono font-bold tracking-wider text-slate-400">DARKSTORI OPERATING SYSTEM</div>
               <div className="text-sm font-black font-display text-white">Trust & Quality Verification</div>
             </div>
           </Link>
@@ -305,7 +305,7 @@ export default function PublicPassportVerification() {
 
         {/* Footer Guarantee */}
         <div className="text-center text-xs text-slate-500 space-y-1 pb-8">
-          <div>Secured by DarkStor Operating System · Cryptographically Sealed on Neon PostgreSQL</div>
+          <div>Secured by DarkStori Operating System · Cryptographically Sealed on Neon PostgreSQL</div>
           <div>All optical snapshot frames are immutable and admissible for customer refund dispute defense.</div>
         </div>
       </div>

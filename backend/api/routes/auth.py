@@ -55,6 +55,10 @@ class UserRegister(BaseModel):
     full_name: str = ""
     username: str = ""
     organization: str = ""
+    city: Optional[str] = "Bangalore"
+    role: Optional[str] = "executive"
+    pincode: Optional[str] = "560034"
+    store_name: Optional[str] = None
 
     @field_validator("password")
     @classmethod
@@ -83,6 +87,10 @@ class Token(BaseModel):
     user_id: str
     role: str
     email: str
+    organization_id: Optional[str] = None
+    store_id: Optional[int] = None
+    store_name: Optional[str] = None
+    city: Optional[str] = None
 
 
 class RefreshRequest(BaseModel):
@@ -128,6 +136,22 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
     # Let's strip tzinfo for SQLAlchemy's default DateTime column.
     expires_at = expires_at.replace(tzinfo=None)
     await store_refresh_token(db, int(uid), jti, expires_at)  # type: ignore
+    store_info = {}
+    if user.organization_id is not None:
+        try:
+            from backend.database.models.models import DarkStore
+            st_res = await db.execute(select(DarkStore).where(DarkStore.organization_id == user.organization_id))
+            st = st_res.scalars().first()
+            if st:
+                store_info = {
+                    "store_id": st.id,
+                    "store_name": st.store_name,
+                    "city": st.city,
+                    "organization_id": str(user.organization_id),
+                }
+        except Exception:
+            pass
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token_str,
@@ -135,6 +159,8 @@ async def _make_token(user: User, db: AsyncSession) -> dict:
         "user_id": str(uid),
         "role": user.role,
         "email": user.email,
+        "organization_id": str(user.organization_id) if user.organization_id is not None else None,
+        **store_info
     }
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -172,11 +198,47 @@ async def register(
         username=username,
         full_name=user.full_name,
         hashed_password=hash_password(user.password),
-        role="user",
+        role=user.role or "executive",
         is_active=True,
         organization_id=workspace.id,
     )
     db.add(new_user)
+
+    # Immediately provision initial DarkStori Pod for this organization
+    try:
+        from backend.database.models.models import DarkStore
+        city_coords = {
+            "Bangalore": (12.9716, 77.5946, "560001"),
+            "Mumbai": (19.0760, 72.8777, "400001"),
+            "Delhi": (28.6139, 77.2090, "110001"),
+            "Delhi NCR": (28.6139, 77.2090, "110001"),
+            "Hyderabad": (17.3850, 78.4867, "500001"),
+            "Chennai": (13.0827, 80.2707, "600001"),
+            "Kolkata": (22.5726, 88.3639, "700001"),
+            "Pune": (18.5204, 73.8567, "411001"),
+            "Jaipur": (26.9124, 75.7873, "302001"),
+            "Lucknow": (26.8467, 80.9462, "226001"),
+            "Chandigarh": (30.7333, 76.7794, "160017"),
+            "Kochi": (9.9312, 76.2673, "682001"),
+        }
+        chosen_city = user.city or "Bangalore"
+        coords = city_coords.get(chosen_city, (12.9716, 77.5946, "560001"))
+        store_title = user.store_name or f"DarkStori - {workspace_name} Pod 01"
+        initial_store = DarkStore(
+            platform="DarkStori",
+            store_name=store_title,
+            city=chosen_city,
+            pincode=user.pincode or coords[2],
+            latitude=coords[0],
+            longitude=coords[1],
+            city_tier="Tier-1",
+            organization_id=workspace.id,
+            is_active=True,
+        )
+        db.add(initial_store)
+    except Exception as store_err:
+        logger.warning(f"Could not provision initial store: {store_err}")
+
     try:
         await db.flush()
         await db.commit()

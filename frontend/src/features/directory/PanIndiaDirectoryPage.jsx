@@ -25,52 +25,52 @@ import { useCity } from '../../context/CityContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 
-// Pan-India Multi-City Darkstore Dataset (Blinkit, Zepto, Instamart, BB Now, Darkstor)
-const PAN_INDIA_DARKSTORES = [
+// Pan-India Multi-City DarkStorie Dataset (Blinkit, Zepto, Instamart, BB Now, DarkStori)
+const PAN_INDIA_DARKSTORIES = [
   // Bangalore
-  { id: 'blr-01', name: 'Darkstor Koramangala Hub', platform: 'Darkstor', city: 'Bangalore', locality: 'Koramangala 4th Block', pincode: '560034', h3Index: '88618925d3fffff', lat: 12.9352, lng: 77.6245, tier: 'Tier-1', ordersDay: 2850, status: 'OPERATIONAL' },
+  { id: 'blr-01', name: 'DarkStori Koramangala Hub', platform: 'DarkStori', city: 'Bangalore', locality: 'Koramangala 4th Block', pincode: '560034', h3Index: '88618925d3fffff', lat: 12.9352, lng: 77.6245, tier: 'Tier-1', ordersDay: 2850, status: 'OPERATIONAL' },
   { id: 'blr-02', name: 'Blinkit Indiranagar Pod', platform: 'Blinkit', city: 'Bangalore', locality: '100ft Road Indiranagar', pincode: '560038', h3Index: '88618925d1fffff', lat: 12.9784, lng: 77.6408, tier: 'Tier-1', ordersDay: 3200, status: 'OPERATIONAL' },
   { id: 'blr-03', name: 'Zepto HSR Layout Central', platform: 'Zepto', city: 'Bangalore', locality: 'Sector 2 HSR', pincode: '560102', h3Index: '88618925cbfffff', lat: 12.9116, lng: 77.6474, tier: 'Tier-1', ordersDay: 2600, status: 'OPERATIONAL' },
   { id: 'blr-04', name: 'Swiggy Instamart Whitefield', platform: 'Swiggy Instamart', city: 'Bangalore', locality: 'ITPL Main Road', pincode: '560066', h3Index: '88618925e7fffff', lat: 12.9850, lng: 77.7315, tier: 'Tier-1', ordersDay: 2400, status: 'OPERATIONAL' },
   { id: 'blr-05', name: 'BB Now Jayanagar Pod', platform: 'BB Now', city: 'Bangalore', locality: '4th Block Jayanagar', pincode: '560011', h3Index: '88618925c3fffff', lat: 12.9250, lng: 77.5938, tier: 'Tier-1', ordersDay: 2100, status: 'OPERATIONAL' },
 
   // Mumbai
-  { id: 'bom-01', name: 'Darkstor Bandra Linking Road', platform: 'Darkstor', city: 'Mumbai', locality: 'Linking Road Bandra West', pincode: '400050', h3Index: '88618924b1fffff', lat: 19.0600, lng: 72.8335, tier: 'Tier-1', ordersDay: 3400, status: 'OPERATIONAL' },
+  { id: 'bom-01', name: 'DarkStori Bandra Linking Road', platform: 'DarkStori', city: 'Mumbai', locality: 'Linking Road Bandra West', pincode: '400050', h3Index: '88618924b1fffff', lat: 19.0600, lng: 72.8335, tier: 'Tier-1', ordersDay: 3400, status: 'OPERATIONAL' },
   { id: 'bom-02', name: 'Zepto BKC Commercial Hub', platform: 'Zepto', city: 'Mumbai', locality: 'G-Block BKC', pincode: '400051', h3Index: '88618924b5fffff', lat: 19.0660, lng: 72.8685, tier: 'Tier-1', ordersDay: 3900, status: 'OPERATIONAL' },
   { id: 'bom-03', name: 'Blinkit Andheri Lokhandwala', platform: 'Blinkit', city: 'Mumbai', locality: 'Lokhandwala Complex', pincode: '400053', h3Index: '88618924bdfffff', lat: 19.1438, lng: 72.8258, tier: 'Tier-1', ordersDay: 3100, status: 'OPERATIONAL' },
   { id: 'bom-04', name: 'Swiggy Instamart Powai Central', platform: 'Swiggy Instamart', city: 'Mumbai', locality: 'Hiranandani Gardens', pincode: '400076', h3Index: '88618924a9fffff', lat: 19.1197, lng: 72.9056, tier: 'Tier-1', ordersDay: 2800, status: 'OPERATIONAL' },
 
   // Delhi NCR
-  { id: 'del-01', name: 'Darkstor Cyber City Hub', platform: 'Darkstor', city: 'Delhi NCR', locality: 'DLF Phase 2 Gurgaon', pincode: '122002', h3Index: '88618927a3fffff', lat: 28.4900, lng: 77.0888, tier: 'Tier-1', ordersDay: 4100, status: 'OPERATIONAL' },
+  { id: 'del-01', name: 'DarkStori Cyber City Hub', platform: 'DarkStori', city: 'Delhi NCR', locality: 'DLF Phase 2 Gurgaon', pincode: '122002', h3Index: '88618927a3fffff', lat: 28.4900, lng: 77.0888, tier: 'Tier-1', ordersDay: 4100, status: 'OPERATIONAL' },
   { id: 'del-02', name: 'Blinkit South Extension Pod', platform: 'Blinkit', city: 'Delhi NCR', locality: 'South Ext Part 2', pincode: '110049', h3Index: '88618927a7fffff', lat: 28.5684, lng: 77.2217, tier: 'Tier-1', ordersDay: 3300, status: 'OPERATIONAL' },
   { id: 'del-03', name: 'Zepto Noida Sector 62', platform: 'Zepto', city: 'Delhi NCR', locality: 'Sector 62 Institutional', pincode: '201309', h3Index: '88618927b1fffff', lat: 28.6258, lng: 77.3629, tier: 'Tier-1', ordersDay: 2750, status: 'OPERATIONAL' },
 
   // Hyderabad
-  { id: 'hyd-01', name: 'Darkstor Gachibowli Pod', platform: 'Darkstor', city: 'Hyderabad', locality: 'Gachibowli Tech Spine', pincode: '500032', h3Index: '88618929a1fffff', lat: 17.4401, lng: 78.3489, tier: 'Tier-1', ordersDay: 2950, status: 'OPERATIONAL' },
+  { id: 'hyd-01', name: 'DarkStori Gachibowli Pod', platform: 'DarkStori', city: 'Hyderabad', locality: 'Gachibowli Tech Spine', pincode: '500032', h3Index: '88618929a1fffff', lat: 17.4401, lng: 78.3489, tier: 'Tier-1', ordersDay: 2950, status: 'OPERATIONAL' },
   { id: 'hyd-02', name: 'Zepto Madhapur Hitec City', platform: 'Zepto', city: 'Hyderabad', locality: 'Cyber Towers Belt', pincode: '500081', h3Index: '88618929a5fffff', lat: 17.4504, lng: 78.3808, tier: 'Tier-1', ordersDay: 3600, status: 'OPERATIONAL' },
   { id: 'hyd-03', name: 'Blinkit Jubilee Hills Pod', platform: 'Blinkit', city: 'Hyderabad', locality: 'Road No 36 Jubilee Hills', pincode: '500033', h3Index: '88618929adfffff', lat: 17.4319, lng: 78.4073, tier: 'Tier-1', ordersDay: 3150, status: 'OPERATIONAL' },
 
   // Chennai
-  { id: 'maa-01', name: 'Darkstor Anna Nagar Central', platform: 'Darkstor', city: 'Chennai', locality: '2nd Avenue Anna Nagar', pincode: '600040', h3Index: '88618928c1fffff', lat: 13.0850, lng: 80.2101, tier: 'Tier-1', ordersDay: 2450, status: 'OPERATIONAL' },
+  { id: 'maa-01', name: 'DarkStori Anna Nagar Central', platform: 'DarkStori', city: 'Chennai', locality: '2nd Avenue Anna Nagar', pincode: '600040', h3Index: '88618928c1fffff', lat: 13.0850, lng: 80.2101, tier: 'Tier-1', ordersDay: 2450, status: 'OPERATIONAL' },
   { id: 'maa-02', name: 'Swiggy Instamart OMR Pod', platform: 'Swiggy Instamart', city: 'Chennai', locality: 'Thoraipakkam OMR', pincode: '600097', h3Index: '88618928c5fffff', lat: 12.9388, lng: 80.2335, tier: 'Tier-1', ordersDay: 2600, status: 'OPERATIONAL' },
 
   // Pune
-  { id: 'pnq-01', name: 'Darkstor Kothrud Pod', platform: 'Darkstor', city: 'Pune', locality: 'Paud Road Kothrud', pincode: '411038', h3Index: '88618922a1fffff', lat: 18.5074, lng: 73.8077, tier: 'Tier-1', ordersDay: 2150, status: 'OPERATIONAL' },
+  { id: 'pnq-01', name: 'DarkStori Kothrud Pod', platform: 'DarkStori', city: 'Pune', locality: 'Paud Road Kothrud', pincode: '411038', h3Index: '88618922a1fffff', lat: 18.5074, lng: 73.8077, tier: 'Tier-1', ordersDay: 2150, status: 'OPERATIONAL' },
   { id: 'pnq-02', name: 'Blinkit Viman Nagar Hub', platform: 'Blinkit', city: 'Pune', locality: 'Viman Nagar Central', pincode: '411014', h3Index: '88618922a7fffff', lat: 18.5679, lng: 73.9143, tier: 'Tier-1', ordersDay: 2700, status: 'OPERATIONAL' },
 
   // Kolkata
-  { id: 'ccu-01', name: 'Darkstor Salt Lake Sector V', platform: 'Darkstor', city: 'Kolkata', locality: 'Sector V Electronics Complex', pincode: '700091', h3Index: '88618923a1fffff', lat: 22.5804, lng: 88.4378, tier: 'Tier-1', ordersDay: 2300, status: 'OPERATIONAL' },
+  { id: 'ccu-01', name: 'DarkStori Salt Lake Sector V', platform: 'DarkStori', city: 'Kolkata', locality: 'Sector V Electronics Complex', pincode: '700091', h3Index: '88618923a1fffff', lat: 22.5804, lng: 88.4378, tier: 'Tier-1', ordersDay: 2300, status: 'OPERATIONAL' },
   { id: 'ccu-02', name: 'Zepto Park Street Hub', platform: 'Zepto', city: 'Kolkata', locality: 'Park Street Camac', pincode: '700016', h3Index: '88618923a7fffff', lat: 22.5510, lng: 88.3533, tier: 'Tier-1', ordersDay: 2650, status: 'OPERATIONAL' },
 
   // Tier-2 Growth Metros
   { id: 'jpr-01', name: 'Blinkit Malviya Nagar Hub', platform: 'Blinkit', city: 'Jaipur', locality: 'Gaurav Tower Belt', pincode: '302017', h3Index: '88618926a1fffff', lat: 26.8530, lng: 75.8050, tier: 'Tier-2', ordersDay: 1850, status: 'OPERATIONAL' },
   { id: 'lko-01', name: 'Zepto Gomti Nagar Pod', platform: 'Zepto', city: 'Lucknow', locality: 'Vibhuti Khand', pincode: '226010', h3Index: '88618926b3fffff', lat: 26.8640, lng: 81.0020, tier: 'Tier-2', ordersDay: 1950, status: 'OPERATIONAL' },
-  { id: 'ixc-01', name: 'Darkstor Sector 35 Central', platform: 'Darkstor', city: 'Chandigarh', locality: 'Sector 35 Market', pincode: '160035', h3Index: '88618926c1fffff', lat: 30.7250, lng: 76.7680, tier: 'Tier-2', ordersDay: 1700, status: 'OPERATIONAL' },
+  { id: 'ixc-01', name: 'DarkStori Sector 35 Central', platform: 'DarkStori', city: 'Chandigarh', locality: 'Sector 35 Market', pincode: '160035', h3Index: '88618926c1fffff', lat: 30.7250, lng: 76.7680, tier: 'Tier-2', ordersDay: 1700, status: 'OPERATIONAL' },
   { id: 'cok-01', name: 'Swiggy Instamart Kakkanad', platform: 'Swiggy Instamart', city: 'Kochi', locality: 'Infopark Expressway', pincode: '682030', h3Index: '88618926d5fffff', lat: 10.0150, lng: 76.3500, tier: 'Tier-2', ordersDay: 1600, status: 'OPERATIONAL' }
 ];
 
 const METRO_CITIES = ['All Cities', 'Bangalore', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Jaipur', 'Lucknow', 'Chandigarh', 'Kochi'];
-const PLATFORMS = ['All Platforms', 'Darkstor', 'Blinkit', 'Zepto', 'Swiggy Instamart', 'BB Now'];
+const PLATFORMS = ['All Platforms', 'DarkStori', 'Blinkit', 'Zepto', 'Swiggy Instamart', 'BB Now'];
 
 export default function PanIndiaDirectoryPage() {
   const { roleConfig } = useRole();
@@ -79,10 +79,10 @@ export default function PanIndiaDirectoryPage() {
   const [selectedCity, setSelectedCity] = useState(activeCity && METRO_CITIES.includes(activeCity) ? activeCity : 'All Cities');
   const [selectedPlatform, setSelectedPlatform] = useState('All Platforms');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStore, setSelectedStore] = useState(PAN_INDIA_DARKSTORES[0]);
+  const [selectedStore, setSelectedStore] = useState(PAN_INDIA_DARKSTORIES[0]);
   const [activeTab, setActiveTab] = useState('directory'); // 'directory', 'algorithms'
 
-  const filteredStores = PAN_INDIA_DARKSTORES.filter(store => {
+  const filteredStores = PAN_INDIA_DARKSTORIES.filter(store => {
     const matchCity = selectedCity === 'All Cities' || store.city === selectedCity;
     const matchPlatform = selectedPlatform === 'All Platforms' || store.platform === selectedPlatform;
     const matchQuery = !searchQuery ||
@@ -116,10 +116,10 @@ export default function PanIndiaDirectoryPage() {
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Pan-India Darkstore Directory & H3 Spatial Mesh
+              Pan-India DarkStorie Directory & H3 Spatial Mesh
             </h1>
             <p className="text-sm text-white/60 max-w-3xl mt-1 leading-relaxed">
-              Maps active micro-fulfillment pods (Blinkit, Zepto, Instamart, BB Now, Darkstor) across all Indian metros.
+              Maps active micro-fulfillment pods (Blinkit, Zepto, Instamart, BB Now, DarkStori) across all Indian metros.
               Powered by free Uber H3 hexagonal indexing and open routing matrices to guarantee 99.2% spatial accuracy without paid mapping APIs.
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function PanIndiaDirectoryPage() {
             <AnimatePresence>
               {filteredStores.map(store => {
                 const isSelected = selectedStore?.id === store.id;
-                const isDarkstor = store.platform === 'Darkstor';
+                const isDarkStori = store.platform === 'DarkStori';
 
                 return (
                   <motion.div
@@ -265,7 +265,7 @@ export default function PanIndiaDirectoryPage() {
                     className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
                       isSelected
                         ? 'bg-amber-500/10 border-amber-400/60 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
-                        : isDarkstor
+                        : isDarkStori
                         ? 'bg-white/[0.03] border-white/15 hover:border-amber-400/30'
                         : 'bg-black/40 border-white/10 hover:border-white/20'
                     }`}
@@ -273,7 +273,7 @@ export default function PanIndiaDirectoryPage() {
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          store.platform === 'Darkstor'
+                          store.platform === 'DarkStori'
                             ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                             : store.platform === 'Blinkit'
                             ? 'bg-yellow-400/15 text-yellow-300'
@@ -318,7 +318,7 @@ export default function PanIndiaDirectoryPage() {
             </div>
             <p className="text-xs text-white/70 leading-relaxed">
               Standard square GIS grids distort diagonal distances by 41.4% (1 vs 1.414).
-              Darkstor uses Uber H3 Resolution-8 hexagons where every neighbor is equidistant.
+              DarkStori uses Uber H3 Resolution-8 hexagons where every neighbor is equidistant.
               This allows instantaneous polygon union calculations to prevent dark store cannibalization without expensive GIS database overhead.
             </p>
             <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white/60">
@@ -337,7 +337,7 @@ export default function PanIndiaDirectoryPage() {
               </div>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">
-              Instead of naive single-order dispatch, Darkstor calculates road corridor savings s(i, j) = d(D, i) + d(D, j) - d(i, j).
+              Instead of naive single-order dispatch, DarkStori calculates road corridor savings s(i, j) = d(D, i) + d(D, j) - d(i, j).
               Orders heading into the same high-density apartment complex are clustered within 8-minute tolerances, increasing rider drops from 1.9 to 3.4 per hour.
             </p>
             <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white/60">
@@ -375,7 +375,7 @@ export default function PanIndiaDirectoryPage() {
               </div>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">
-              Traditional inventory assumes linear demand. Darkstor models morning 7–9 AM milk bursts and evening snacks separately,
+              Traditional inventory assumes linear demand. DarkStori models morning 7–9 AM milk bursts and evening snacks separately,
               dynamically adjusting purchase orders with supplier lead times. Prevents out-of-stock churn while saving ₹1.65 Lakhs per month in spoiled perishables.
             </p>
             <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white/60">

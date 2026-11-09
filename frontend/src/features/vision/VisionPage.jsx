@@ -105,7 +105,7 @@ export default function VisionPage() {
           <div className="mt-5 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-start gap-3 text-xs text-purple-200">
             <Info className="w-4 h-4 mt-0.5 shrink-0 text-purple-400" />
             <div>
-              <strong>Quality Assurance Workflow:</strong> When an order bag is placed under the overhead camera, Darkstor's YOLOv8 model detects item shapes and counts. Combined with the digital weight scale (tolerance ±15g), clicking "Issue Quality Passport" generates a verifiable cryptographic receipt for the customer.
+              <strong>Quality Assurance Workflow:</strong> When an order bag is placed under the overhead camera, DarkStori's YOLOv8 model detects item shapes and counts. Combined with the digital weight scale (tolerance ±15g), clicking "Issue Quality Passport" generates a verifiable cryptographic receipt for the customer.
             </div>
           </div>
         )}
@@ -204,7 +204,7 @@ export default function VisionPage() {
 
           <div className="flex items-center justify-between text-xs text-white/50 pt-2">
             <span>Hardware: Hikvision 4K Overhead + Intel RealSense Depth Sensor</span>
-            <span className="text-emerald-400 font-mono">Model: DarkstorYolo-v8s-INT8</span>
+            <span className="text-emerald-400 font-mono">Model: DarkStoriYolo-v8s-INT8</span>
           </div>
         </div>
 

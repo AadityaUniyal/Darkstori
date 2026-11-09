@@ -141,7 +141,7 @@ export default function CompetitorPage() {
     toast.promise(
       new Promise((resolve) => setTimeout(resolve, 500)),
       {
-        loading: 'Syncing prices across Darkstor catalog to Neon DB...',
+        loading: 'Syncing prices across DarkStori catalog to Neon DB...',
         success: 'Dynamic pricing ledger updated! Synchronized across customer apps.',
         error: 'Failed to update ledger.'
       }
@@ -296,7 +296,7 @@ export default function CompetitorPage() {
             <thead>
               <tr className="border-b border-white/10 text-white/50 uppercase tracking-wider">
                 <th className="pb-3 font-semibold">SKU Name</th>
-                <th className="pb-3 font-semibold">Darkstor Price</th>
+                <th className="pb-3 font-semibold">DarkStori Price</th>
                 <th className="pb-3 font-semibold">Blinkit</th>
                 <th className="pb-3 font-semibold">Zepto</th>
                 <th className="pb-3 font-semibold">Instamart</th>

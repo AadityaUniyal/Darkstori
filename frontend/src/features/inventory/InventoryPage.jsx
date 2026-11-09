@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useRole } from '../../context/RoleContext';
 import { useCity } from '../../context/CityContext';
+import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
@@ -44,6 +45,7 @@ const HOURLY_VELOCITY_DATA = [
 export default function InventoryPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
   const { activeCity } = useCity();
+  const { user } = useAuth();
 
   const [category, setCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -195,8 +197,8 @@ export default function InventoryPage() {
               <span className="text-xs font-bold uppercase tracking-widest text-purple-400">
                 Feature 02 · Predictive Inventory
               </span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">
-                Primary: Store GM Lens
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                {user?.store?.name || `${activeCity || 'Bangalore'} Pod`}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">

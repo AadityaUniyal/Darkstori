@@ -42,7 +42,7 @@ export default function ThermalLabelSticker({
   const handleCopyRawEscPos = () => {
     const rawText = 
 `[ESC @]
-[ESC a 1] DARKSTOR DS-OS
+[ESC a 1] DARKSTORI DS-OS
 [ESC a 1] PROOF-OF-PACK QUALITY SEAL
 ================================
 ORDER: ${orderId}
@@ -194,7 +194,7 @@ GSTIN: 29AAACG1234F1Z5
 
               {/* Title & Hub Header */}
               <div className="text-center pb-2 border-b-2 border-dashed border-black">
-                <div className="text-[12px] font-black tracking-tight uppercase">DARKSTOR DS-OS</div>
+                <div className="text-[12px] font-black tracking-tight uppercase">DARKSTORI DS-OS</div>
                 <div className="text-[9px] font-bold tracking-widest text-slate-700">PROOF-OF-PACK QUALITY SEAL</div>
                 <div className="text-[10px] font-bold mt-1">{hubCode} · PIN {pincode}</div>
               </div>
