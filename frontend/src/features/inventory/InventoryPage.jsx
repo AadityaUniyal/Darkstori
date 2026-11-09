@@ -27,6 +27,8 @@ import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import InboundDockView from './InboundDockView';
+import { Truck } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Dairy & Eggs', 'Fresh Produce', 'Beverages', 'Snacks'];
 
@@ -55,6 +57,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(false);
   const [poModalOpen, setPoModalOpen] = useState(false);
   const [selectedSkuForPo, setSelectedSkuForPo] = useState(null);
+  const [inventoryViewMode, setInventoryViewMode] = useState('replenishment');
 
   // Live Inventory Items from Neon DB
   const [recommendations, setRecommendations] = useState([
@@ -235,6 +238,36 @@ export default function InventoryPage() {
         )}
       </div>
 
+      {/* VIEW MODE TOGGLE (Replenishment vs Inbound Dock) */}
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+        <button
+          onClick={() => { setInventoryViewMode('replenishment'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            inventoryViewMode === 'replenishment'
+              ? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Package className="w-3.5 h-3.5" />
+          <span>Demand & Micro-Replenishment</span>
+        </button>
+        <button
+          onClick={() => { setInventoryViewMode('inbound-dock'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            inventoryViewMode === 'inbound-dock'
+              ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Truck className="w-3.5 h-3.5" />
+          <span>Inbound Receiving Dock (GRN)</span>
+        </button>
+      </div>
+
+      {inventoryViewMode === 'inbound-dock' ? (
+        <InboundDockView />
+      ) : (
+        <>
       {/* 2. REPLENISHMENT KPI METRICS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div whileHover={{ y: -2 }} className="kpi-card p-5 rounded-2xl bg-white/[0.02] border border-white/10">
@@ -514,6 +547,8 @@ export default function InventoryPage() {
             </div>
           </motion.div>
         </div>
+      )}
+    </>
       )}
     </div>
   );

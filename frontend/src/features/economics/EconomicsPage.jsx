@@ -19,6 +19,8 @@ import {
 import { useRole } from '../../context/RoleContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import ExecutivePortfolioView from './ExecutivePortfolioView';
+import { Globe } from 'lucide-react';
 
 export default function EconomicsPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
@@ -31,6 +33,7 @@ export default function EconomicsPage() {
   const [pickerCost, setPickerCost] = useState(18.2);
   const [monthlyRent, setMonthlyRent] = useState(145000);
   const [shrinkagePct, setShrinkagePct] = useState(1.15);
+  const [economicsViewMode, setEconomicsViewMode] = useState('waterfall');
 
   // Dynamic Unit Economics Waterfall calculations
   const grossProfitPerOrder = +(aov * (grossMarginPct / 100)).toFixed(2);
@@ -129,6 +132,36 @@ export default function EconomicsPage() {
         )}
       </div>
 
+      {/* VIEW MODE TOGGLE (Waterfall vs Portfolio) */}
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+        <button
+          onClick={() => { setEconomicsViewMode('waterfall'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            economicsViewMode === 'waterfall'
+              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Calculator className="w-3.5 h-3.5" />
+          <span>Single-Store Waterfall & EBITDA</span>
+        </button>
+        <button
+          onClick={() => { setEconomicsViewMode('portfolio'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            economicsViewMode === 'portfolio'
+              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Globe className="w-3.5 h-3.5" />
+          <span>Pan-India Portfolio Rollup (8 Pods)</span>
+        </button>
+      </div>
+
+      {economicsViewMode === 'portfolio' ? (
+        <ExecutivePortfolioView />
+      ) : (
+        <>
       {/* 2. EBITDA & MARGIN KPI RIBBON */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div whileHover={{ y: -2 }} className="kpi-card p-5 rounded-2xl bg-white/[0.02] border border-white/10">
@@ -299,6 +332,8 @@ export default function EconomicsPage() {
           </div>
         </div>
       </div>
+    </>
+      )}
     </div>
   );
 }

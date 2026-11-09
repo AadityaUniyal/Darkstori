@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck,
@@ -16,11 +16,16 @@ import {
   Scale,
   RefreshCw,
   X,
-  Eye
+  Eye,
+  Usb,
+  Cpu,
+  Check,
+  Printer
 } from 'lucide-react';
 import { useRole } from '../../context/RoleContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import { useWebSerialScale } from '../../hooks/useWebSerialScale';
 
 export default function VisionPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
@@ -31,6 +36,7 @@ export default function VisionPage() {
   const [measuredWeightGrams, setMeasuredWeightGrams] = useState(1240);
   const [passportModalOpen, setPassportModalOpen] = useState(false);
   const [activePassportQr, setActivePassportQr] = useState('PASSPORT-DKS-9941A2');
+  const [activeTab, setActiveTab] = useState('live-dock');
 
   // Real optical detection items with bounding box coordinates
   const [verifiedItems, setVerifiedItems] = useState([
@@ -39,11 +45,25 @@ export default function VisionPage() {
     { id: 3, name: 'Farm Fresh Tender Coconut', count: 1, confidence: 0.991, status: 'VERIFIED', bbox: { x: 120, y: 140, w: 100, h: 90 } }
   ]);
 
+  // WebSerial scale hook for real physical scales
+  const {
+    isSupported: isSerialSupported,
+    isConnected: isSerialConnected,
+    liveWeightGrams: serialLiveWeight,
+    connectScale,
+    disconnectScale,
+    portDetails
+  } = useWebSerialScale({
+    onWeightChange: (grams) => {
+      setMeasuredWeightGrams(grams);
+    }
+  });
+
   const weightDelta = measuredWeightGrams - targetWeightGrams;
   const isWeightValid = Math.abs(weightDelta) <= 15; // 15g tolerance
 
   const handleIssuePassport = () => {
-    floorAudio.success();
+    floorAudio.playSuccessPick();
     const newQr = `PASSPORT-DKS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     setActivePassportQr(newQr);
     setPassportModalOpen(true);
@@ -60,7 +80,7 @@ export default function VisionPage() {
 
   const handleSimulateWeightChange = (newWeight) => {
     setMeasuredWeightGrams(newWeight);
-    floorAudio.click();
+    floorAudio.playSuccessPick();
   };
 
   return (
@@ -75,7 +95,7 @@ export default function VisionPage() {
                 <Scan className="w-5 h-5" />
               </span>
               <span className="text-xs font-bold uppercase tracking-widest text-purple-400">
-                Feature 08 · Quality Assurance
+                Feature 08 · Quality Assurance & WebSerial Hardware
               </span>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">
                 Primary: Store GM Lens
@@ -86,11 +106,35 @@ export default function VisionPage() {
             </h1>
             <p className="text-sm text-white/60 max-w-3xl mt-1 leading-relaxed">
               Eradicates missing-item customer disputes and guarantees zero-defect bagging before rider dispatch.
-              Reconciles optical camera SKU detection with precision weight delta scales to stamp a tamper-proof digital passport.
+              Reconciles client-side YOLOv8 optical SKU detection with direct <code className="text-purple-300 font-mono">WebSerial</code> digital scales to stamp a tamper-proof digital passport.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
+            {isSerialConnected ? (
+              <button
+                onClick={disconnectScale}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 flex items-center gap-2 cursor-pointer transition-all"
+              >
+                <Usb className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                <span>Scale Connected ({portDetails?.usbVendorId || 'USB-Serial'})</span>
+              </button>
+            ) : (
+              <button
+                onClick={connectScale}
+                disabled={!isSerialSupported}
+                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
+                  isSerialSupported
+                    ? 'bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20'
+                    : 'bg-white/5 text-white/40 border-white/10 cursor-not-allowed'
+                }`}
+                title={isSerialSupported ? 'Connect USB / RS232 platform scale directly to browser' : 'WebSerial not supported in this browser'}
+              >
+                <Usb className="w-3.5 h-3.5 text-sky-400" />
+                <span>Connect Hardware Scale (WebSerial)</span>
+              </button>
+            )}
+
             <button
               onClick={handleIssuePassport}
               className="px-5 py-2.5 rounded-xl font-bold text-sm bg-purple-500 hover:bg-purple-400 text-white transition-all shadow-md shadow-purple-500/10 cursor-pointer flex items-center gap-2 active:scale-95"
@@ -118,7 +162,7 @@ export default function VisionPage() {
             <span>Bagging Defect Rate</span>
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400">0.02%</div>
+          <div className="text-2xl font-black text-emerald-400 font-mono">0.02%</div>
           <div className="text-[11px] text-white/40 mt-1">Industry benchmark &lt; 0.15%</div>
         </motion.div>
 
@@ -127,7 +171,7 @@ export default function VisionPage() {
             <span>Optical Model Confidence</span>
             <Camera className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="text-2xl font-black text-white">99.4%</div>
+          <div className="text-2xl font-black text-white font-mono">99.4%</div>
           <div className="text-[11px] text-purple-300 mt-1">YOLOv8 Edge Model 60 FPS</div>
         </motion.div>
 
@@ -136,8 +180,12 @@ export default function VisionPage() {
             <span>Weight Scale Precision</span>
             <Scale className="w-4 h-4 text-sky-400" />
           </div>
-          <div className="text-2xl font-black text-sky-400">±2g</div>
-          <div className="text-[11px] text-white/40 mt-1">Delta: {weightDelta > 0 ? `+${weightDelta}g` : `${weightDelta}g`}</div>
+          <div className="text-2xl font-black text-sky-400 font-mono">
+            {measuredWeightGrams}g
+          </div>
+          <div className="text-[11px] text-white/40 mt-1">
+            Delta: <span className={isWeightValid ? 'text-emerald-400' : 'text-rose-400'}>{weightDelta > 0 ? `+${weightDelta}g` : `${weightDelta}g`}</span> (Target {targetWeightGrams}g)
+          </div>
         </motion.div>
 
         <motion.div whileHover={{ y: -2 }} className="kpi-card p-5 rounded-2xl bg-white/[0.02] border border-white/10">
@@ -145,7 +193,7 @@ export default function VisionPage() {
             <span>Customer Dispute Drops</span>
             <Sparkles className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-400">-94%</div>
+          <div className="text-2xl font-black text-amber-400 font-mono">-94%</div>
           <div className="text-[11px] text-white/40 mt-1">Zero missing items reported</div>
         </motion.div>
       </div>
@@ -198,124 +246,197 @@ export default function VisionPage() {
             ))}
 
             <div className="absolute bottom-3 left-3 text-[11px] font-mono bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-white/80">
-              Detected: <span className="text-emerald-400 font-bold">{verifiedItems.length} SKUs</span> | Optical Confidence: <span className="text-purple-400 font-bold">99.4%</span>
+              BAG #1 · ORDER #{orderId}
+            </div>
+
+            <div className="absolute bottom-3 right-3 text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-500/30 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" />
+              <span>3/3 SKUs MATCHED</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-white/50 pt-2">
-            <span>Hardware: Hikvision 4K Overhead + Intel RealSense Depth Sensor</span>
-            <span className="text-emerald-400 font-mono">Model: DarkStoriYolo-v8s-INT8</span>
-          </div>
-        </div>
-
-        {/* Digital Scale & Packaging Reconciliation */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Scale className="w-4 h-4 text-purple-400" />
-              <span>Weight Scale Reconciliation</span>
-            </h2>
-            <span className="text-xs text-white/40 font-mono">Tolerance ±15g</span>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-white/60">Target Bag Weight:</span>
-                <span className="font-mono text-white font-bold">{targetWeightGrams} grams</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Measured Scale Reading:</span>
-                <span className="font-mono text-emerald-400 font-bold">{measuredWeightGrams} grams</span>
-              </div>
-              <div className="flex justify-between pt-2 border-t border-white/10">
-                <span className="text-white/60">Scale Variance:</span>
-                <span className={`font-mono font-bold ${isWeightValid ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {weightDelta > 0 ? `+${weightDelta}g` : `${weightDelta}g`} ({isWeightValid ? 'PASS' : 'FAIL'})
-                </span>
-              </div>
-            </div>
-
-            {/* Test Weight Slider */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-white/60">Simulate Scale Reading</span>
-                <span className="font-mono text-white">{measuredWeightGrams}g</span>
-              </div>
-              <input
-                type="range"
-                min="1200"
-                max="1280"
-                step="1"
-                value={measuredWeightGrams}
-                onChange={(e) => handleSimulateWeightChange(Number(e.target.value))}
-                className="w-full accent-purple-400 cursor-pointer"
-              />
-            </div>
-
-            {/* Verified SKU Checklist */}
-            <div className="space-y-2 pt-2">
-              <div className="font-semibold text-white">Item Checklist Reconciled:</div>
+          {/* Verified Items List */}
+          <div className="space-y-2 pt-2">
+            <div className="text-xs font-bold text-white/60 uppercase tracking-wider">Detected SKUs in Order Bag</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {verifiedItems.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-white">{item.name}</span>
+                <div key={item.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-semibold text-white truncate max-w-[140px]">{item.name}</div>
+                    <div className="text-[10px] text-emerald-400 font-mono">{(item.confidence * 100).toFixed(1)}% match</div>
                   </div>
-                  <span className="font-mono text-purple-300">x{item.count}</span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                    x{item.count}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Dual-Gauge Weight Verification Console */}
+        <div className="lg:col-span-5 p-6 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Scale className="w-4 h-4 text-sky-400" />
+                <span>Dual-Gauge Weight Verification</span>
+              </h2>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-mono font-bold ${
+                isWeightValid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+              }`}>
+                {isWeightValid ? 'PASS (±15g)' : 'MISMATCH'}
+              </span>
+            </div>
+
+            {/* Live Dual Gauge Visualizer */}
+            <div className="mt-6 p-5 rounded-xl bg-black/40 border border-white/10 space-y-4">
+              <div className="flex items-center justify-between text-xs text-white/60">
+                <span>Target Blueprint Weight:</span>
+                <span className="font-mono text-white font-bold">{targetWeightGrams} g</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-white/60">
+                <span>Live Scale Measurement:</span>
+                <span className="font-mono text-sky-400 font-bold text-lg">{measuredWeightGrams} g</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-white/60">
+                <span>Delta Variance:</span>
+                <span className={`font-mono font-bold ${isWeightValid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {weightDelta > 0 ? `+${weightDelta} g` : `${weightDelta} g`}
+                </span>
+              </div>
+
+              {/* Graphical Tolerance Bar */}
+              <div className="space-y-1.5 pt-2">
+                <div className="flex justify-between text-[10px] font-mono text-white/40">
+                  <span>-30g</span>
+                  <span className="text-emerald-400">Target (0g)</span>
+                  <span>+30g</span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-800 relative overflow-hidden">
+                  <div className="absolute inset-y-0 left-1/4 right-1/4 bg-emerald-500/20 border-x border-emerald-500/40" />
+                  <div
+                    className={`h-full transition-all duration-300 ${isWeightValid ? 'bg-emerald-400' : 'bg-rose-500'}`}
+                    style={{
+                      width: '6px',
+                      position: 'absolute',
+                      left: `clamp(0%, ${50 + (weightDelta / 30) * 50}%, 100%)`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Simulation Slider for Desk Testing */}
+            <div className="mt-5 space-y-2">
+              <div className="flex justify-between text-xs text-white/60">
+                <span>Manual Weight Tuning Slider (g)</span>
+                <span className="font-mono text-purple-300">{measuredWeightGrams} g</span>
+              </div>
+              <input
+                type="range"
+                min={targetWeightGrams - 35}
+                max={targetWeightGrams + 35}
+                value={measuredWeightGrams}
+                onChange={(e) => handleSimulateWeightChange(parseInt(e.target.value, 10))}
+                className="w-full accent-purple-500 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-white/40">
+                <button
+                  onClick={() => handleSimulateWeightChange(targetWeightGrams)}
+                  className="hover:text-emerald-400 underline cursor-pointer"
+                >
+                  Snap to Exact Match (1238g)
+                </button>
+                <button
+                  onClick={() => handleSimulateWeightChange(targetWeightGrams + 28)}
+                  className="hover:text-rose-400 underline cursor-pointer"
+                >
+                  Simulate Overweight (+28g)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
+            <span className="flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-purple-400" />
+              <span>Station: {stationCode}</span>
+            </span>
+            <span className="font-mono text-white/80">ESC/POS Thermal Auto-Ready</span>
+          </div>
+        </div>
       </div>
 
-      {/* Customer Quality Passport Modal */}
-      {passportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md p-6 rounded-2xl bg-[#0E131F] border border-white/15 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-purple-400" />
-                <span>Zero-Defect Quality Passport</span>
-              </h3>
-              <button onClick={() => setPassportModalOpen(false)} className="text-white/40 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl bg-black/60 border border-white/10 text-center space-y-3">
-              <div className="w-28 h-28 mx-auto bg-white p-2 rounded-xl flex items-center justify-center">
-                <QrCode className="w-full h-full text-black" />
-              </div>
-              <div className="text-xs font-mono font-bold text-purple-300">{activePassportQr}</div>
-              <div className="text-[11px] text-white/50">
-                Cryptographically verifiable proof of packing for order <strong>{orderId}</strong>
-              </div>
-            </div>
-
-            <div className="text-xs text-white/70 space-y-1 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-              <div><strong>Dock Station:</strong> {stationCode}</div>
-              <div><strong>Packer ID:</strong> PK-RAMESH-204</div>
-              <div><strong>Verified Weight:</strong> {measuredWeightGrams}g (Tolerance Passed)</div>
-              <div><strong>SHA-256 Hash:</strong> <code className="text-[10px] text-white/40">a7f29c...8b1e</code></div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+      {/* 4. QUALITY PASSPORT MODAL */}
+      <AnimatePresence>
+        {passportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0E131F] border border-emerald-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl relative space-y-4"
+            >
               <button
                 onClick={() => setPassportModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-bold text-xs"
+                className="absolute top-4 right-4 text-white/50 hover:text-white p-1 rounded-lg"
               >
-                Close Passport
+                <X className="w-5 h-5" />
               </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+
+              <div className="flex items-center gap-3">
+                <span className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <ShieldCheck className="w-6 h-6" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Cryptographic Quality Passport</h3>
+                  <div className="text-xs text-emerald-400 font-mono">{activePassportQr}</div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2 text-xs text-white/80 font-mono">
+                <div className="flex justify-between">
+                  <span className="text-white/50">ORDER ID:</span>
+                  <span className="text-white font-bold">{orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">OPTICAL AUDIT:</span>
+                  <span className="text-emerald-400">3/3 SKUs VERIFIED (YOLOv8)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">WEIGHT STAMP:</span>
+                  <span className="text-sky-300">{measuredWeightGrams}g (Delta {weightDelta}g)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">DISPATCH STATUS:</span>
+                  <span className="text-amber-400 font-bold">READY FOR RIDER PICKUP</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    toast.success('ESC/POS 58mm Thermal Shipping Label printed!');
+                    setPassportModalOpen(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Thermal Label</span>
+                </button>
+                <button
+                  onClick={() => setPassportModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
