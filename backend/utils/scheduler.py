@@ -362,7 +362,7 @@ class BackgroundScheduler:
                     staff_msg = f"Recommended Rider Staffing: {store.staff_count + extra_riders} (Add +{extra_riders} riders)." if extra_riders > 0 else f"Recommended Rider Staffing: Normal ({store.staff_count} riders)."
 
                     brief = (
-                        f"*[Darkstori Morning Brief]* 📦\n"
+                        f"*[Darkstor Morning Brief]* 📦\n"
                         f"Store: {store.store_name} ({store.platform})\n"
                         f"Weather: {weather_msg}\n"
                         f"Local Events:{events_msg or ' None.'}\n"

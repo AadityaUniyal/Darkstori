@@ -1,702 +1,516 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  MapPin,
-  Clock,
   ShieldCheck,
   Zap,
-  Activity,
   Layers,
   ChevronRight,
-  Cpu,
   BarChart3,
   CheckCircle2,
   Truck,
   Building2,
   Compass,
-  Database,
-  Maximize2,
-  Scan,
-  ThermometerSnowflake,
-  Navigation,
   Sparkles,
-  Eye,
   AlertTriangle,
-  GitBranch
+  Clock,
+  TrendingUp,
+  Boxes,
+  Lock,
+  ArrowUpRight
 } from 'lucide-react';
-import AmbientBackground from '../components/AmbientBackground';
-import LazyMapView from '../components/LazyMapView';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../context/RoleContext';
-import { useCity } from '../context/CityContext';
 import './LandingPage.css';
-
-const CITY_STORE_COUNTS = {
-  Bangalore: 116,
-  Mumbai: 56,
-  Delhi: 61,
-  Hyderabad: 40,
-  Pune: 38,
-  Chennai: 28,
-  Kolkata: 20,
-  Ahmedabad: 20,
-  Jaipur: 8,
-  Lucknow: 8,
-  Chandigarh: 8,
-  Kochi: 8
-};
-
-const ADVANCED_CAPABILITIES = [
-  {
-    id: 'spatial',
-    title: 'Spatial Catchment & Greenfield Placement',
-    badge: 'Huff Gravity & Voronoi Engine',
-    problem: 'Arbitrary postal-code store placement leads to 34% internal cannibalization while competitors capture high-velocity demand corridors.',
-    solution: 'Topological road network graphs evaluate population density, real road travel time, and competitor proximity (Blinkit, Zepto, Instamart) across 12 Indian metros to identify whitespace clusters with sub-10 minute catchment viability.',
-    metric: '95.9% R² Placement Accuracy',
-    icon: Compass,
-    accent: 'amber'
-  },
-  {
-    id: 'wms',
-    title: 'Sub-120s Intralogistics Floor WMS',
-    badge: 'TSP Directed Batch Wave Routing',
-    problem: 'In 1.2m narrow aisles during peak evening surges, pickers walk 4.8 km per shift, with floor congestion breaching the 10-minute SLA before couriers depart.',
-    solution: 'Algorithmic Traveling Salesperson Problem (TSP) multi-order wave batching coupled with 3D Golden-Zone vertical velocity slotting directs pickers along continuous single-pass paths, reducing walking distance by 74%.',
-    metric: '42s Pick + 35s Pack SLA',
-    icon: Layers,
-    accent: 'emerald'
-  },
-  {
-    id: 'vision',
-    title: 'VisionPack™ Edge Computer Vision Gate',
-    badge: 'Real-Time Neural Verification',
-    problem: 'Severe return rates, missing items, and broken packaging caused by human pickers rushing barcode scans under extreme dispatch time pressure.',
-    solution: 'Edge neural network inference trained on 25,000+ Indian FMCG packaging variations verifies basket completeness, detects packaging defects or swelling, and cryptographically signs Proof-of-Pack in under 800ms.',
-    metric: '99.8% Packaging Accuracy',
-    icon: Eye,
-    accent: 'cyan'
-  },
-  {
-    id: 'halo',
-    title: 'Dynamic Non-Euclidean Delivery Halos',
-    badge: 'Topological Weather & Traffic Impedance',
-    problem: 'Static circular radii fail against Indian urban realities—monsoon waterlogging, railway level crossings, and gated colony access chokepoints.',
-    solution: 'Dynamic A* road impedance graphs automatically contract and reshape delivery perimeters during heavy rainfall and traffic surges, safeguarding rider safety while guaranteeing strict 10-minute arrival SLAs.',
-    metric: 'Sub-2.0 km Dynamic Halos',
-    icon: Navigation,
-    accent: 'blue'
-  },
-  {
-    id: 'coldchain',
-    title: 'Autonomous Shelf-Life Decay & Cold Chain',
-    badge: 'Sigmoid Dynamic Markdown & IoT',
-    problem: 'Dark stores lose 8–14% of gross margins to perishable dairy/produce spoilage and undetected cold-chain temperature excursions.',
-    solution: 'Continuous non-linear Sigmoid markdown pricing automatically discounts expiring batches to achieve zero inventory write-offs, synchronized with continuous HACCP IoT temperature telemetry (3.8°C dairy, -18°C frozen).',
-    metric: 'Zero Perishable Waste Target',
-    icon: ThermometerSnowflake,
-    accent: 'purple'
-  }
-];
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, demoLogin } = useAuth();
-  const { setRole } = useRole();
-  const { selectedCity, setSelectedCity, cities } = useCity();
-  const [activeTab, setActiveTab] = useState('spatial');
+  const { user } = useAuth();
+  const { activeRole, setRole } = useRole();
 
-  useEffect(() => {
-    if (!selectedCity) setSelectedCity('Bangalore');
-  }, [selectedCity, setSelectedCity]);
-
-  // IST Real-Time Clock
-  const [istTime, setIstTime] = useState('');
-  useEffect(() => {
-    const updateTime = () => {
-      try {
-        setIstTime(new Intl.DateTimeFormat('en-IN', {
-          timeZone: 'Asia/Kolkata',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        }).format(new Date()));
-      } catch {
-        setIstTime('15:30:00');
-      }
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleLaunch = async (role = 'executive', path = '/cockpit') => {
-    setRole(role);
-    if (isAuthenticated) {
-      navigate(path);
+  const handleLaunch = (roleId = 'executive') => {
+    setRole(roleId);
+    if (user) {
+      navigate('/dashboard');
     } else {
-      try {
-        await demoLogin({
-          id: role,
-          role: role,
-          title: role === 'executive' ? 'Executive Director' : (role === 'store-gm' ? 'General Manager' : 'Operations Lead'),
-          city: selectedCity || 'Bangalore'
-        });
-        navigate(path);
-      } catch {
-        navigate(path);
-      }
+      navigate('/login');
     }
   };
 
-  const currentCapability = ADVANCED_CAPABILITIES.find(c => c.id === activeTab) || ADVANCED_CAPABILITIES[0];
-
   return (
-    <div className="apple-landing-root">
-      <AmbientBackground />
+    <div className="darkstor-landing-page">
+      {/* 1. TOP ENTERPRISE NAVIGATION */}
+      <header className="darkstor-nav-header">
+        <div className="nav-container max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="brand-logo-mark">
+              <span className="logo-symbol">◆</span>
+            </div>
+            <span className="brand-title tracking-tight text-xl font-bold text-white">
+              Darkstor
+            </span>
+            <span className="brand-pill text-xs uppercase tracking-wider px-2.5 py-0.5 rounded-full font-medium">
+              Enterprise OS
+            </span>
+          </div>
 
-      {/* 1. APPLE-GRADE REFINED NAVIGATION */}
-      <header className="apple-nav-header">
-        <div className="apple-nav-container">
-          <Link to="/" className="apple-brand-logo">
-            <span className="brand-symbol">◆</span>
-            <span className="brand-title">DarkStori</span>
-          </Link>
-
-          <nav className="apple-nav-links">
-            <Link to="/cockpit">Spatial Intelligence</Link>
-            <Link to="/floor">Floor Operations</Link>
-            <Link to="/network">Fleet & Infrastructure</Link>
-            <Link to="/dashboard">Command Center</Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/70">
+            <a href="#problem" className="hover:text-white transition-colors">The Problem</a>
+            <a href="#story" className="hover:text-white transition-colors">The Story</a>
+            <a href="#what-we-are" className="hover:text-white transition-colors">What We Are</a>
+            <a href="#roles" className="hover:text-white transition-colors">Operational Lenses</a>
           </nav>
 
-          <div className="apple-nav-actions">
-            <div className="nav-noc-status" title="Operations Command Control">
-              <span className="live-ping" />
-              <span className="noc-text">BLR NOC • {istTime || '15:30'} IST</span>
-            </div>
-
-            <button
-              onClick={() => handleLaunch('executive', '/cockpit')}
-              className="btn-primary-nav"
+          <div className="flex items-center gap-4">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-white/80 hover:text-white px-3 py-2 transition-colors"
             >
-              <span>{isAuthenticated ? 'Open Operating System' : 'Launch Platform'}</span>
-              <ArrowRight size={14} />
+              Sign In
+            </Link>
+            <button
+              onClick={() => handleLaunch('executive')}
+              className="launch-button-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg cursor-pointer"
+            >
+              <span>Launch Console</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="apple-hero-section pt-32 pb-20">
-        <div className="hero-story-container max-w-5xl mx-auto px-6 text-center">
+      <section className="darkstor-hero-section relative pt-28 pb-20 overflow-hidden">
+        <div className="hero-glow-backdrop" />
+        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="hero-badge-wrap inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 mb-8"
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-xs font-mono font-medium tracking-wide text-white/80">
-              Autonomous Intralogistics Operating System
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="text-xs uppercase tracking-widest text-white/90 font-semibold">
+              Introducing Darkstor
             </span>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.08]"
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="hero-headline text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight sm:leading-none mb-6"
           >
-            The Architecture of<br />
-            <span className="bg-gradient-to-r from-white via-slate-200 to-amber-300 bg-clip-text text-transparent">
-              10-Minute Commerce.
-            </span>
+            Sub-10-Minute Delivery Built on <span className="highlight-text">Mathematical Order</span>, Not Operational Chaos.
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-lg md:text-xl text-white/60 max-w-3xl mx-auto mt-6 leading-relaxed font-normal"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="hero-subtext text-lg sm:text-xl text-white/70 max-w-3xl mx-auto font-normal leading-relaxed mb-10"
           >
-            Quick-commerce is won inside the four walls of high-density micro-warehouses. DarkStori unifies spatial catchment intelligence, sub-120 second floor dispatch, and real-time edge computer vision into an integrated operating system.
+            Quick-commerce is redefining retail, but negative unit economics, chaotic store floors,
+            and blind rider dispatch threaten the entire industry. Darkstor is the unified operating system
+            engineering resilience, micro-warehouse speed, and sustainable profitability across your dark store network.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-10 flex flex-wrap gap-4 justify-center items-center"
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <button
-              onClick={() => handleLaunch('executive', '/cockpit')}
-              className="px-7 py-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm shadow-xl shadow-amber-500/15 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+              onClick={() => handleLaunch('executive')}
+              className="enter-platform-btn w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-xl text-base font-bold text-black transition-all shadow-2xl cursor-pointer"
             >
-              <span>Launch Operating System</span>
-              <ArrowRight size={15} />
+              <span>Enter Darkstor Platform</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => handleLaunch('executive', '/cockpit')}
-              className="px-7 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/15 font-medium text-sm transition-all flex items-center gap-2"
+            <a
+              href="#problem"
+              className="view-story-btn w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold text-white/80 hover:text-white border border-white/10 hover:border-white/20 transition-all bg-white/5 cursor-pointer"
             >
-              <Compass size={15} className="text-amber-400" />
-              <span>Explore Spatial Intelligence</span>
-            </button>
+              <span>The Problem & Story</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
           </motion.div>
 
-          {/* Institutional Telemetry Strip */}
-          <div className="mt-14 flex flex-wrap items-center justify-center gap-8 text-xs text-white/60 font-mono">
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              12 Mapped Indian Metros
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Sub-120s Dispatch Cadence
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              2.0 km Catchment Halos
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              95.9% Placement Model Precision
-            </span>
+          {/* Quick Metrics Bar */}
+          <div className="hero-metrics-grid mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-white/10 text-left">
+            <div className="metric-box p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="metric-num text-2xl font-bold text-amber-400">sub-60s</div>
+              <div className="metric-label text-xs text-white/60 uppercase tracking-wider mt-1">Pick-to-Bag Time</div>
+            </div>
+            <div className="metric-box p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="metric-num text-2xl font-bold text-emerald-400">99.4%</div>
+              <div className="metric-label text-xs text-white/60 uppercase tracking-wider mt-1">SLA Adherence Rate</div>
+            </div>
+            <div className="metric-box p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="metric-num text-2xl font-bold text-purple-400">Zero</div>
+              <div className="metric-label text-xs text-white/60 uppercase tracking-wider mt-1">Unplanned Cannibalization</div>
+            </div>
+            <div className="metric-box p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="metric-num text-2xl font-bold text-sky-400">+4.2%</div>
+              <div className="metric-label text-xs text-white/60 uppercase tracking-wider mt-1">EBITDA Margin Delta</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 3. INTERACTIVE SPATIAL GRID & UNIT ECONOMICS ENGINE */}
-      <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-2xl shadow-2xl relative overflow-hidden">
-          {/* Top Bar with Metro Selection */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-amber-500/15 text-amber-400 border border-amber-500/25 uppercase tracking-wider">
-                  Live Spatial Network
-                </span>
-                <span className="text-xs text-white/40 font-mono">Connected Across 12 Indian Metros</span>
+      {/* 3. THE PROBLEM SECTION */}
+      <section id="problem" className="darkstor-section py-24 bg-white/[0.01] border-t border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold uppercase tracking-wider mb-4">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              The Quick-Commerce Crisis
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+              Sub-10 Minutes is a Masterclass in Customer Love, and an Operational Nightmare.
+            </h2>
+            <p className="text-white/60 text-base leading-relaxed">
+              Behind the glossy consumer promise lies a fragile web of micro-fulfillment friction.
+              Without mathematical precision, quick commerce networks bleed capital at every node.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="problem-card p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-red-500/30 transition-all">
+              <div className="problem-icon w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 mb-5 font-bold text-lg">
+                01
               </div>
-              <h2 className="text-2xl md:text-3xl font-semibold text-white mt-2 tracking-tight">
-                Pan-India Dark Store Grid & Feasibility Map
-              </h2>
-              <p className="text-xs text-white/60 mt-1 max-w-2xl">
-                Inspect physical fulfillment centers, active 2.0 km delivery halos, and competitor density across India.
+              <h3 className="text-lg font-bold text-white mb-2">Unit Economics Collapse</h3>
+              <p className="text-sm text-white/60 leading-relaxed">
+                When average order values stay modest while rider delivery payouts and picking wages rise,
+                blended profit metrics mask dark stores that lose money on every single package dispatched.
               </p>
             </div>
 
-            <button
-              onClick={() => handleLaunch('executive', '/cockpit')}
-              className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-white flex items-center gap-2 self-start md:self-auto transition-all"
-            >
-              <Maximize2 size={13} className="text-amber-400" />
-              <span>Full-Screen Cockpit</span>
-            </button>
-          </div>
-
-          {/* 12-City Selector Pills */}
-          <div className="py-4 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-white/[0.06]">
-            {(cities || []).map((city) => {
-              const isSelected = selectedCity === city;
-              const count = CITY_STORE_COUNTS[city] || 8;
-              return (
-                <button
-                  key={city}
-                  onClick={() => setSelectedCity(city)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
-                    isSelected
-                      ? 'bg-amber-500 text-black font-semibold shadow-md shadow-amber-500/10'
-                      : 'bg-white/[0.03] hover:bg-white/[0.06] text-white/70 hover:text-white border border-white/[0.06]'
-                  }`}
-                >
-                  <span>{city}</span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-white/50'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Map + Feasibility Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6">
-            {/* 3-Column Tactical Map */}
-            <div className="lg:col-span-3 rounded-2xl overflow-hidden border border-white/10 relative shadow-inner bg-[#07090E]">
-              <LazyMapView
-                height="480px"
-                zoom={12}
-                showHeatmap={true}
-              />
-              <div className="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-lg bg-black/85 backdrop-blur-md border border-white/10 text-[11px] text-white/70 font-mono flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Active Hub: <strong>{selectedCity}</strong> ({CITY_STORE_COUNTS[selectedCity] || 8} stores)</span>
-                <span className="text-white/30">•</span>
-                <span className="text-amber-400">Halo: 2.0 km / 10-Min</span>
+            <div className="problem-card p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-all">
+              <div className="problem-icon w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 mb-5 font-bold text-lg">
+                02
               </div>
+              <h3 className="text-lg font-bold text-white mb-2">Chaotic Micro-Floors</h3>
+              <p className="text-sm text-white/60 leading-relaxed">
+                Racking layouts arranged arbitrarily force pickers to walk crisscrossing, serpentine paths.
+                Aisles get congested, fresh produce is damaged, and pick-to-bag times blow past 150 seconds.
+              </p>
             </div>
 
-            {/* 1-Column Unit Economics Engine Card */}
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col justify-between space-y-4">
+            <div className="problem-card p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-purple-500/30 transition-all">
+              <div className="problem-icon w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-5 font-bold text-lg">
+                03
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Blind Cannibalization</h3>
+              <p className="text-sm text-white/60 leading-relaxed">
+                Opening new dark stores based on simple radius circles or postal codes cannibalizes your own
+                profitable stores, splitting order density and duplicating fixed warehouse overheads.
+              </p>
+            </div>
+
+            <div className="problem-card p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-blue-500/30 transition-all">
+              <div className="problem-icon w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-5 font-bold text-lg">
+                04
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Unforgiving Shocks</h3>
+              <p className="text-sm text-white/60 leading-relaxed">
+                A sudden 25mm rainstorm, grid power failure, or festival demand spike collapses delivery times
+                to 45 minutes, damages brand reputation, and leaves fleets paralyzed without automated protocols.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. THE STORY SECTION */}
+      <section id="story" className="darkstor-section py-24 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-6">
+            <Sparkles className="w-3.5 h-3.5" />
+            The Origin of Darkstor
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-8">
+            Built from the Warehouse Floor, Not from an Ivory Tower.
+          </h2>
+
+          <div className="story-content text-base sm:text-lg text-white/70 space-y-6 leading-relaxed">
+            <p>
+              In dense urban corridors across India and Southeast Asia, dark store managers were fighting an impossible daily battle.
+              Operating in 2,500-square-foot storefronts converted into micro-warehouses, they managed 3,000 daily orders across 4,000 SKUs,
+              relying on walkie-talkies, handwritten packing slips, and intuition to keep up with the timer ticking down from 10 minutes.
+            </p>
+            <p>
+              Meanwhile, corporate executive suites saw conflicting reports. Regional growth dashboards claimed exponential volume,
+              yet net margins were evaporating under excessive rider incentives, spoiled milk and perishables, and runaway real estate leases.
+            </p>
+            <blockquote className="my-8 pl-6 border-l-2 border-amber-400 text-white font-medium text-lg sm:text-xl italic">
+              "We realized quick-commerce didn’t need another generic BI dashboard. It needed an intelligent nervous system
+              connecting real estate physics, micro-warehouse ergonomics, and rider dispatch into an integrated closed loop."
+            </blockquote>
+            <p>
+              That realization became <strong className="text-white">Darkstor</strong>.
+              We engineered a system where spatial gravity models protect against self-cannibalization,
+              shelf slotting algorithms guide pickers to sub-45-second bag seals, and automated playbooks
+              instantly contract delivery radiuses the second a monsoon downpour begins.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. WHAT WE ARE SECTION */}
+      <section id="what-we-are" className="darkstor-section py-24 bg-white/[0.01] border-t border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              What Darkstor Is
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+              The Intelligent Operating System for Quick-Commerce Dark Store Networks.
+            </h2>
+            <p className="text-white/60 text-base leading-relaxed">
+              Darkstor is not a simulation or a prototype. It is the comprehensive operational platform
+              powering high-throughput micro-fulfillment across four interconnected pillars.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="feature-pillar-card p-8 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono font-medium text-amber-400 uppercase tracking-wider">
-                    Unit Economics Engine
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-mono">CALCULATED</span>
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-6">
+                  <Compass className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-semibold text-white mt-1">
-                  {selectedCity} Micro-Warehouse Benchmark
-                </h3>
-                <p className="text-xs text-white/50 mt-1">
-                  Algorithmic placement model for regional store owners and franchisees.
+                <h3 className="text-xl font-bold text-white mb-3">1. Spatial Catchment & Site Selection</h3>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Replaces gut-feel store openings with scientific road network topology, Huff gravity catchment models,
+                  and automated cannibalization scoring against existing stores and competitors (Zepto, Blinkit, Instamart).
                 </p>
+              </div>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                <span>Feature 01: Expansion Cockpit</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
 
-                <div className="mt-4 space-y-3">
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <div className="text-[11px] text-white/50 font-mono">ESTIMATED CAPEX</div>
-                    <div className="text-lg font-semibold text-white mt-0.5">₹21.50 Lakhs</div>
-                    <div className="text-[10px] text-white/40">Racking, cold chain, 4x IoT terminals</div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <div className="text-[11px] text-white/50 font-mono">MONTHLY OPEX</div>
-                    <div className="text-lg font-semibold text-amber-400 mt-0.5">₹1.45 Lakhs/mo</div>
-                    <div className="text-[10px] text-white/40">Lease (2,200 sqft), 6 pickers, power</div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                      <div className="text-[10px] text-white/50 font-mono">DAILY CAPACITY</div>
-                      <div className="text-sm font-semibold text-white mt-0.5">850–1,200</div>
-                      <div className="text-[9px] text-white/40">Orders/day</div>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                      <div className="text-[10px] text-white/50 font-mono">PAYBACK</div>
-                      <div className="text-sm font-semibold text-emerald-400 mt-0.5">4.2 Months</div>
-                      <div className="text-[9px] text-white/40">At ₹42 margin/ord</div>
-                    </div>
-                  </div>
+            <div className="feature-pillar-card p-8 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-6">
+                  <Layers className="w-6 h-6" />
                 </div>
+                <h3 className="text-xl font-bold text-white mb-3">2. Micro-Warehouse Floor Digital Twin</h3>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Configures optimal racking layouts, dynamic aisle heatmaps, and "Golden Zone" shelf allocations
+                  that place top-velocity SKUs at eye level adjacent to packing stations to slash picker walking paths.
+                </p>
               </div>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                <span>Feature 03: Floor Mode & Layout</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
 
-              <div className="pt-2">
-                <button
-                  onClick={() => handleLaunch('executive', '/cockpit')}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold transition-all shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5"
-                >
-                  <span>Evaluate Site in {selectedCity}</span>
-                  <ArrowRight size={13} />
-                </button>
+            <div className="feature-pillar-card p-8 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+                  <Truck className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">3. Autonomous Rider Swarm Dispatch</h3>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Solves dynamic vehicle routing with real-time order batching, pairing dense apartment deliveries
+                  to maximize drops per rider while preserving unbreakable 10-minute delivery SLA commitments.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <span>Feature 04: Rider Swarm & SLA</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="feature-pillar-card p-8 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-6">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">4. Unit Economics & EBITDA Simulator</h3>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Reveals store-by-store Contribution Margin 1, 2, and 3 down to the individual delivery drop,
+                  tracking rider payouts, picker seconds, rent overheads, and shrinkage tolerances.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-sky-400 uppercase tracking-wider">
+                <span>Feature 07: EBITDA & Unit Economics</span>
+                <ArrowUpRight className="w-4 h-4" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. THE CORE PROBLEM: THE THREE STRUCTURAL FAILURE POINTS */}
-      <section className="py-24 px-6 max-w-6xl mx-auto border-t border-white/[0.06]">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-medium uppercase tracking-widest text-amber-400">The Problem</span>
-          <h2 className="text-3xl md:text-5xl font-semibold text-white mt-3 tracking-tight">
-            The 10-Minute Delivery Illusion.
-          </h2>
-          <p className="text-base text-white/60 mt-4 leading-relaxed font-normal">
-            Quick-commerce operators burn millions in capital by treating micro-fulfillment like traditional retail. The bottlenecks are mathematical, spatial, and physical.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] backdrop-blur-xl relative overflow-hidden group hover:border-red-500/30 transition-all">
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center font-mono font-semibold text-sm mb-6">
-              01
+      {/* 6. OPERATIONAL ROLES & WORKFLOWS */}
+      <section id="roles" className="darkstor-section py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-4">
+              <Boxes className="w-3.5 h-3.5" />
+              Dedicated Operational Lenses
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">The Spreadsheet Fallacy</h3>
-            <p className="text-sm text-white/60 leading-relaxed font-normal">
-              Opening dark stores based on postal codes causes up to 34% cannibalization of your own stores, while Blinkit and Zepto carve out high-density order clusters.
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+              Three Specialized Views. Zero Clutter.
+            </h2>
+            <p className="text-white/60 text-base leading-relaxed">
+              An Executive Strategist does not need picker aisle heatmaps, and a Dark Store General Manager
+              does not need city-wide CapEx models. Darkstor adapts its entire navigation, telemetry,
+              and color palette to the active role.
             </p>
-            <div className="mt-6 pt-4 border-t border-white/[0.04] text-xs font-mono text-red-400">
-              Impact: Negative store-level contribution margin.
-            </div>
           </div>
 
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] backdrop-blur-xl relative overflow-hidden group hover:border-amber-500/30 transition-all">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-mono font-semibold text-sm mb-6">
-              02
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">The Floor Congestion Trap</h3>
-            <p className="text-sm text-white/60 leading-relaxed font-normal">
-              During 7 PM surges, pickers walk 4.8 km per shift in narrow 1.2m aisles. 42 seconds spent searching for displaced milk crates breaches the 10-minute SLA before the rider departs.
-            </p>
-            <div className="mt-6 pt-4 border-t border-white/[0.04] text-xs font-mono text-amber-400">
-              Impact: 78% of late deliveries originate inside the hub.
-            </div>
-          </div>
-
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] backdrop-blur-xl relative overflow-hidden group hover:border-purple-500/30 transition-all">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-mono font-semibold text-sm mb-6">
-              03
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">The Asphalt Blame Game</h3>
-            <p className="text-sm text-white/60 leading-relaxed font-normal">
-              Blaming 2-wheeler couriers for delays ignores real-world Indian urban realities: waterlogged flyovers, railway level crossings, and unmapped gated colony gates.
-            </p>
-            <div className="mt-6 pt-4 border-t border-white/[0.04] text-xs font-mono text-purple-400">
-              Impact: Severe courier safety risks and customer churn.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. ADVANCED ARCHITECTURAL CAPABILITIES (LOGIC & TRAINING SOLVING REAL PROBLEMS) */}
-      <section className="py-24 px-6 max-w-6xl mx-auto border-t border-white/[0.06]">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-medium uppercase tracking-widest text-emerald-400">Core Systems</span>
-          <h2 className="text-3xl md:text-5xl font-semibold text-white mt-3 tracking-tight">
-            Advanced Operational Intelligence.
-          </h2>
-          <p className="text-base text-white/60 mt-4 leading-relaxed font-normal">
-            Five purpose-built intralogistics engines engineered to solve the mathematical and physical bottlenecks of rapid urban fulfillment.
-          </p>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pb-8">
-          {ADVANCED_CAPABILITIES.map((cap) => {
-            const Icon = cap.icon;
-            const isActive = activeTab === cap.id;
-            return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Executive Role */}
+            <div className="role-lens-card p-8 rounded-2xl bg-gradient-to-b from-[#F59E0B]/5 to-transparent border border-[#F59E0B]/20 flex flex-col justify-between">
+              <div>
+                <div className="role-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F59E0B]/10 text-[#F59E0B] text-xs font-bold uppercase tracking-wider mb-6">
+                  C-Suite & Growth
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Executive Lens</h3>
+                <p className="text-xs text-[#F59E0B] font-mono mb-4">Chromatic Accent: Liquid Amber Gold</p>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Designed for Chief Operating Officers, Expansion Heads, and Finance Directors. Focuses on network EBITDA,
+                  competitor encroachment, capital expenditure payback, and greenfield site approvals.
+                </p>
+                <ul className="space-y-2.5 text-xs text-white/70 mb-8">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#F59E0B]" />
+                    <span>Catchment Isochrone Modeling</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#F59E0B]" />
+                    <span>Unit Economics Contribution 1/2/3</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#F59E0B]" />
+                    <span>Competitor Price Radar & Parity</span>
+                  </li>
+                </ul>
+              </div>
               <button
-                key={cap.id}
-                onClick={() => setActiveTab(cap.id)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-white/10 text-white border border-white/20 shadow-lg'
-                    : 'bg-white/[0.02] text-white/50 hover:text-white/80 hover:bg-white/[0.05] border border-white/[0.05]'
-                }`}
+                onClick={() => handleLaunch('executive')}
+                className="w-full py-3 rounded-xl bg-[#F59E0B] text-black font-bold text-sm hover:brightness-110 transition-all cursor-pointer"
               >
-                <Icon size={14} className={isActive ? 'text-amber-400' : 'text-white/40'} />
-                <span>{cap.title}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active Capability Deep Dive Card */}
-        <div className="p-8 md:p-12 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-8 border-b border-white/[0.06]">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full text-[11px] font-mono font-medium bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                  {currentCapability.badge}
-                </span>
-                <span className="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 size={13} />
-                  {currentCapability.metric}
-                </span>
-              </div>
-              <h3 className="text-2xl md:text-3xl font-semibold text-white mt-3">
-                {currentCapability.title}
-              </h3>
-            </div>
-
-            <button
-              onClick={() => handleLaunch('executive', activeTab === 'wms' ? '/floor' : (activeTab === 'spatial' ? '/cockpit' : (activeTab === 'halo' ? '/network' : '/dashboard')))}
-              className="px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-amber-500 hover:text-black border border-white/10 text-xs font-semibold text-white flex items-center gap-2 self-start lg:self-auto transition-all"
-            >
-              <span>Explore Engine</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
-            <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.05]">
-              <div className="flex items-center gap-2 text-xs font-mono text-red-400 mb-3">
-                <AlertTriangle size={14} />
-                <span>THE STRUCTURAL BOTTLENECK</span>
-              </div>
-              <p className="text-sm text-white/70 leading-relaxed font-normal">
-                {currentCapability.problem}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white/[0.015] border border-white/[0.05]">
-              <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 mb-3">
-                <Sparkles size={14} />
-                <span>DARKSTORI ADVANCED LOGIC & INFERENCE</span>
-              </div>
-              <p className="text-sm text-white/70 leading-relaxed font-normal">
-                {currentCapability.solution}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. FOUR UNIFIED OPERATIONAL WORKSPACES */}
-      <section className="py-24 px-6 max-w-6xl mx-auto border-t border-white/[0.06]">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-medium uppercase tracking-widest text-cyan-400">Integrated Platform</span>
-          <h2 className="text-3xl md:text-5xl font-semibold text-white mt-3 tracking-tight">
-            Four Dedicated Workspaces.
-          </h2>
-          <p className="text-base text-white/60 mt-4 leading-relaxed font-normal">
-            Tailored interfaces engineered for each operational responsibility across the fulfillment lifecycle.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Workspace 1: Cockpit */}
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-amber-500/30 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                  WORKSPACE 01
-                </span>
-                <Compass className="text-amber-400" size={18} />
-              </div>
-              <h3 className="text-xl font-semibold text-white">Expansion & Greenfield Cockpit</h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed font-normal">
-                Street-level geospatial intelligence, Huff gravity cannibalization modeling, reverse geocoding, and automated CapEx/OpEx payback models for 12 Indian metros.
-              </p>
-            </div>
-            <div className="pt-6">
-              <button
-                onClick={() => handleLaunch('executive', '/cockpit')}
-                className="w-full py-2.5 rounded-xl bg-white/[0.04] hover:bg-amber-500 hover:text-black border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
-              >
-                <span>Launch Expansion Cockpit</span>
-                <ArrowRight size={13} />
+                Launch Executive Lens
               </button>
             </div>
-          </div>
 
-          {/* Workspace 2: Dashboard */}
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-blue-500/30 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-blue-500/15 text-blue-400 border border-blue-500/25">
-                  WORKSPACE 02
-                </span>
-                <Activity className="text-blue-400" size={18} />
+            {/* Store GM Role */}
+            <div className="role-lens-card p-8 rounded-2xl bg-gradient-to-b from-[#8B5CF6]/5 to-transparent border border-[#8B5CF6]/20 flex flex-col justify-between">
+              <div>
+                <div className="role-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8B5CF6]/10 text-[#8B5CF6] text-xs font-bold uppercase tracking-wider mb-6">
+                  Inside The 4 Walls
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Store GM Lens</h3>
+                <p className="text-xs text-[#8B5CF6] font-mono mb-4">Chromatic Accent: Electric Amethyst</p>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Designed for Dark Store General Managers and Warehouse Supervisors. Focuses on inside-the-four-walls
+                  micro-fulfillment ergonomics, shelf restocking, picker velocity, and vision packing QA.
+                </p>
+                <ul className="space-y-2.5 text-xs text-white/70 mb-8">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#8B5CF6]" />
+                    <span>Floor Digital Twin & Aisle Heatmaps</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#8B5CF6]" />
+                    <span>Dynamic Demand & Stock Predictor</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#8B5CF6]" />
+                    <span>Vision Proof-of-Pack Passports</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-semibold text-white">Executive Operations Dashboard</h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed font-normal">
-                Real-time order throughput, active cohorts, 90-day decision loop counterfactuals, and network-wide margin defense telemetry.
-              </p>
-            </div>
-            <div className="pt-6">
               <button
-                onClick={() => handleLaunch('executive', '/dashboard')}
-                className="w-full py-2.5 rounded-xl bg-white/[0.04] hover:bg-blue-500 hover:text-white border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
+                onClick={() => handleLaunch('store-gm')}
+                className="w-full py-3 rounded-xl bg-[#8B5CF6] text-white font-bold text-sm hover:brightness-110 transition-all cursor-pointer"
               >
-                <span>Launch Executive Dashboard</span>
-                <ArrowRight size={13} />
+                Launch Store GM Lens
               </button>
             </div>
-          </div>
 
-          {/* Workspace 3: Floor Mode */}
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-amber-500/30 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                  WORKSPACE 03
-                </span>
-                <Layers className="text-amber-400" size={18} />
+            {/* Fleet Commander Role */}
+            <div className="role-lens-card p-8 rounded-2xl bg-gradient-to-b from-[#10B981]/5 to-transparent border border-[#10B981]/20 flex flex-col justify-between">
+              <div>
+                <div className="role-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] text-xs font-bold uppercase tracking-wider mb-6">
+                  Last-Mile Logistics
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Fleet Commander Lens</h3>
+                <p className="text-xs text-[#10B981] font-mono mb-4">Chromatic Accent: Hyper Emerald</p>
+                <p className="text-sm text-white/60 leading-relaxed mb-6">
+                  Designed for Logistics Dispatchers and Fleet Operators. Focuses on 2-wheeler swarm dispatch,
+                  dynamic batch clustering, weather disruption mitigation, and preserving sub-10 minute SLAs.
+                </p>
+                <ul className="space-y-2.5 text-xs text-white/70 mb-8">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+                    <span>Live Order Dispatch Queue & Batching</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+                    <span>Automated Monsoon Crisis Playbooks</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+                    <span>Real-Time SLA Breach Predictor</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-semibold text-white">Dark Store Floor Operations & WMS</h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed font-normal">
-                Sub-120s dispatch cadence timer, Golden Zone vertical rack slotting, single-pass TSP picker routing, and VisionPack™ verification.
-              </p>
-            </div>
-            <div className="pt-6">
               <button
-                onClick={() => handleLaunch('store-gm', '/floor')}
-                className="w-full py-2.5 rounded-xl bg-white/[0.04] hover:bg-amber-500 hover:text-black border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
+                onClick={() => handleLaunch('fleet-commander')}
+                className="w-full py-3 rounded-xl bg-[#10B981] text-black font-bold text-sm hover:brightness-110 transition-all cursor-pointer"
               >
-                <span>Launch Floor Operations</span>
-                <ArrowRight size={13} />
-              </button>
-            </div>
-          </div>
-
-          {/* Workspace 4: Fleet & Network */}
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-cyan-500/30 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/25">
-                  WORKSPACE 04
-                </span>
-                <Cpu className="text-cyan-400" size={18} />
-              </div>
-              <h3 className="text-xl font-semibold text-white">Fleet War Room & Infrastructure</h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed font-normal">
-                411-store directory, courier dispatch orchestration, monsoon rainfall routing, and multi-market model validation.
-              </p>
-            </div>
-            <div className="pt-6">
-              <button
-                onClick={() => handleLaunch('fleet-commander', '/network')}
-                className="w-full py-2.5 rounded-xl bg-white/[0.04] hover:bg-cyan-500 hover:text-black border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
-              >
-                <span>Launch Fleet Infrastructure</span>
-                <ArrowRight size={13} />
+                Launch Fleet Commander Lens
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. INSTITUTIONAL METRICS */}
-      <section className="py-20 px-6 max-w-6xl mx-auto border-t border-white/[0.06]">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <div className="text-3xl md:text-5xl font-semibold text-amber-400">95.9%</div>
-            <div className="text-xs uppercase tracking-wider text-white/50 mt-2 font-mono">Catchment Precision</div>
-            <div className="text-[11px] text-white/30 mt-1">Validated across Indian metros</div>
+      {/* 7. ENTERPRISE CTA & FOOTER */}
+      <footer className="darkstor-footer py-16 border-t border-white/10 bg-black/40">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-12 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="logo-symbol text-amber-400 text-lg">◆</span>
+                <span className="text-xl font-bold text-white">Darkstor</span>
+              </div>
+              <p className="text-sm text-white/50 max-w-md">
+                The Enterprise Operating System for Autonomous Quick-Commerce Networks.
+                Engineering mathematical precision and profitability across Indian and global metros.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => handleLaunch('executive')}
+                className="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all cursor-pointer"
+              >
+                Open Darkstor Console
+              </button>
+            </div>
           </div>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <div className="text-3xl md:text-5xl font-semibold text-emerald-400">118s</div>
-            <div className="text-xs uppercase tracking-wider text-white/50 mt-2 font-mono">Mean Dispatch SLA</div>
-            <div className="text-[11px] text-white/30 mt-1">Order receipt to courier handoff</div>
-          </div>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <div className="text-3xl md:text-5xl font-semibold text-cyan-400">411</div>
-            <div className="text-xs uppercase tracking-wider text-white/50 mt-2 font-mono">Verified Hubs</div>
-            <div className="text-[11px] text-white/30 mt-1">Across 12 major metros</div>
-          </div>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <div className="text-3xl md:text-5xl font-semibold text-purple-400">4.2 Mo</div>
-            <div className="text-xs uppercase tracking-wider text-white/50 mt-2 font-mono">Average Payback</div>
-            <div className="text-[11px] text-white/30 mt-1">On ₹21.5L store CapEx</div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-white/40 gap-4">
+            <p>© 2026 Darkstor Systems, Inc. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <span>Zero-Leak Enterprise Security</span>
+              <span>Neon PostgreSQL Backed</span>
+              <span>Vercel / Railway Ready</span>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* 8. FINAL CALL TO ACTION */}
-      <section className="py-24 px-6 max-w-4xl mx-auto text-center border-t border-white/[0.06]">
-        <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight">
-          The Future of Micro-Fulfillment is Algorithmic.
-        </h2>
-        <p className="text-base text-white/60 mt-4 max-w-2xl mx-auto leading-relaxed font-normal">
-          Empowering Indian grocery franchisees, regional store owners, and D2C brands with enterprise micro-warehouse operating intelligence.
-        </p>
-
-        <div className="mt-8 flex flex-wrap gap-4 justify-center">
-          <button
-            onClick={() => handleLaunch('executive', '/cockpit')}
-            className="px-8 py-4 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
-          >
-            <span>Launch DarkStori</span>
-            <ArrowRight size={16} />
-          </button>
-        </div>
-      </section>
+      </footer>
     </div>
   );
 }

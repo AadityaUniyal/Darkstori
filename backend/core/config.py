@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # API Settings
-    APP_NAME: str = "Darkstori — Hyperlocal Delivery Intelligence"
+    APP_NAME: str = "Darkstor — Hyperlocal Delivery Intelligence"
     VERSION: str = "3.0.0"
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
 
     # CORS (override via env var as JSON array or comma-separated)
     ALLOWED_ORIGINS: Union[List[str], str] = [
-        "https://darkstori.vercel.app",
+        "https://darkstor.vercel.app",
         "https://darkstore-intelligence.vercel.app",
         "http://localhost:3000",
         "http://localhost:8501",
@@ -162,7 +162,7 @@ class Settings(BaseSettings):
             if env == "testing":
                 return "sqlite+aiosqlite:///:memory:"
             # Default development SQLite
-            return "sqlite+aiosqlite:///darkstori.db"
+            return "sqlite+aiosqlite:///darkstor.db"
         return v
 
     @field_validator("ALLOWED_ORIGINS", "FOCUS_CITIES", mode="before")
@@ -187,7 +187,7 @@ class Settings(BaseSettings):
             ]
             if not self.ALLOWED_ORIGINS:
                 self.ALLOWED_ORIGINS = [
-                    "https://darkstori.vercel.app",
+                    "https://darkstor.vercel.app",
                     "https://darkstore-intelligence.vercel.app",
                 ]
         elif isinstance(self.ALLOWED_ORIGINS, str):
@@ -196,7 +196,7 @@ class Settings(BaseSettings):
                 if o.strip() and o.strip() != "*" and "localhost" not in o and "127.0.0.1" not in o
             ]
             self.ALLOWED_ORIGINS = origins or [
-                "https://darkstori.vercel.app",
+                "https://darkstor.vercel.app",
                 "https://darkstore-intelligence.vercel.app",
             ]
         return self

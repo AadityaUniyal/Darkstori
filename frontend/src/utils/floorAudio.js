@@ -9,7 +9,7 @@
 class FloorFeedbackEngine {
   constructor() {
     this.audioCtx = null;
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('darkstori_audio_profile') : null;
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('darkstor_audio_profile') : null;
     this.profile = saved || 'warehouse';
     this.listeners = new Set();
   }
@@ -18,7 +18,7 @@ class FloorFeedbackEngine {
     if (['warehouse', 'office', 'silent'].includes(newProfile)) {
       this.profile = newProfile;
       try {
-        localStorage.setItem('darkstori_audio_profile', newProfile);
+        localStorage.setItem('darkstor_audio_profile', newProfile);
       } catch {}
       this.listeners.forEach(cb => cb(this.profile));
     }

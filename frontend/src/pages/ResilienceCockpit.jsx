@@ -93,7 +93,7 @@ export default function ResilienceCockpit() {
     setAlerts(fetchedAlerts);
   }, [compMoves, slaMetrics]);
 
-  // Listen to darkstori:notification window events
+  // Listen to darkstor:notification window events
   useEffect(() => {
     const handleNotification = (e) => {
       const detail = e.detail;
@@ -109,8 +109,8 @@ export default function ResilienceCockpit() {
         setAlerts((prev) => [newAlert, ...prev.slice(0, 9)]);
       }
     };
-    window.addEventListener('darkstori:notification', handleNotification);
-    return () => window.removeEventListener('darkstori:notification', handleNotification);
+    window.addEventListener('darkstor:notification', handleNotification);
+    return () => window.removeEventListener('darkstor:notification', handleNotification);
   }, []);
 
   const getSeverityBorderColor = (sev) => {

@@ -73,7 +73,7 @@ function coordinatesOf(item) {
 
 /* ── Apple-grade Color Semantics ─────────────────────────────────── */
 const COLORS = {
-  highScore:    [0, 113, 227, 220],    // Darkstori Hyper-Cobalt
+  highScore:    [0, 113, 227, 220],    // Darkstor Hyper-Cobalt
   medScore:     [56, 189, 248, 200],   // Radiant Cyan
   lowScore:     [142, 142, 147, 160],  // Cupertino System Gray
   competitor:   [255, 59, 48, 210],    // Apple Red
@@ -262,7 +262,7 @@ export default function MapView({
 
     const competitorLayer = new ScatterplotLayer({
       id: 'competitors',
-      data: stores.filter((s) => s.platform && s.platform.toLowerCase() !== 'darkstori' && coordinatesOf(s)),
+      data: stores.filter((s) => s.platform && s.platform.toLowerCase() !== 'darkstor' && coordinatesOf(s)),
       getPosition: coordinatesOf,
       getFillColor: COLORS.competitor,
       getRadius: 140,
@@ -274,7 +274,7 @@ export default function MapView({
 
     const activeStoreLayer = new ScatterplotLayer({
       id: 'active-stores',
-      data: stores.filter((s) => (!s.platform || s.platform.toLowerCase() === 'darkstori' || s.is_active) && coordinatesOf(s)),
+      data: stores.filter((s) => (!s.platform || s.platform.toLowerCase() === 'darkstor' || s.is_active) && coordinatesOf(s)),
       getPosition: coordinatesOf,
       getFillColor: COLORS.activeStore,
       getRadius: 180,
@@ -443,8 +443,8 @@ export default function MapView({
 
       {/* Cupertino Frosted Legend */}
       <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 bg-[#0E121A]/90 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 text-[11px] font-medium text-white shadow-lg">
-        {stores.some((store) => (!store.platform || store.platform.toLowerCase() === 'darkstori' || store.is_active) && coordinatesOf(store)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#34C759]" />Active Hub</span>}
-        {stores.some((store) => store.platform && store.platform.toLowerCase() !== 'darkstori' && coordinatesOf(store)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />Recorded POI</span>}
+        {stores.some((store) => (!store.platform || store.platform.toLowerCase() === 'darkstor' || store.is_active) && coordinatesOf(store)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#34C759]" />Active Hub</span>}
+        {stores.some((store) => store.platform && store.platform.toLowerCase() !== 'darkstor' && coordinatesOf(store)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />Recorded POI</span>}
         {liveOrders.some((item) => coordinatesOf(item)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#38BDF8]" />Order event</span>}
         {externalPoints.some((item) => coordinatesOf(item)) && <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />OpenStreetMap POI</span>}
         <span className="flex items-center gap-1.5">

@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
         setUser({
           id: payload.user_id || '6',
-          email: payload.sub || 'executive@darkstori.demo',
+          email: payload.sub || 'executive@darkstor.demo',
           role: payload.role || 'director',
         });
         setIsAuthenticated(true);
@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
     }).catch(() => {
       setUser({
         id: '6',
-        email: 'executive@darkstori.demo',
+        email: 'executive@darkstor.demo',
         role: 'director',
       });
       setIsAuthenticated(true);
@@ -134,7 +134,7 @@ export function AuthProvider({ children }) {
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
         const loggedInUser = {
           id: payload.user_id || data.user_id || personaData.id,
-          email: payload.sub || data.email || (personaData.id ? (personaData.id + '@darkstori.demo') : 'demo@darkstori.com'),
+          email: payload.sub || data.email || (personaData.id ? (personaData.id + '@darkstor.demo') : 'demo@darkstor.com'),
           role: payload.role || data.role || personaData.role || 'user',
         };
         setUser(loggedInUser);

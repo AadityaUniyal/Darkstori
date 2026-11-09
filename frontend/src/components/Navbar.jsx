@@ -9,6 +9,8 @@ import { ThemeToggle } from './ThemeToggle';
 import { useSocketStore } from '../stores/socketStore';
 import UniversalDataImporter from './UniversalDataImporter';
 import StorefrontSettingsModal from './StorefrontSettingsModal';
+import ApplePersonaSelector from './ApplePersonaSelector';
+import { floorAudio } from '../utils/floorAudio';
 import './Navbar.css';
 import './CitySelector.css';
 
@@ -30,8 +32,8 @@ const Navbar = memo(() => {
   useEffect(() => {
     const handleOpenImporter = () => setImporterOpen(true);
     const handleOpenSettings = () => setSettingsOpen(true);
-    window.addEventListener('darkstori:open-importer', handleOpenImporter);
-    window.addEventListener('darkstori:open-settings', handleOpenSettings);
+    window.addEventListener('darkstor:open-importer', handleOpenImporter);
+    window.addEventListener('darkstor:open-settings', handleOpenSettings);
 
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -43,8 +45,8 @@ const Navbar = memo(() => {
     };
     document.addEventListener('mousedown', handleClick);
     return () => {
-      window.removeEventListener('darkstori:open-importer', handleOpenImporter);
-      window.removeEventListener('darkstori:open-settings', handleOpenSettings);
+      window.removeEventListener('darkstor:open-importer', handleOpenImporter);
+      window.removeEventListener('darkstor:open-settings', handleOpenSettings);
       document.removeEventListener('mousedown', handleClick);
     };
   }, []);
@@ -54,14 +56,14 @@ const Navbar = memo(() => {
   return (
     <nav className="navbar">
       <div className="navbar-brand" onClick={() => navigate('/')}>
-        <span className="brand-text">DarkStori</span>
+        <span className="brand-text">Darkstor</span>
         <span className="brand-pulse-dot" />
       </div>
       <div className="navbar-actions">
         {isAuthenticated && (
           <>
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
+              onClick={() => window.dispatchEvent(new CustomEvent('darkstor:open-command-palette'))}
               className="flex items-center justify-between bg-white/[0.05] hover:bg-white/[0.08] hover:border-[#FF9F1C]/40 border border-white/10 rounded-full px-3.5 py-1.5 md:w-60 cursor-pointer transition-all duration-200 text-left group shadow-sm hover:shadow-[0_0_16px_rgba(255,159,28,0.15)] backdrop-blur-xl"
               title="Search corridors, metrics, actions (⌘K)"
             >
@@ -155,21 +157,12 @@ const Navbar = memo(() => {
             </div>
 
             <div className="hidden lg:flex items-center">
-              {activeRole === 'executive' && (
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#0071E3]/20 text-[#0071E3] border border-[#0071E3]/40 tracking-wide">
-                  Executive Lens
-                </span>
-              )}
-              {activeRole === 'store-gm' && (
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FF9F1C]/20 text-[#FF9F1C] border border-[#FF9F1C]/40 tracking-wide">
-                  Store GM Lens
-                </span>
-              )}
-              {activeRole === 'fleet-commander' && (
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40 tracking-wide">
-                  Fleet Commander Lens
-                </span>
-              )}
+              <ApplePersonaSelector
+                activePersona={activeRole}
+                onSelectPersona={(r) => setOperationalRole(r)}
+                audioFeedback={() => floorAudio.click()}
+                compact={true}
+              />
             </div>
 
             <div className="user-menu" ref={menuRef}>
@@ -201,7 +194,7 @@ const Navbar = memo(() => {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
+                      window.dispatchEvent(new CustomEvent('darkstor:open-tour'));
                     }}
                     className="user-dropdown-item w-full text-left flex items-center justify-between"
                   >

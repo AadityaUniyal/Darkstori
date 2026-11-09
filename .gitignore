@@ -101,7 +101,7 @@ TEST_READY.md
 ORIGINAL_REQUEST.md
 PROJECT.md
 TEST_INFRA.md
-Darkstori_Improvement_Roadmap.txt
+Darkstor_Improvement_Roadmap.txt
 *.prompt
 *.agent
 
@@ -233,3 +233,10 @@ backup/
 /check-*.json
 /ssm-*.json
 /test_aws_deployment.py
+
+# Historical Archive & Deployment Temp Artifacts
+.legacy_archive/
+*.log
+mlruns/
+dist/
+.vercel/

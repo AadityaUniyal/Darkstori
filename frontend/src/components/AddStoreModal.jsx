@@ -20,7 +20,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
   const [createdStore, setCreatedStore] = useState(null);
 
   const [storeName, setStoreName] = useState('');
-  const [platform, setPlatform] = useState('Darkstori');
+  const [platform, setPlatform] = useState('DarkStor');
   const [city, setCity] = useState('Bangalore');
   const [pincode, setPincode] = useState('560001');
   const [latitude, setLatitude] = useState(12.9716);
@@ -202,7 +202,7 @@ export default function AddStoreModal({ isOpen, onClose, initialData = null }) {
                 onChange={(e) => setPlatform(e.target.value)}
                 className="w-full bg-[#0b0f17] border border-border/80 rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-emerald-500"
               >
-                <option value="Darkstori">Darkstori Direct</option>
+                <option value="DarkStor">DarkStor Direct</option>
                 <option value="Swiggy Instamart">Swiggy Instamart</option>
                 <option value="Blinkit">Blinkit</option>
                 <option value="Zepto">Zepto</option>

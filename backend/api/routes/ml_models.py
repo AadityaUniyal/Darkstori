@@ -177,7 +177,7 @@ async def get_model_info(
             description="Production model serving live inferences with automated drift validation",
             creation_timestamp="2026-03-01T00:00:00Z",
             last_updated_timestamp="2026-03-15T00:00:00Z",
-            run_id="run-prod-darkstori-001",
+            run_id="run-prod-darkstor-001",
             source="s3://customer-pii-vault-145023097151/models",
             tags={"framework": "xgboost", "metric": "rmse", "val_score": "0.042"},
             status="READY",

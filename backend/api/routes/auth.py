@@ -236,7 +236,7 @@ async def demo_login(
     requested_role = role_aliases.get(requested_role, requested_role)
     if requested_role not in allowed_demo_roles and req.role.strip().lower() not in allowed_demo_roles:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unsupported demo persona")
-    demo_email = req.email or f"{req.persona_id or req.role}@darkstori.demo"
+    demo_email = req.email or f"{req.persona_id or req.role}@darkstor.demo"
     result = await db.execute(select(User).where(User.email == demo_email))
     user = result.scalar_one_or_none()
     if not user:

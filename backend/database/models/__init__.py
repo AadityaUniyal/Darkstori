@@ -1,4 +1,4 @@
-"""Database models — cleaned up for Darkstori 3.0 schema."""
+"""Database models — cleaned up for Darkstor 3.0 schema."""
 
 from backend.database.models.models import (
     # Core

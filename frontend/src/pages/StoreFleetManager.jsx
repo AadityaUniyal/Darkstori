@@ -244,7 +244,7 @@ export default function StoreFleetManager() {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-              {['All', 'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune'].map((city) => (
+              {['All', 'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 'Chennai', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Chandigarh', 'Kochi'].map((city) => (
                 <button
                   key={city}
                   onClick={() => setSelectedCity(city)}
@@ -299,7 +299,7 @@ export default function StoreFleetManager() {
                         <Building2 size={14} className="text-[#0071E3]" />
                         {store.store_name}
                       </td>
-                      <td className="p-3 font-mono text-white/70">{store.platform || 'Darkstori'}</td>
+                      <td className="p-3 font-mono text-white/70">{store.platform || 'DarkStor'}</td>
                       <td className="p-3 font-medium text-white/90">{store.city}</td>
                       <td className="p-3">{store.storage_sqft || 2500} sqft</td>
                       <td className="p-3">{store.daily_capacity || 800} orders/day</td>

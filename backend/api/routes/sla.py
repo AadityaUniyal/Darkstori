@@ -316,7 +316,7 @@ async def simulate_neuro_symbolic_darkstore(
     1. Hawkes Multivariate Point Process for Anticipatory Basket Intent
     2. Locally-Adaptive Conformal Quantile Regression (CQR)
     3. Dark Store Digital Twin Picker Kinematics & Staging Bay Handoff
-    4. Head-to-Head Benchmark: Traditional Q-Commerce vs Darkstori Apex
+    4. Head-to-Head Benchmark: Traditional Q-Commerce vs Darkstor Apex
     """
     from backend.ml.neuro_symbolic_engine import (
         hawkes_engine,

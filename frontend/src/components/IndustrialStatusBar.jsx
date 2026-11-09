@@ -8,7 +8,7 @@ import { useRole } from '../context/RoleContext';
 export default function IndustrialStatusBar() {
   const location = useLocation();
   const { currentCity } = useCity();
-  const { activeRole } = useRole();
+  const { activeRole, isFirstTimeUser, toggleFirstTimeUserMode } = useRole();
 
   const [audioProfile, setAudioProfile] = useState(floorAudio.getProfile());
   const [latency, setLatency] = useState(24);
@@ -82,8 +82,24 @@ export default function IndustrialStatusBar() {
         </div>
       </div>
 
-      {/* Right side: Audio Profile, Shortcuts, Spotlight */}
+      {/* Right side: Audio Profile, Onboarding Toggle, Spotlight */}
       <div className="flex items-center gap-2.5">
+        {/* Onboarding Mode Toggle */}
+        <button
+          onClick={toggleFirstTimeUserMode}
+          className={`px-2 py-0.5 rounded border text-[9px] font-bold transition-all flex items-center gap-1 ${
+            isFirstTimeUser
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300'
+          }`}
+          title="Toggle First-Time User Guided Tour vs Returning User Telemetry"
+        >
+          <HelpCircle size={10} className={isFirstTimeUser ? 'text-amber-400' : 'text-slate-400'} />
+          <span>{isFirstTimeUser ? 'Onboarding: ACTIVE' : 'Mode: RETURNING'}</span>
+        </button>
+
+        <span className="text-slate-700">•</span>
+
         {/* Tactical Audio Profile Switcher Button */}
         <button
           onClick={cycleAudioProfile}
@@ -98,7 +114,7 @@ export default function IndustrialStatusBar() {
 
         {/* Command Palette Trigger Hint */}
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent('darkstori:open-command-palette'))}
+          onClick={() => window.dispatchEvent(new CustomEvent('darkstor:open-command-palette'))}
           className="text-slate-400 hover:text-white flex items-center gap-1"
         >
           <kbd className="px-1 py-0.2 rounded bg-white/10 border border-white/15 text-slate-300 font-mono text-[9px]">⌘K</kbd>

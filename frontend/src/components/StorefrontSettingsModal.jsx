@@ -7,11 +7,11 @@ import {
 import { toast } from 'sonner';
 import { api } from '../services/api';
 
-const STORAGE_KEY = 'darkstori_storefront_config';
+const STORAGE_KEY = 'darkstor_storefront_config';
 
 export default function StorefrontSettingsModal({ isOpen, onClose }) {
   const [platform, setPlatform] = useState('shopify');
-  const [webhookUrl, setWebhookUrl] = useState('https://storefront.mybrand.in/api/webhooks/darkstori');
+  const [webhookUrl, setWebhookUrl] = useState('https://storefront.mybrand.in/api/webhooks/darkstor');
   const [hmacSecret, setHmacSecret] = useState('whsec_in_' + Math.random().toString(36).substring(2, 12));
   const [gstin, setGstin] = useState('29AAACG1234F1Z5');
   const [fssai, setFssai] = useState('11224333000492');
@@ -191,7 +191,7 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
                     type="url"
                     value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://api.yourstore.com/webhooks/darkstori"
+                    placeholder="https://api.yourstore.com/webhooks/darkstor"
                     className="flex-1 bg-[#141A26] border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 outline-none focus:border-violet-500"
                   />
                 </div>
@@ -332,7 +332,7 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
                   </div>
                   <div className="text-slate-400 text-[10px] truncate">Target: {testResult.target_url}</div>
                   {testResult.hmac_signature && (
-                    <div className="text-[10px] text-amber-300/80 truncate">Header: X-Darkstori-Signature: {testResult.hmac_signature.slice(0, 32)}...</div>
+                    <div className="text-[10px] text-amber-300/80 truncate">Header: X-Darkstor-Signature: {testResult.hmac_signature.slice(0, 32)}...</div>
                   )}
                   <div className="text-slate-300 text-[10px] pt-1">{testResult.detail}</div>
                 </div>

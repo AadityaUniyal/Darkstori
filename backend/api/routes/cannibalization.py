@@ -244,7 +244,7 @@ async def analyze_cannibalization(
         lost_orders = max(0, int(es["current_orders"] * fraction_lost))
         lost_pct = round((lost_orders / es["current_orders"]) * 100, 1) if es["current_orders"] else 0.0
 
-        is_own = store.platform and store.platform.lower() in ["darkstori", "own"]
+        is_own = store.platform and store.platform.lower() in ["darkstor", "own"]
         if is_own:
             total_cannibalized_own += lost_orders
         else:

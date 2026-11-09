@@ -42,7 +42,7 @@ export default function DarkStoreDigitalTwin() {
     runSimulation();
   }, [selectedCategory, dwellSec, trafficCongestion, rainMm]);
 
-  const apex = simData?.darkstori_apex_pipeline;
+  const apex = simData?.darkstor_apex_pipeline;
   const trad = simData?.traditional_pipeline;
   const twin = simData?.digital_twin;
 
@@ -272,7 +272,7 @@ export default function DarkStoreDigitalTwin() {
           </div>
         </div>
 
-        {/* Column 3: The Empirical Proof - Traditional vs. Darkstori Apex (4 Cols) */}
+        {/* Column 3: The Empirical Proof - Traditional vs. Darkstor Apex (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
             <div className="flex items-center justify-between text-xs">
@@ -301,11 +301,11 @@ export default function DarkStoreDigitalTwin() {
                 </div>
               </div>
 
-              {/* Darkstori Apex Benchmark */}
+              {/* Darkstor Apex Benchmark */}
               <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 space-y-1.5 text-xs shadow-lg shadow-emerald-500/5">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-emerald-300 flex items-center gap-1">
-                    <Sparkles size={12} /> Darkstori Apex Closed-Loop
+                    <Sparkles size={12} /> Darkstor Apex Closed-Loop
                   </span>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
                     100% SLA DEFENDED

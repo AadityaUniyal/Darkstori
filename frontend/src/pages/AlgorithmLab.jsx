@@ -220,7 +220,7 @@ export default function AlgorithmLab() {
               Closed-Loop Operational Performance
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
-              Continuous feedback comparison of Darkstori model predictions vs on-ground actuals.
+              Continuous feedback comparison of Darkstor model predictions vs on-ground actuals.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
@@ -296,7 +296,7 @@ export default function AlgorithmLab() {
             </h3>
             
             <p style={{ margin: '0 0 16px', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
-              Enable Darkstori to continuously recalibrate store demand profiles as seasonal patterns and metro growth evolve.
+              Enable Darkstor to continuously recalibrate store demand profiles as seasonal patterns and metro growth evolve.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

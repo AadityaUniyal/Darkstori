@@ -44,11 +44,11 @@ class TestJWTTokenCreationAndDecoding:
 
     def test_create_and_decode_access_token(self):
         """Access token contains encoded subject, role, and expiration."""
-        payload_data = {"sub": "analyst@darkstori.in", "role": "analyst", "org_id": 1}
+        payload_data = {"sub": "analyst@darkstor.in", "role": "analyst", "org_id": 1}
         token = create_access_token(payload_data, expires_delta=timedelta(minutes=15))
         decoded = decode_token(token)
 
-        assert decoded["sub"] == "analyst@darkstori.in"
+        assert decoded["sub"] == "analyst@darkstor.in"
         assert decoded["role"] == "analyst"
         assert decoded["org_id"] == 1
         assert "exp" in decoded
@@ -56,7 +56,7 @@ class TestJWTTokenCreationAndDecoding:
 
     def test_create_refresh_token_has_unique_jti(self):
         """Refresh tokens contain unique JTI identifiers for rotation tracking."""
-        data = {"sub": "ops@darkstori.in"}
+        data = {"sub": "ops@darkstor.in"}
         token1, jti1 = create_refresh_token(data)
         token2, jti2 = create_refresh_token(data)
 
@@ -67,7 +67,7 @@ class TestJWTTokenCreationAndDecoding:
 
     def test_decode_tampered_token_raises_401(self):
         """Tampered JWT signature raises HTTP 401 Unauthorized."""
-        token = create_access_token({"sub": "user@darkstori.in"})
+        token = create_access_token({"sub": "user@darkstor.in"})
         parts = token.split(".")
         sig = parts[2]
         mid = len(sig) // 2
@@ -94,14 +94,14 @@ class TestRoleBasedAccessControl:
     @pytest.mark.asyncio
     async def test_verify_admin_allowed(self):
         """Admin payload successfully passes verify_admin check."""
-        admin_payload = {"sub": "admin@darkstori.in", "role": "admin"}
+        admin_payload = {"sub": "admin@darkstor.in", "role": "admin"}
         result = await verify_admin(admin_payload)
         assert result["role"] == "admin"
 
     @pytest.mark.asyncio
     async def test_verify_admin_forbidden_for_non_admin(self):
         """Non-admin user payload is rejected with HTTP 403 Forbidden."""
-        user_payload = {"sub": "viewer@darkstori.in", "role": "viewer"}
+        user_payload = {"sub": "viewer@darkstor.in", "role": "viewer"}
         with pytest.raises(HTTPException) as excinfo:
             await verify_admin(user_payload)
         assert excinfo.value.status_code == 403

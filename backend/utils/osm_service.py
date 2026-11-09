@@ -20,7 +20,7 @@ _nominatim_request_lock = asyncio.Lock()
 async def _execute_nominatim_search(url: str, params: dict) -> list:
     async with httpx.AsyncClient(
         timeout=20.0,
-        headers={"User-Agent": "Darkstori/1.0 (regional-expansion-cockpit)"},
+        headers={"User-Agent": "Darkstor/1.0 (regional-expansion-cockpit)"},
     ) as client:
         response = await client.get(url, params=params)
         response.raise_for_status()
@@ -31,7 +31,7 @@ async def _execute_nominatim_search(url: str, params: dict) -> list:
 async def _execute_nominatim_reverse(url: str, params: dict) -> dict:
     async with httpx.AsyncClient(
         timeout=20.0,
-        headers={"User-Agent": "Darkstori/1.0 (regional-expansion-cockpit)"},
+        headers={"User-Agent": "Darkstor/1.0 (regional-expansion-cockpit)"},
     ) as client:
         response = await client.get(url, params=params)
         response.raise_for_status()
@@ -42,7 +42,7 @@ async def _execute_nominatim_reverse(url: str, params: dict) -> dict:
 async def _execute_osm_query(url: str, query: str) -> dict:
     async with httpx.AsyncClient(
         timeout=30.0,
-        headers={"User-Agent": "Darkstori/1.0 (regional-expansion-cockpit)"},
+        headers={"User-Agent": "Darkstor/1.0 (regional-expansion-cockpit)"},
     ) as client:
         response = await client.post(url, data={"data": query})
         response.raise_for_status()

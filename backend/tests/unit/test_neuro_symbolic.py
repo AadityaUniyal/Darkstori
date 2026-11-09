@@ -71,5 +71,5 @@ def test_digital_twin_kinematics():
     assert picker["pick_walk_time_seconds"] > 0
 
     # Verify head-to-head proof
-    assert res["darkstori_apex_pipeline"]["total_seconds"] < res["traditional_pipeline"]["total_seconds"]
-    assert res["darkstori_apex_pipeline"]["pick_pack_duration_s"] == 28
+    assert res["darkstor_apex_pipeline"]["total_seconds"] < res["traditional_pipeline"]["total_seconds"]
+    assert res["darkstor_apex_pipeline"]["pick_pack_duration_s"] == 28

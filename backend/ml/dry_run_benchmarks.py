@@ -1,4 +1,4 @@
-"""Automated 50-Scenario ML Validation Benchmark Harness for Darkstori 5.0.
+"""Automated 50-Scenario ML Validation Benchmark Harness for Darkstor 5.0.
 
 Fulfills Aaditya Uniyal's resume benchmark claim:
 - Trains and benchmarks XGBoost, Random Forest, and Prophet models on 22 features.
@@ -141,6 +141,6 @@ def run_benchmark_suite() -> Dict[str, Any]:
 
 if __name__ == '__main__':
     res = run_benchmark_suite()
-    print("=== DARKSTORI 50-SCENARIO ML ACCURACY BENCHMARK ===")
+    print("=== DARKSTOR 50-SCENARIO ML ACCURACY BENCHMARK ===")
     for m, mres in res['model_benchmarks'].items():
         print(f"[{m}] Accuracy R²: {mres['r2_accuracy_pct']}% | MAPE: {mres['mape_error_pct']}% | Meets 85%+ Goal: {mres['exceeds_85pct_accuracy']}")

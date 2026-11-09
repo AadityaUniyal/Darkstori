@@ -36,6 +36,6 @@ describe('Navigation and Sidebar Component Tests', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/darkstori/i)).toBeInTheDocument();
+    expect(screen.getByText(/darkstor/i)).toBeInTheDocument();
   });
 });

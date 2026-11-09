@@ -43,7 +43,7 @@
   gap: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--darkstori-400, #60A5FA);
+  color: var(--darkstor-400, #60A5FA);
   background: rgba(0, 113, 227, 0.1);
   border: 1px solid rgba(0, 113, 227, 0.25);
   padding: 4px 12px;

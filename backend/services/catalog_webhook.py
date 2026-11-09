@@ -56,7 +56,7 @@ async def dispatch_catalog_price_update(
             "currency": "INR",
         },
         "timestamp": now.isoformat(),
-        "source": "Darkstori Autonomous Decision Engine",
+        "source": "Darkstor Autonomous Decision Engine",
     }
 
     url = webhook_url or getattr(settings, "CATALOG_WEBHOOK_URL", None)
@@ -80,9 +80,9 @@ async def dispatch_catalog_price_update(
 
     headers = {
         "Content-Type": "application/json",
-        "X-Darkstori-Timestamp": now.isoformat(),
-        "X-Darkstori-Signature": signature,
-        "User-Agent": "Darkstori-Webhook-Dispatcher/3.0",
+        "X-Darkstor-Timestamp": now.isoformat(),
+        "X-Darkstor-Signature": signature,
+        "User-Agent": "Darkstor-Webhook-Dispatcher/3.0",
     }
 
     try:

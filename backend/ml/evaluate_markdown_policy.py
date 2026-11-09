@@ -3,7 +3,7 @@
 Compares:
 1. Baseline A: FIFO / Status Quo (Static late fire-sale at T <= 4 hours)
 2. Baseline B: Linear Step Markdown (Fixed 15% / 30% / 50% stair-step)
-3. Darkstori Dynamic Sigmoid Policy: Freshness-aware velocity optimization
+3. Darkstor Dynamic Sigmoid Policy: Freshness-aware velocity optimization
 """
 
 import math
@@ -71,7 +71,7 @@ def _simulate_batch_lifecycle(
                 discount = 0.15
             else:
                 discount = 0.0
-        elif policy_type == "darkstori_dynamic":
+        elif policy_type == "darkstor_dynamic":
             # Smooth sigmoid discount targeting early velocity lift
             # k=10.0, x0=0.45: starts ramping around 45% remaining shelf life
             sigmoid = 1.0 / (1.0 + math.exp(10.0 * (freshness - 0.45)))
@@ -113,11 +113,11 @@ def evaluate_batch_set(
     batches: List[BatchSimulationInput],
 ) -> Dict[str, Any]:
     """Benchmark all 3 policies across a historical/empirical cohort of batches."""
-    policies = ["fifo_status_quo", "linear_step", "darkstori_dynamic"]
+    policies = ["fifo_status_quo", "linear_step", "darkstor_dynamic"]
     policy_labels = {
         "fifo_status_quo": "Baseline: FIFO / Status Quo",
         "linear_step": "Baseline: Linear Stair-Step",
-        "darkstori_dynamic": "Darkstori Dynamic Sigmoid Policy",
+        "darkstor_dynamic": "Darkstor Dynamic Sigmoid Policy",
     }
 
     results: Dict[str, PolicyResult] = {}
@@ -152,15 +152,15 @@ def evaluate_batch_set(
         )
 
     fifo = results["fifo_status_quo"]
-    darkstori = results["darkstori_dynamic"]
+    darkstor = results["darkstor_dynamic"]
 
-    waste_reduction_units = fifo.units_wasted - darkstori.units_wasted
+    waste_reduction_units = fifo.units_wasted - darkstor.units_wasted
     waste_reduction_pct = (
-        round(((fifo.units_wasted - darkstori.units_wasted) / max(1, fifo.units_wasted)) * 100, 1)
+        round(((fifo.units_wasted - darkstor.units_wasted) / max(1, fifo.units_wasted)) * 100, 1)
         if fifo.units_wasted > 0
         else 0.0
     )
-    margin_uplift_inr = round(darkstori.revenue_inr - fifo.revenue_inr, 2)
+    margin_uplift_inr = round(darkstor.revenue_inr - fifo.revenue_inr, 2)
 
     return {
         "batch_count": len(batches),
@@ -171,10 +171,10 @@ def evaluate_batch_set(
             "waste_reduction_units": waste_reduction_units,
             "waste_reduction_pct": waste_reduction_pct,
             "margin_uplift_inr": margin_uplift_inr,
-            "net_recovery_delta_pct": round(darkstori.net_recovery_pct - fifo.net_recovery_pct, 2),
+            "net_recovery_delta_pct": round(darkstor.net_recovery_pct - fifo.net_recovery_pct, 2),
         },
         "conclusion": (
-            f"Darkstori Dynamic Policy reduced expiry waste by {waste_reduction_pct}% "
+            f"Darkstor Dynamic Policy reduced expiry waste by {waste_reduction_pct}% "
             f"and generated INR {margin_uplift_inr:,.2f} in incremental recovered revenue vs. FIFO baseline."
         ),
     }

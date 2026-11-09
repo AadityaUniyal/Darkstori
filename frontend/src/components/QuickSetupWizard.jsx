@@ -41,7 +41,7 @@ export default function QuickSetupWizard({ totalStores = 0, totalBatches = 0, to
               <span>Hub Setup & Onboarding</span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold font-display text-white">
-              Welcome to Your Darkstori Operating System
+              Welcome to Your Darkstor Operating System
             </h2>
             <p className="text-sm text-[#86868B] mt-1 max-w-xl">
               Connect your own stores and inventory first. Sample benchmarks are illustrative and are not operating evidence.

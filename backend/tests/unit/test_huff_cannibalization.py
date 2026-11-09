@@ -68,7 +68,7 @@ class TestHuffGravityModel:
     def test_huff_probability_distribution_sums_to_one(self):
         """Customer choice probabilities across all competing stores must sum to 1.0."""
         stores = [
-            {"name": "Darkstori Koramangala", "sqft": 2500, "dist_km": 0.8},
+            {"name": "Darkstor Koramangala", "sqft": 2500, "dist_km": 0.8},
             {"name": "Zepto Koramangala", "sqft": 2000, "dist_km": 1.2},
             {"name": "Blinkit HSR", "sqft": 1800, "dist_km": 2.0},
             {"name": "Swiggy Instamart", "sqft": 2200, "dist_km": 1.5},

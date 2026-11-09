@@ -1,4 +1,4 @@
-"""Seed 75+ Verified Competitor Dark Store Hubs across 5 Focus Cities for Darkstori.
+"""Seed 75+ Verified Competitor Dark Store Hubs across 5 Focus Cities for Darkstor.
 
 Covers Bangalore, Mumbai, Delhi-NCR, Hyderabad, and Pune.
 Competitor networks: Blinkit, Zepto, Swiggy Instamart, BB Now.

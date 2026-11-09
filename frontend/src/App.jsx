@@ -3,24 +3,24 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
+// Public & Core Pages
 const LandingPage      = lazy(() => import('./pages/LandingPage'));
-const ExpansionCockpit = lazy(() => import('./pages/ExpansionCockpit'));
-const Dashboard        = lazy(() => import('./pages/Dashboard'));
-const ResilienceCockpit = lazy(() => import('./pages/ResilienceCockpit'));
-const Simulator        = lazy(() => import('./pages/Simulator'));
-const Neighborhoods    = lazy(() => import('./pages/Neighborhoods'));
-const Analytics        = lazy(() => import('./pages/Analytics'));
-const Forecast         = lazy(() => import('./pages/Forecast'));
-const AlgorithmLab     = lazy(() => import('./pages/AlgorithmLab'));
-const Recommendations  = lazy(() => import('./pages/Recommendations'));
-const LocalEvents      = lazy(() => import('./pages/LocalEvents'));
-const Playbooks        = lazy(() => import('./pages/Playbooks'));
 const AuthPage         = lazy(() => import('./pages/AuthPage'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
-const DarkStoreFloorMode = lazy(() => import('./components/DarkStoreFloorMode'));
-const VisionPackDock   = lazy(() => import('./pages/VisionPackDock'));
 const PublicPassportVerification = lazy(() => import('./pages/PublicPassportVerification'));
-const StoreFleetManager = lazy(() => import('./pages/StoreFleetManager'));
+
+// 8 Dedicated Flagship Production Features + Advanced Extensions
+const ExpansionPage  = lazy(() => import('./features/expansion/ExpansionPage'));
+const InventoryPage  = lazy(() => import('./features/inventory/InventoryPage'));
+const FloorPage      = lazy(() => import('./features/floor/FloorPage'));
+const DispatchPage   = lazy(() => import('./features/dispatch/DispatchPage'));
+const CompetitorPage = lazy(() => import('./features/competitor/CompetitorPage'));
+const PlaybooksPage  = lazy(() => import('./features/playbooks/PlaybooksPage'));
+const EconomicsPage  = lazy(() => import('./features/economics/EconomicsPage'));
+const VisionPage     = lazy(() => import('./features/vision/VisionPage'));
+const NocPage        = lazy(() => import('./features/noc/NocPage'));
+const PickerTerminalPage = lazy(() => import('./features/terminal/PickerTerminalPage'));
+const PanIndiaDirectoryPage = lazy(() => import('./features/directory/PanIndiaDirectoryPage'));
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -41,7 +41,6 @@ import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from 'sonner';
 
 import GradientMesh from './components/GradientMesh';
-
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -114,10 +113,10 @@ function AppContent() {
     const handleCustomOpen = () => setCommandPaletteOpen(true);
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('darkstori:open-command-palette', handleCustomOpen);
+    window.addEventListener('darkstor:open-command-palette', handleCustomOpen);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('darkstori:open-command-palette', handleCustomOpen);
+      window.removeEventListener('darkstor:open-command-palette', handleCustomOpen);
     };
   }, [setRole]);
 
@@ -178,23 +177,31 @@ function AppContent() {
           <Suspense fallback={<RangoliLoader />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                {/* 4 Core Workspaces */}
-                <Route path="/dashboard"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
-                <Route path="/floor"         element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
-                <Route path="/cockpit"       element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/network"       element={<PrivateRoute><AnimatedPage><StoreFleetManager /></AnimatedPage></PrivateRoute>} />
+                {/* 8 Dedicated Flagship Features + NOC, Terminal & Pan-India Directory */}
+                <Route path="/directory"   element={<PrivateRoute><AnimatedPage><PanIndiaDirectoryPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/noc"         element={<PrivateRoute><AnimatedPage><NocPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/terminal"    element={<PrivateRoute><AnimatedPage><PickerTerminalPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/expansion"   element={<PrivateRoute><AnimatedPage><ExpansionPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/inventory"   element={<PrivateRoute><AnimatedPage><InventoryPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/floor"       element={<PrivateRoute><AnimatedPage><FloorPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/dispatch"    element={<PrivateRoute><AnimatedPage><DispatchPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/competitor"  element={<PrivateRoute><AnimatedPage><CompetitorPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/playbooks"   element={<PrivateRoute><AnimatedPage><PlaybooksPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/economics"   element={<PrivateRoute><AnimatedPage><EconomicsPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/vision"      element={<PrivateRoute><AnimatedPage><VisionPage /></AnimatedPage></PrivateRoute>} />
 
-                {/* Graceful Legacy Route Aliases */}
-                <Route path="/vision-pack"   element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
-                <Route path="/resilience"    element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
-                <Route path="/simulator"     element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/neighborhoods" element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/analytics"     element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
-                <Route path="/forecast"      element={<PrivateRoute><AnimatedPage><Dashboard /></AnimatedPage></PrivateRoute>} />
-                <Route path="/algorithm-lab" element={<PrivateRoute><AnimatedPage><StoreFleetManager /></AnimatedPage></PrivateRoute>} />
-                <Route path="/recommendations" element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/events"        element={<PrivateRoute><AnimatedPage><ExpansionCockpit /></AnimatedPage></PrivateRoute>} />
-                <Route path="/playbooks"     element={<PrivateRoute><AnimatedPage><DarkStoreFloorMode /></AnimatedPage></PrivateRoute>} />
+                {/* Seamless Legacy Workspaces & Aliases */}
+                <Route path="/dashboard"     element={<Navigate to="/expansion" replace />} />
+                <Route path="/cockpit"       element={<Navigate to="/expansion" replace />} />
+                <Route path="/network"       element={<Navigate to="/dispatch" replace />} />
+                <Route path="/vision-pack"   element={<Navigate to="/vision" replace />} />
+                <Route path="/resilience"    element={<Navigate to="/playbooks" replace />} />
+                <Route path="/simulator"     element={<Navigate to="/expansion" replace />} />
+                <Route path="/neighborhoods" element={<Navigate to="/expansion" replace />} />
+                <Route path="/analytics"     element={<Navigate to="/economics" replace />} />
+                <Route path="/forecast"      element={<Navigate to="/inventory" replace />} />
+                <Route path="/recommendations" element={<Navigate to="/inventory" replace />} />
+                
                 <Route path="/not-found"     element={<AnimatedPage><NotFound /></AnimatedPage>} />
                 <Route path="*"              element={<Navigate to="/not-found" replace />} />
               </Routes>
@@ -209,18 +216,18 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="darkstori-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="darkstor-ui-theme">
       <GradientMesh />
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <CityProvider>
             <RoleProvider>
               <AuthProvider>
-              <LiveSocketListener />
-              <Toaster position="top-right" richColors />
-              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <AppContent />
-              </Router>
+                <LiveSocketListener />
+                <Toaster position="top-right" richColors />
+                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                  <AppContent />
+                </Router>
               </AuthProvider>
             </RoleProvider>
           </CityProvider>

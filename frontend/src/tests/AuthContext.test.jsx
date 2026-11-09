@@ -24,7 +24,7 @@ function TestAuthConsumer() {
       <span data-testid="auth-status">{isAuthenticated ? 'AUTHENTICATED' : 'ANONYMOUS'}</span>
       <span data-testid="user-email">{user ? user.email : 'NONE'}</span>
       <span data-testid="user-role">{user ? user.role : 'NONE'}</span>
-      <button onClick={() => login({ email: 'test@darkstori.in', password: 'secretpassword' })}>
+      <button onClick={() => login({ email: 'test@darkstor.in', password: 'secretpassword' })}>
         Login Action
       </button>
       <button onClick={() => logout()}>Logout Action</button>
@@ -71,7 +71,7 @@ describe('AuthContext Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-status').textContent).toBe('AUTHENTICATED');
-      expect(screen.getByTestId('user-email').textContent).toBe('test@darkstori.in');
+      expect(screen.getByTestId('user-email').textContent).toBe('test@darkstor.in');
       expect(screen.getByTestId('user-role').textContent).toBe('admin');
     });
   });

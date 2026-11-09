@@ -27,7 +27,7 @@ def test_expansion_cockpit_root_route(e2e_client):
     response = e2e_client.get("/")
     assert response.status_code == 200
     data = response.json()
-    assert "Darkstori" in data.get("message", "")
+    assert "Darkstor" in data.get("message", "")
 
 
 def test_sidebar_dashboard_navigation_link():
@@ -218,7 +218,7 @@ def test_login_svg_feature_cards_render():
 def test_login_auth_form_submission_success(unauthenticated_client):
     """TC-F05-03: Register/login user via POST /api/v1/auth/login."""
     import uuid
-    email = f"tier1_{uuid.uuid4().hex[:6]}@darkstori.io"
+    email = f"tier1_{uuid.uuid4().hex[:6]}@darkstor.io"
     res = unauthenticated_client.post("/api/v1/auth/register", json={
         "email": email,
         "password": "Password123!",
@@ -235,7 +235,7 @@ def test_login_auth_form_submission_success(unauthenticated_client):
 def test_login_auth_form_validation_error(unauthenticated_client):
     """TC-F05-04: Submit invalid login credentials returns 401 Unauthorized."""
     response = unauthenticated_client.post("/api/v1/auth/login", json={
-        "email": "wrong_user@darkstori.io",
+        "email": "wrong_user@darkstor.io",
         "password": "WrongPassword!"
     })
     assert response.status_code == 401
@@ -244,7 +244,7 @@ def test_login_auth_form_validation_error(unauthenticated_client):
 def test_login_token_storage_and_redirect(unauthenticated_client):
     """TC-F05-05: Token generation response returns JWT bearer token type."""
     import uuid
-    email = f"token_{uuid.uuid4().hex[:6]}@darkstori.io"
+    email = f"token_{uuid.uuid4().hex[:6]}@darkstor.io"
     res = unauthenticated_client.post("/api/v1/auth/register", json={
         "email": email,
         "password": "Password123!",
@@ -1000,7 +1000,7 @@ def test_predict_batch_pincode_forecasts(e2e_client):
 def test_uvicorn_backend_app_import():
     """TC-F20-01: Import backend.app:app programmatically."""
     from backend.app import app
-    assert app.title == "Darkstori — Hyperlocal Delivery Intelligence"
+    assert app.title == "Darkstor — Hyperlocal Delivery Intelligence"
 
 
 def test_fastapi_lifespan_startup_events():

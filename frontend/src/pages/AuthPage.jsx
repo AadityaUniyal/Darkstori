@@ -37,8 +37,8 @@ const UNIFIED_PERSONAS = [
     badge: 'Cupertino Sapphire & Gold',
     city: 'All 5 Metros',
     icon: Compass,
-    accentColor: '#0071E3',
-    targetRoute: '/cockpit',
+    accentColor: '#F59E0B',
+    targetRoute: '/expansion',
     description: 'Greenfield scouting, competitor Huff gravity displacement, CapEx & breakeven models, portfolio ROI.'
   },
   {
@@ -60,7 +60,7 @@ const UNIFIED_PERSONAS = [
     city: 'NOC War Room (5 Cities)',
     icon: Truck,
     accentColor: '#00F0FF',
-    targetRoute: '/dashboard',
+    targetRoute: '/dispatch',
     description: '10-minute SLA radar, Clarke-Wright multi-drop VRP dispatch, live Doppler monsoon flood protection.'
   }
 ];
@@ -91,7 +91,7 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (isAuthenticated && !onboardingSuccess) {
-      const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit';
+      const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dispatch' : '/expansion';
       navigate(target, { replace: true });
     }
   }, [isAuthenticated, navigate, selectedRole, onboardingSuccess]);
@@ -124,10 +124,10 @@ export default function AuthPage() {
           organization,
           city: selectedCity,
           role: selectedRole,
-          targetRoute: selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit'
+          targetRoute: selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dispatch' : '/expansion'
         });
       } else {
-        const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dashboard' : '/cockpit';
+        const target = selectedRole === 'store-gm' ? '/floor' : selectedRole === 'fleet-commander' ? '/dispatch' : '/expansion';
         navigate(target, { replace: true });
       }
     },
@@ -202,7 +202,7 @@ export default function AuthPage() {
         </Link>
         <div className="auth-brand-badge">
           <span className="brand-dot-pulse" />
-          <span>Darkstori Identity Gateway 5.0</span>
+          <span>Darkstor Access Gateway</span>
         </div>
       </div>
 
@@ -275,7 +275,7 @@ export default function AuthPage() {
             <div className="auth-form-wrapper">
               <div className="auth-form-header">
                 <h2>
-                  {authMode === 'login' && 'Sign In to Darkstori'}
+                  {authMode === 'login' && 'Sign In to Darkstor'}
                   {authMode === 'register' && 'Provision Enterprise Hub'}
                   {authMode === 'forgot' && 'Reset Access Credentials'}
                 </h2>
@@ -332,7 +332,7 @@ export default function AuthPage() {
                         <select
                           value={selectedCity}
                           onChange={(e) => setSelectedCity(e.target.value)}
-                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0071E3]"
+                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#F59E0B]"
                         >
                           <option value="Bangalore">Bangalore (HSR, Indiranagar, Whitefield)</option>
                           <option value="Mumbai">Mumbai (Bandra West, Andheri East, BKC)</option>
@@ -347,7 +347,7 @@ export default function AuthPage() {
                         <select
                           value={selectedRole}
                           onChange={(e) => setSelectedRole(e.target.value)}
-                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0071E3]"
+                          className="w-full bg-[#0a0f18] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#F59E0B]"
                         >
                           <option value="executive">Executive (Expansion, CapEx & ROI)</option>
                           <option value="store-gm">Store GM (Floor Throughput & Zero-Waste)</option>
@@ -364,7 +364,7 @@ export default function AuthPage() {
                     <Mail size={16} className="field-icon" />
                     <input
                       type="email"
-                      placeholder="operator@darkstori.io"
+                      placeholder="operator@darkstor.io"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -423,7 +423,7 @@ export default function AuthPage() {
               <div className="text-center mb-6">
                 <h3 className="text-lg font-bold text-white">Instant Role Fast-Pass</h3>
                 <p className="text-xs text-white/60 mt-1">
-                  Experience Darkstori instantly through verified persona credentials with dedicated telemetry.
+                  Experience Darkstor instantly through verified persona credentials with dedicated telemetry.
                 </p>
               </div>
 

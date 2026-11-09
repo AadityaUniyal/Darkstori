@@ -160,7 +160,7 @@ async def get_benchmarks(
         "city": city or "Bangalore",
         "benchmark": match,
         "industry_average_breakeven_months": 18,
-        "darkstori_optimized_breakeven_months": 7,
+        "darkstor_optimized_breakeven_months": 7,
     }
 
 

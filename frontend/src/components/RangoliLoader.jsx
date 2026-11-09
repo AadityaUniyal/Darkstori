@@ -28,7 +28,7 @@ export default function RangoliLoader() {
         {/* Status Text */}
         <div className="mt-2 text-center space-y-1">
           <div className="text-sm font-bold text-white tracking-wide">
-            Darkstori Intelligence
+            Darkstor Intelligence
           </div>
           <div className="flex items-center justify-center gap-1.5 text-xs text-white/60 font-medium">
             <Loader2 size={13} className="animate-spin text-[#FF9F1C]" />

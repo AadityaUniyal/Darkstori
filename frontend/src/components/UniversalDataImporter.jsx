@@ -9,7 +9,7 @@ import { api } from '../services/api';
 
 const SAMPLE_TEMPLATES = {
   inventory: {
-    filename: "darkstori_inventory_template.csv",
+    filename: "darkstor_inventory_template.csv",
     headers: "store_id,batch_code,product_name,category,quantity,base_price,current_price,expiry_time,freshness_score\n",
     rows: [
       "1,BAT-AMUL-01,Amul Taaza Toned Milk 500ml,Dairy,50,27.0,27.0,2026-11-08T18:00:00Z,0.95",
@@ -21,7 +21,7 @@ const SAMPLE_TEMPLATES = {
     ].join('\n')
   },
   catalog: {
-    filename: "darkstori_sku_catalog_template.csv",
+    filename: "darkstor_sku_catalog_template.csv",
     headers: "sku_code,product_name,category,mrp,cost_price,storage_zone,ean_barcode,gst_pct\n",
     rows: [
       "SKU-MILK-500,Amul Taaza Toned Milk 500ml,Dairy,27.0,25.5,Chiller,8901262010054,0",

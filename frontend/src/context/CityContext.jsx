@@ -5,7 +5,7 @@ const CityContext = createContext(null);
 
 export function CityProvider({ children }) {
   const [selectedCity, setSelectedCityState] = useState(() => {
-    return localStorage.getItem('darkstori_selected_city') || 'Bangalore';
+    return localStorage.getItem('darkstor_selected_city') || 'Bangalore';
   });
   const [cities, setCities] = useState([
     'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 
@@ -17,7 +17,7 @@ export function CityProvider({ children }) {
   const setSelectedCity = useCallback((city) => {
     if (!city) return;
     setSelectedCityState(city);
-    localStorage.setItem('darkstori_selected_city', city);
+    localStorage.setItem('darkstor_selected_city', city);
   }, []);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function CityProvider({ children }) {
         if (mounted && names.length > 0) {
           setCitiesError(false);
           setCities(names);
-          if (!localStorage.getItem('darkstori_selected_city')) {
+          if (!localStorage.getItem('darkstor_selected_city')) {
             const defaultCity = names.includes('Bangalore') ? 'Bangalore' : names[0];
             setSelectedCity(defaultCity);
           }
@@ -70,7 +70,7 @@ export function CityProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ selectedCity, currentCity: selectedCity, setSelectedCity, setCity: setSelectedCity, cities, citiesError, addCity, selectedLocation, setSelectedLocation, selectLocation }),
+    () => ({ selectedCity, currentCity: selectedCity, activeCity: selectedCity, setSelectedCity, setCity: setSelectedCity, cities, citiesError, addCity, selectedLocation, setSelectedLocation, selectLocation }),
     [selectedCity, cities, citiesError, addCity, selectedLocation, selectLocation]
   );
 

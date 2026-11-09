@@ -131,7 +131,7 @@ def test_combination_frontend_backend_auth_and_login_assets(e2e_client):
     Verify authentication register/login flow and Login page SVG asset composition.
     """
     res_auth = e2e_client.post("/api/v1/auth/register", json={
-        "email": "pair_auth@darkstori.io",
+        "email": "pair_auth@darkstor.io",
         "password": "Password123!",
         "full_name": "Pair User"
     })

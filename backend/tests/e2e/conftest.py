@@ -1,4 +1,4 @@
-"""Shared fixtures for Darkstori E2E Test Suite."""
+"""Shared fixtures for Darkstor E2E Test Suite."""
 
 import os
 import sys
@@ -100,7 +100,7 @@ async def override_e2e_get_db():
 async def override_e2e_verify_token():
     return {
         "sub": "e2e_admin_user",
-        "email": "admin@darkstori.io",
+        "email": "admin@darkstor.io",
         "role": "admin",
         "org_id": 1,
         "organization_id": 1,

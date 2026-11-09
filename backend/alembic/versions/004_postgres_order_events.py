@@ -40,7 +40,7 @@ def upgrade() -> None:
         DECLARE payload JSON;
         BEGIN
           payload = json_build_object('table', TG_TABLE_NAME, 'action', TG_OP, 'data', row_to_json(NEW));
-          PERFORM pg_notify('darkstori_events', payload::text);
+          PERFORM pg_notify('darkstor_events', payload::text);
           RETURN NEW;
         END;
         $$ LANGUAGE plpgsql;

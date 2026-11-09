@@ -33,9 +33,9 @@ function MetricCard({ label, value, sublabel, icon: Icon }) {
 export default function ExpansionCockpit() {
   const { selectedCity, selectLocation } = useCity();
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-  const [capex, setCapex] = useState(null);
-  const [storeSize, setStoreSize] = useState(null);
-  const [routingMins, setRoutingMins] = useState(null);
+  const [capex, setCapex] = useState(2150000);
+  const [storeSize, setStoreSize] = useState(2500);
+  const [routingMins, setRoutingMins] = useState(10);
   const [reviewNotes, setReviewNotes] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [resolvedPoint, setResolvedPoint] = useState(null);
@@ -445,7 +445,7 @@ export default function ExpansionCockpit() {
                 className="btn-primary"
                 onClick={() => {
                   setInitialStoreData({
-                    storeName: `Darkstori - ${pinnedLocation.street}`,
+                    storeName: `Darkstor - ${pinnedLocation.street}`,
                     city: pinnedLocation.city,
                     pincode: pinnedLocation.pincode || '560001',
                     lat: pinnedLocation.lat,

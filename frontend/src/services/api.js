@@ -1,5 +1,5 @@
 /**
- * Darkstori API Service
+ * Darkstor API Service
  * Centralized API client for all backend communication.
  */
 
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
         }
       }
       // No refresh token available — force logout unless in sandbox demo mode
-      if (localStorage.getItem('darkstori_persona') || refreshToken?.includes('demo')) {
+      if (localStorage.getItem('darkstor_persona') || refreshToken?.includes('demo')) {
         return Promise.reject(err);
       }
       localStorage.removeItem('auth_token');
@@ -130,7 +130,7 @@ const demoLogin = async (persona) => {
   const response = await apiClient.post('/api/v1/auth/demo-login', {
     persona_id: persona.id,
     role: persona.role,
-    email: `${persona.id}@darkstori.demo`,
+    email: `${persona.id}@darkstor.demo`,
     full_name: persona.title,
   });
   if (response.data.access_token) {
@@ -171,7 +171,7 @@ const resetPassword = async (token, newPassword) => {
 // ── Stores ─────────────────────────────────────────────────────────────────────
 
 const getStores = async (params = {}) => {
-  const response = await apiClient.get('/api/v1/stores/', { params });
+  const response = await apiClient.get('/api/v1/stores', { params });
   if (Array.isArray(response.data)) return response.data;
   if (Array.isArray(response.data?.stores)) return response.data.stores;
   return [];
@@ -263,7 +263,7 @@ const getFocusCities = async () => {
 
 const getNeighborhoods = async (cityId = null, limit = 50) => {
   const params = { limit, ...(cityId ? { city_id: cityId } : {}) };
-  const response = await apiClient.get('/api/v1/neighborhoods/', { params });
+  const response = await apiClient.get('/api/v1/neighborhoods', { params });
   return Array.isArray(response.data) ? response.data : [];
 };
 
@@ -602,7 +602,7 @@ const getHealth = async () => {
 // ── Evidence-backed operator decision loop ──────────────────────────────────
 
 const getDecisionQueue = async (city) => {
-  const response = await apiClient.get('/api/v1/decision-loop/', { params: { city } });
+  const response = await apiClient.get('/api/v1/decision-loop', { params: { city } });
   return response.data;
 };
 
@@ -694,7 +694,7 @@ const approveExpansionDecision = async (simulationId) => {
 
 const getEvents = async (params) => {
   try {
-    const response = await apiClient.get('/api/v1/events/', { params });
+    const response = await apiClient.get('/api/v1/events', { params });
     if (Array.isArray(response.data)) return response.data;
   } catch (err) {
     console.warn('Events unavailable; sample events are not shown as current demand signals', err);
@@ -704,7 +704,7 @@ const getEvents = async (params) => {
 };
 
 const createEvent = async (payload) => {
-  const response = await apiClient.post('/api/v1/events/', payload);
+  const response = await apiClient.post('/api/v1/events', payload);
   return response.data;
 };
 
@@ -721,12 +721,12 @@ const deleteEvent = async (eventId) => {
 // ── Playbook Automation ──────────────────────────────────────────────────────
 
 const getPlaybooks = async (params) => {
-  const response = await apiClient.get('/api/v1/playbooks/', { params });
+  const response = await apiClient.get('/api/v1/playbooks', { params });
   return response.data;
 };
 
 const createPlaybook = async (payload) => {
-  const response = await apiClient.post('/api/v1/playbooks/', payload);
+  const response = await apiClient.post('/api/v1/playbooks', payload);
   return response.data;
 };
 
@@ -832,9 +832,9 @@ const getMultiHubMesh = async () => {
 const getCompetitors = async (city = null) => {
   const params = { include_competitors: true };
   if (city && city !== 'All') params.city = city;
-  const response = await apiClient.get('/api/v1/stores/', { params });
+  const response = await apiClient.get('/api/v1/stores', { params });
   const all = Array.isArray(response.data) ? response.data : (response.data?.stores || []);
-  return all.filter((s) => s.is_competitor || s.competitor || (s.platform && s.platform !== 'Darkstori'));
+  return all.filter((s) => s.is_competitor || s.competitor || (s.platform && s.platform.toLowerCase() !== 'darkstor'));
 };
 
 const getMlBenchmark = async () => {

@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for Darkstori 3.0 — complete schema.
+"""SQLAlchemy ORM models for Darkstor 3.0 — complete schema.
 
 Contains all database models including core business tables,
 ML tracking tables, hyperlocal intelligence tables, and auth tables.
@@ -51,7 +51,7 @@ class DarkStore(Base):
     __tablename__ = "dark_stores"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    platform = Column(String(50), nullable=False, default="Darkstori")
+    platform = Column(String(50), nullable=False, default="Darkstor")
     store_name = Column(String(200))
     name = synonym("store_name")
     store_code = Column(String(50))
@@ -64,7 +64,7 @@ class DarkStore(Base):
         if "lng" in kwargs and "longitude" not in kwargs:
             kwargs["longitude"] = kwargs.pop("lng")
         if "platform" not in kwargs:
-            kwargs["platform"] = "Darkstori"
+            kwargs["platform"] = "Darkstor"
         super().__init__(**kwargs)
     city = Column(String(100), nullable=False)
     pincode = Column(String(10))

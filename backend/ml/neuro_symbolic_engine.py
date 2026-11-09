@@ -258,7 +258,7 @@ class DarkStoreDigitalTwin:
                 "road_transit_duration_s": 520,
                 "total_seconds": 702,  # 11.7 mins (BREACH)
             },
-            "darkstori_apex_pipeline": {
+            "darkstor_apex_pipeline": {
                 "point_eta_min": apex_sim["adjusted_point_min"],
                 "lower_bound_min": apex_sim["lower_bound_min"],
                 "upper_bound_min": apex_sim["upper_bound_min"],

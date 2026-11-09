@@ -180,7 +180,7 @@ def test_login_sql_injection_attempt_in_username(e2e_client):
 def test_login_extremely_long_password(e2e_client):
     """TC-F05-B02: Submit 10,000 character password to login endpoint."""
     res = e2e_client.post("/api/v1/auth/login", data={
-        "username": "admin@darkstori.io",
+        "username": "admin@darkstor.io",
         "password": "A" * 10000
     })
     assert res.status_code in [401, 422, 400]

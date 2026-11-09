@@ -1,31 +1,31 @@
 services:
   postgres:
     image: postgis/postgis:16-3.4-alpine
-    container_name: darkstori-postgres
+    container_name: darkstor-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-darkstori}
+      POSTGRES_USER: ${POSTGRES_USER:-darkstor}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: darkstori_db
+      POSTGRES_DB: darkstor_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U darkstori"]
+      test: ["CMD-SHELL", "pg_isready -U darkstor"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
     networks:
-      - darkstori-network
+      - darkstor-network
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: darkstori-backend
+    container_name: darkstor-backend
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-darkstori}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/darkstori_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-darkstor}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/darkstor_db
       - ENVIRONMENT=development
       - DEBUG=True
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}
@@ -55,11 +55,11 @@ services:
       - ./docker-entrypoint.sh:/app/docker-entrypoint.sh
       - ./frontend/nginx:/app/frontend/nginx
     networks:
-      - darkstori-network
+      - darkstor-network
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
-    container_name: darkstori-mlflow
+    container_name: darkstor-mlflow
     command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
     ports:
       - "5000:5000"
@@ -72,21 +72,21 @@ services:
     volumes:
       - mlflow_data:/mlflow
     networks:
-      - darkstori-network
+      - darkstor-network
 
   prometheus:
     image: prom/prometheus:v2.45.0
-    container_name: darkstori-prometheus
+    container_name: darkstor-prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - darkstori-network
+      - darkstor-network
 
   grafana:
     image: grafana/grafana:10.1.5
-    container_name: darkstori-grafana
+    container_name: darkstor-grafana
     ports:
       - "3001:3000"
     volumes:
@@ -94,14 +94,14 @@ services:
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
-      - darkstori-network
+      - darkstor-network
 
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-    container_name: darkstori-frontend
+    container_name: darkstor-frontend
     environment:
       - VITE_API_URL=http://localhost:8000
     ports:
@@ -109,12 +109,12 @@ services:
     depends_on:
       - backend
     networks:
-      - darkstori-network
+      - darkstor-network
 
 volumes:
   postgres_data:
   mlflow_data:
 
 networks:
-  darkstori-network:
+  darkstor-network:
     driver: bridge

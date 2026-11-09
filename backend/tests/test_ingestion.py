@@ -21,7 +21,7 @@ async def test_order_and_batch_ingestion_end_to_end():
         await db.flush()
 
         user = User(
-            email="operator_ingest@darkstori.io",
+            email="operator_ingest@darkstor.io",
             username="operator_ingest",
             hashed_password="hashed_test_password",
             full_name="Operations Ingest Lead",
@@ -37,7 +37,7 @@ async def test_order_and_batch_ingestion_end_to_end():
             city="Bangalore",
             latitude=12.9716,
             longitude=77.5946,
-            platform="Darkstori",
+            platform="Darkstor",
             organization_id=org.id,
             is_active=True,
         )
@@ -53,7 +53,7 @@ async def test_order_and_batch_ingestion_end_to_end():
     token = create_access_token({
         "sub": str(user_id),
         "user_id": user_id,
-        "email": "operator_ingest@darkstori.io",
+        "email": "operator_ingest@darkstor.io",
         "role": "store-gm",
         "org_id": org_id,
         "organization_id": org_id,

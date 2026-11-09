@@ -142,7 +142,7 @@ export default function DecisionQueue({ city }) {
             <div>
               <h4 className="text-xs font-semibold text-white/90">Empirical Policy Validation · Counterfactual Backtest</h4>
               <p className="mt-0.5 text-[11px] text-white/45">
-                Comparing Darkstori&apos;s dynamic markdown policy against standard FIFO status quo and linear step discounting.
+                Comparing Darkstor&apos;s dynamic markdown policy against standard FIFO status quo and linear step discounting.
               </p>
             </div>
             {isBacktestLoading && <Loader2 size={14} className="animate-spin text-white/50" />}
@@ -172,17 +172,17 @@ export default function DecisionQueue({ city }) {
                 </div>
               </div>
 
-              {/* Darkstori Sigmoid */}
+              {/* Darkstor Sigmoid */}
               <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/[0.05] p-3">
                 <div className="flex items-center justify-between">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Darkstori Dynamic</span>
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Darkstor Dynamic</span>
                   <span className="rounded-full bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">PROVEN</span>
                 </div>
                 <p className="mt-1 text-xs font-medium text-emerald-100">Sigmoid Freshness Rule</p>
                 <div className="mt-2 space-y-1 text-xs">
-                  <div className="flex justify-between text-emerald-100/70"><span>Waste units</span><span className="font-bold text-emerald-300">{backtest.comparison_metrics.darkstori_dynamic.waste_units}</span></div>
-                  <div className="flex justify-between text-emerald-100/70"><span>Waste reduction</span><span className="font-bold text-emerald-300">-{backtest.comparison_metrics.darkstori_dynamic.waste_reduction_vs_fifo_pct}%</span></div>
-                  <div className="flex justify-between text-emerald-100/70"><span>Discounted rev</span><span className="font-bold text-white">{formatRupees(backtest.comparison_metrics.darkstori_dynamic.markdown_revenue_inr)}</span></div>
+                  <div className="flex justify-between text-emerald-100/70"><span>Waste units</span><span className="font-bold text-emerald-300">{backtest.comparison_metrics.darkstor_dynamic.waste_units}</span></div>
+                  <div className="flex justify-between text-emerald-100/70"><span>Waste reduction</span><span className="font-bold text-emerald-300">-{backtest.comparison_metrics.darkstor_dynamic.waste_reduction_vs_fifo_pct}%</span></div>
+                  <div className="flex justify-between text-emerald-100/70"><span>Discounted rev</span><span className="font-bold text-white">{formatRupees(backtest.comparison_metrics.darkstor_dynamic.markdown_revenue_inr)}</span></div>
                 </div>
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function DecisionQueue({ city }) {
       ) : isError ? (
         <div className="py-6">
           <p className="text-sm font-medium text-white/80">Live recommendations are unavailable</p>
-          <p className="mt-1 text-xs leading-relaxed text-white/50">The queue needs a connection to Darkstori’s API. Synthetic actions are not shown as live recommendations.</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/50">The queue needs a connection to Darkstor’s API. Synthetic actions are not shown as live recommendations.</p>
           <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/15">Try again</button>
         </div>
       ) : recommendations.length === 0 ? (

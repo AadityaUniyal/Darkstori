@@ -279,14 +279,14 @@ async def test_storefront_webhook(
     }
 
     raw_json = json.dumps(test_body, sort_keys=True)
-    secret = (item.hmac_secret or "darkstori_webhook_secret_key").encode("utf-8")
+    secret = (item.hmac_secret or "darkstor_webhook_secret_key").encode("utf-8")
     signature = hmac.new(secret, raw_json.encode("utf-8"), hashlib.sha256).hexdigest()
 
     headers = {
         "Content-Type": "application/json",
-        "X-Darkstori-Event": item.event_type,
-        "X-Darkstori-Signature": f"sha256={signature}",
-        "X-Darkstori-Timestamp": now.isoformat(),
+        "X-Darkstor-Event": item.event_type,
+        "X-Darkstor-Signature": f"sha256={signature}",
+        "X-Darkstor-Timestamp": now.isoformat(),
     }
 
     start_time = time.perf_counter()

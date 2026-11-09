@@ -39,7 +39,7 @@ async def test_cross_tenant_isolation_and_negative_permissions():
             city="Bangalore",
             latitude=12.9352,
             longitude=77.6245,
-            platform="Darkstori",
+            platform="Darkstor",
             organization_id=org_a.id,
             is_active=True,
         )
@@ -82,7 +82,7 @@ async def test_cross_tenant_isolation_and_negative_permissions():
             city="Bangalore",
             latitude=12.9719,
             longitude=77.6412,
-            platform="Darkstori",
+            platform="Darkstor",
             organization_id=org_b.id,
             is_active=True,
         )
@@ -181,7 +181,7 @@ async def test_decision_loop_backtest_and_catalog_webhook():
     """Verify decision loop policy backtesting endpoint and catalog webhook dispatch."""
     token = create_access_token({
         "sub": "test_operator",
-        "email": "op@darkstori.io",
+        "email": "op@darkstor.io",
         "role": "admin",
         "org_id": 1,
         "organization_id": 1,
@@ -197,7 +197,7 @@ async def test_decision_loop_backtest_and_catalog_webhook():
         assert data["batch_count"] == 15
         assert "policies" in data
         assert "fifo_status_quo" in data["policies"]
-        assert "darkstori_dynamic" in data["policies"]
+        assert "darkstor_dynamic" in data["policies"]
         assert "measured_uplift" in data
         assert data["measured_uplift"]["waste_reduction_pct"] > 0
 

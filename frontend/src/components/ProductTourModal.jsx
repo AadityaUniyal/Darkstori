@@ -21,7 +21,7 @@ const TOUR_STEPS = [
     title: 'Three Dedicated Operational Lenses',
     subtitle: 'Role-Optimized Control Centers',
     description:
-      'Darkstori dynamically reorganizes its telemetry depending on who is at the helm. Switch between Executive (Preserved Capital & Spoilage Alpha), Store GM (In-Store Digital Twin & Rack Slotting), and Fleet Commander (10-Min Swarm Intercept & VRP Dispatch).',
+      'Darkstor dynamically reorganizes its telemetry depending on who is at the helm. Switch between Executive (Preserved Capital & Spoilage Alpha), Store GM (In-Store Digital Twin & Rack Slotting), and Fleet Commander (10-Min Swarm Intercept & VRP Dispatch).',
     icon: Compass,
     color: '#FF9F1C',
     highlights: [
@@ -63,7 +63,7 @@ const TOUR_STEPS = [
     title: 'Autonomous Self-Healing Mesh & VRP',
     subtitle: 'Zero-Waste Transshipments & Rider Dispatch',
     description:
-      'When perishable SKUs reach critical shelf-life thresholds, Darkstori computes Sigmoid markdown prices and automatically coordinates inter-hub EV transshipment runners across adjacent hubs before food spoils.',
+      'When perishable SKUs reach critical shelf-life thresholds, Darkstor computes Sigmoid markdown prices and automatically coordinates inter-hub EV transshipment runners across adjacent hubs before food spoils.',
     icon: Zap,
     color: '#EF4444',
     highlights: [
@@ -87,13 +87,13 @@ export default function ProductTourModal() {
       setCurrentStepIndex(0);
       setIsOpen(true);
     };
-    window.addEventListener('darkstori:open-tour', handleOpenTour);
-    return () => window.removeEventListener('darkstori:open-tour', handleOpenTour);
+    window.addEventListener('darkstor:open-tour', handleOpenTour);
+    return () => window.removeEventListener('darkstor:open-tour', handleOpenTour);
   }, []);
 
   const handleSkipOrComplete = () => {
     try {
-      localStorage.setItem('darkstori_tour_completed', 'true');
+      localStorage.setItem('darkstor_tour_completed', 'true');
     } catch (e) {
       // Ignore storage errors
     }
@@ -147,7 +147,7 @@ export default function ProductTourModal() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-foreground">Darkstori Onboarding</span>
+                    <span className="font-semibold text-sm text-foreground">Darkstor Onboarding</span>
                     <span
                       className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
                       style={{

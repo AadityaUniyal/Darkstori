@@ -5,7 +5,7 @@ from backend.core.config import settings
 from backend.core.logger import logger
 
 async def start_realtime_listener(sio):
-    """Listens for pg_notify events on 'darkstori_events' channel and forwards to Socket.IO."""
+    """Listens for pg_notify events on 'darkstor_events' channel and forwards to Socket.IO."""
     logger.info("Starting real-time PostgreSQL database listener...")
     
     # Extract database URL
@@ -30,8 +30,8 @@ async def start_realtime_listener(sio):
                 except Exception as e:
                     logger.error(f"Error handling notification payload: {e}")
 
-            await conn.add_listener("darkstori_events", handle_notification)
-            logger.info("Real-time PostgreSQL listener connected and listening to 'darkstori_events'")
+            await conn.add_listener("darkstor_events", handle_notification)
+            logger.info("Real-time PostgreSQL listener connected and listening to 'darkstor_events'")
             
             # Keep connection alive with periodic healthcheck pings
             while True:

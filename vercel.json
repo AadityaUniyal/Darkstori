@@ -1,10 +1,19 @@
 {
-  "buildCommand": "cd frontend && npm ci && npm run build",
+  "version": 2,
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "http://3.109.5.16/api/$1"
+    },
+    {
+      "source": "/socket.io/(.*)",
+      "destination": "http://3.109.5.16/socket.io/$1"
+    },
+    {
+      "source": "/health/(.*)",
+      "destination": "http://3.109.5.16/health/$1"
     },
     {
       "source": "/(.*)",

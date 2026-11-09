@@ -135,7 +135,7 @@ export default function Dashboard() {
           )}
           <button
             onClick={() => {
-              const event = new CustomEvent('darkstori:open-command-palette');
+              const event = new CustomEvent('darkstor:open-command-palette');
               window.dispatchEvent(event);
             }}
             className="studio-shortcut-pill"

@@ -16,7 +16,7 @@ const TRANSLATIONS = {
     layoutTitle: "Store Layout Optimization",
     exportPdf: "Export to Leadership PDF",
     apiTitle: "Enterprise API Documentation",
-    apiDesc: "Integrate Darkstori recommendations into your existing OMS or ERP systems.",
+    apiDesc: "Integrate Darkstor recommendations into your existing OMS or ERP systems.",
     category: "Category",
     allocation: "Space Allocation",
     investment: "Investment Amount",
@@ -201,7 +201,7 @@ export default function Recommendations() {
       </div>
 
       <div className="print-only-header" style={{ display: 'none', borderBottom: '2px solid #000', paddingBottom: '16px', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24pt', fontWeight: 'bold', margin: '0 0 4px 0' }}>DARKSTORI INTELLIGENCE EXECUTIVE SUMMARY REPORT</h1>
+        <h1 style={{ fontSize: '24pt', fontWeight: 'bold', margin: '0 0 4px 0' }}>DARKSTOR INTELLIGENCE EXECUTIVE SUMMARY REPORT</h1>
         <p style={{ fontSize: '11pt', margin: 0 }}>
           Neighborhood Profile: <strong>{neighborhoodList.find(n => n.neighborhood_id === selectedNbId)?.neighborhood_name}</strong> | Generated on: {new Date().toLocaleDateString()}
         </p>
@@ -411,7 +411,7 @@ export default function Recommendations() {
                           {log.new_state?.store_provisioned || "Darkstore Hub"}
                         </td>
                         <td style={{ padding: '10px 6px', color: 'var(--color-text-secondary)' }}>
-                          {prov?.approver?.email || "regional_head@darkstori.com"}
+                          {prov?.approver?.email || "regional_head@darkstor.com"}
                         </td>
                         <td style={{ padding: '10px 6px', fontFamily: 'var(--font-mono)' }}>
                           v{prov?.model_version || "3.1.0"}
@@ -441,7 +441,7 @@ export default function Recommendations() {
             </div>
             
             <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>
-              Automatically synchronize Darkstori inventory allocations and pricing models directly into your warehouse management and ordering platforms.
+              Automatically synchronize Darkstor inventory allocations and pricing models directly into your warehouse management and ordering platforms.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>

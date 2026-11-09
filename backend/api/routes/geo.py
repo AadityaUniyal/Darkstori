@@ -117,7 +117,7 @@ async def analyze_location(
         "note": "Counts describe available records and mapped POIs only. No demand or profitability score is inferred.",
         "sources": {
             "competitors": "OpenStreetMap Overpass POIs; community mapped and may be incomplete",
-            "dark_stores": "tenant-scoped Darkstori database records",
+            "dark_stores": "tenant-scoped Darkstor database records",
             "coverage": "pincode_coverage database records",
         },
         "competitor_count": len(competitors),

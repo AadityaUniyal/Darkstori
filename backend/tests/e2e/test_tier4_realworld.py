@@ -16,9 +16,9 @@ def test_e2e_platform_onboarding_and_seeding(e2e_client):
     assert res_ready.status_code in [200, 503]
 
     res_reg = e2e_client.post("/api/v1/auth/register", json={
-        "email": "onboarding_admin@darkstori.io",
+        "email": "onboarding_admin@darkstor.io",
         "password": "SecurePassword123!",
-        "full_name": "Darkstori Admin"
+        "full_name": "Darkstor Admin"
     })
     assert res_reg.status_code in [201, 400]
 
@@ -50,7 +50,7 @@ def test_e2e_perishable_inventory_spoilage_mitigation(e2e_client):
 
         res_verify = e2e_client.post("/api/v1/resilience/batches/verify-photo", json={
             "batch_id": decayed_batches[0]["id"],
-            "photo_url": "https://storage.darkstori.io/inspect_01.jpg",
+            "photo_url": "https://storage.darkstor.io/inspect_01.jpg",
             "bruising_percent": 15.5,
             "color_state": "Slight Wilting",
             "freshness_score": 0.70
@@ -192,6 +192,6 @@ def test_e2e_multitenant_auth_and_security_isolation(e2e_client, unauthenticated
     assert res_unauth.status_code in [401, 403]
 
     from backend.core.security import create_access_token
-    token = create_access_token({"sub": "tenant_test@darkstori.io", "org_id": 1, "role": "admin"})
+    token = create_access_token({"sub": "tenant_test@darkstor.io", "org_id": 1, "role": "admin"})
     res_auth = e2e_client.get("/api/v1/stores", headers={"Authorization": f"Bearer {token}"})
     assert res_auth.status_code == 200

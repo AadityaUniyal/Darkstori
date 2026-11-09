@@ -125,9 +125,9 @@ export default function CommandPalette({ isOpen, onClose }) {
       type: 'Action',
       icon: UploadCloud,
       title: 'Import Catalog / Inventory CSV',
-      subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into Darkstori',
+      subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into DarkStor',
       action: () => {
-        window.dispatchEvent(new CustomEvent('darkstori:open-importer'));
+        window.dispatchEvent(new CustomEvent('darkstor:open-importer'));
       }
     },
     {
@@ -137,7 +137,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: 'Storefront Webhooks & Compliance',
       subtitle: 'Configure real-time price sync, stockout hooks, GSTIN, and FSSAI credentials',
       action: () => {
-        window.dispatchEvent(new CustomEvent('darkstori:open-settings'));
+        window.dispatchEvent(new CustomEvent('darkstor:open-settings'));
       }
     },
     {
@@ -147,7 +147,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: 'Start Product Tour',
       subtitle: 'Walk through dark store operational lenses, digital twin, and VRP dispatch',
       action: () => {
-        window.dispatchEvent(new CustomEvent('darkstori:open-tour'));
+        window.dispatchEvent(new CustomEvent('darkstor:open-tour'));
       }
     },
     {
@@ -383,7 +383,7 @@ export default function CommandPalette({ isOpen, onClose }) {
                   <span className="hidden sm:inline">Close</span>
                 </span>
               </div>
-              <span className="text-[11px] font-medium text-amber-500 font-mono">Darkstori Spotlight</span>
+              <span className="text-[11px] font-medium text-amber-500 font-mono">DarkStor Spotlight</span>
             </div>
           </motion.div>
         </motion.div>
