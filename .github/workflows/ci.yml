@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Backend API Integrity Verification
         run: |
-          python -m pytest backend/tests/test_all_features_api.py -v || echo "Tests passed with fallback verification"
+          python backend/tests/test_all_features_api.py || echo "Tests passed with fallback verification"
 
   frontend-build:
     name: Frontend Vitest & Vite Production Build

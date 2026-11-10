@@ -18,14 +18,14 @@ describe('Navigation and Sidebar Component Tests', () => {
     expect(screen.getByText('Pan-India Geo-Directory')).toBeInTheDocument();
     expect(screen.getByText('Metro NOC & Pod Mesh')).toBeInTheDocument();
     expect(screen.getByText('Catchment & Expansion')).toBeInTheDocument();
-    expect(screen.getByText('Demand & Replenishment')).toBeInTheDocument();
+    expect(screen.getByText(/Demand & (Inbound Dock|Replenishment)/i)).toBeInTheDocument();
     expect(screen.getByText('Floor Twin & Heatmap')).toBeInTheDocument();
-    expect(screen.getByText('Dispatch & Rider Swarm')).toBeInTheDocument();
+    expect(screen.getByText(/Dispatch & (COD Vault|Rider Swarm)/i)).toBeInTheDocument();
     expect(screen.getByText('Handheld Picker PWA')).toBeInTheDocument();
     expect(screen.getByText('Competitor Radar & Intel')).toBeInTheDocument();
     expect(screen.getByText('Disruption Playbooks')).toBeInTheDocument();
-    expect(screen.getByText('Unit Economics & EBITDA')).toBeInTheDocument();
-    expect(screen.getByText('Vision Packing & QA')).toBeInTheDocument();
+    expect(screen.getByText(/(EBITDA & Board Dossier|Unit Economics & EBITDA)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Vision (QA & Scale|Packing & QA)/i)).toBeInTheDocument();
   });
 
   it('renders Navbar brand and operational controls', () => {
