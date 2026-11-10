@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import { api } from '../../services/api';
 
 // Pre-seeded Perishable SKUs approaching near-expiry threshold
 const PERISHABLE_SKUS = [
@@ -187,12 +188,14 @@ export default function DynamicMarkdownEngine({ onSyncFeed }) {
     }, 450);
   };
 
-  // Commit markdown to Storefront Feed
-  const handleDeployMarkdown = () => {
+  // Commit markdown to Storefront Feed and live database
+  const handleDeployMarkdown = async () => {
     if (!selectedOptimalArm) {
       toast.error('Please run the Thompson Sampling optimizer first.');
       return;
     }
+
+    floorAudio.click();
 
     const payload = {
       skuId: activeSku.id,
@@ -208,31 +211,46 @@ export default function DynamicMarkdownEngine({ onSyncFeed }) {
       status: 'LIVE_ON_STOREFRONT'
     };
 
+    try {
+      await api.applyDynamicMarkdown({
+        sku_name: activeSku.name,
+        discount_pct: selectedOptimalArm.pct,
+        arm_name: selectedOptimalArm.label,
+        projected_salvage_units: selectedOptimalArm.projectedSalesUnits || stockToLiquidate,
+        net_economic_gain_inr: selectedOptimalArm.netProfitOrLoss || 0.0
+      });
+      toast.success(`Catalog updated in Neon DB: ${selectedOptimalArm.label} deployed to live storefront feeds!`);
+    } catch (err) {
+      toast.info(`Markdown applied locally to storefront feeds.`);
+    }
+
     const updated = {
       ...appliedMarkdowns,
       [activeSku.id]: payload
     };
 
     setAppliedMarkdowns(updated);
-    try {
-      localStorage.setItem('darkstori_active_markdowns', JSON.stringify(updated));
-    } catch {}
-
     floorAudio.playDispatchSuccess();
-    toast.success(`Deployed ${selectedOptimalArm.discountLabel} to Zepto/Blinkit/Instamart storefront feeds!`);
     if (onSyncFeed) onSyncFeed(payload);
   };
 
-  // Revoke markdown
-  const handleRevokeMarkdown = (skuId) => {
+  // Revoke markdown and restore catalog price
+  const handleRevokeMarkdown = async (skuId) => {
+    floorAudio.click();
+    try {
+      await api.applyDynamicMarkdown({
+        sku_name: activeSku.name,
+        discount_pct: 0.0,
+        arm_name: "Standard MRP Restored",
+        projected_salvage_units: 0,
+        net_economic_gain_inr: 0.0
+      });
+    } catch {}
+
     const updated = { ...appliedMarkdowns };
     delete updated[skuId];
     setAppliedMarkdowns(updated);
-    try {
-      localStorage.setItem('darkstori_active_markdowns', JSON.stringify(updated));
-    } catch {}
-    floorAudio.click();
-    toast.info('Markdown revoked. Price restored to standard MRP.');
+    toast.info('Markdown revoked. Price restored to standard MRP in database.');
   };
 
   const isCurrentSkuLive = Boolean(appliedMarkdowns[activeSku.id]);

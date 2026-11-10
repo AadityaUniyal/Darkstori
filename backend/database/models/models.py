@@ -982,3 +982,30 @@ class PackingVerification(Base):
         Index("idx_packing_verif_passport", "passport_qr"),
         Index("idx_packing_verif_created", "created_at"),
     )
+
+
+class RiderSettlement(Base):
+    """Cash-on-Delivery (COD) vault settlement ledger for delivery fleet."""
+    __tablename__ = "rider_settlements"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
+    store_id = Column(Integer, ForeignKey("dark_stores.id"), nullable=True, index=True)
+    rider_code = Column(String(50), nullable=False, index=True)
+    rider_name = Column(String(120), nullable=False)
+    orders_completed = Column(Integer, default=0)
+    cash_due_inr = Column(Float, default=0.0)
+    upi_collected_inr = Column(Float, default=0.0)
+    cash_deposited_inr = Column(Float, default=0.0)
+    variance_inr = Column(Float, default=0.0)
+    status = Column(String(30), default="SETTLED")  # SETTLED, PENDING_AUDIT, ESCALATED
+    notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("idx_rider_settlement_rider", "rider_code"),
+        Index("idx_rider_settlement_store", "store_id"),
+        Index("idx_rider_settlement_created", "created_at"),
+    )

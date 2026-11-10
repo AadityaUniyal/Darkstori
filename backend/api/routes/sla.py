@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.core.logger import logger
 from backend.core.security import verify_token, verify_token_optional
 from backend.database.connection import get_db
-from backend.database.models.models import AuditLog, DeliverySLAMetric, OrderEvent, OrderSynthetic
+from backend.database.models.models import AuditLog, DeliverySLAMetric, OrderEvent, OrderSynthetic, RiderSettlement
 
 router = APIRouter()
 
@@ -474,4 +474,133 @@ async def simulate_neuro_symbolic_darkstore(
         "note": "Generated scenario only; no customer clickstream, picker, dispatch, or SLA actuators are connected.",
         "hawkes_predicted_basket": predicted_basket,
         **simulation_result
+    }
+
+
+# ── COD Cash Vault & Fleet Settlements ──────────────────────────────────────────
+
+class CodDepositIn(BaseModel):
+    rider_code: str
+    deposit_amount_inr: float
+    notes: Optional[str] = "End-of-shift vault drop"
+
+
+@router.get("/cod-vault")
+async def get_cod_vault_ledger(
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """
+    Returns live Cash-on-Delivery vault reconciliation ledger from the database.
+    Auto-seeds baseline fleet settlement rows if empty.
+    """
+    res = await db.execute(select(RiderSettlement).order_by(RiderSettlement.id.asc()))
+    settlements = list(res.scalars().all())
+
+    # Auto-seed baseline fleet records if table is brand new
+    if not settlements:
+        seed_data = [
+            {"rider_code": "RD-SURESH-08", "rider_name": "Suresh Kumar", "orders_completed": 14, "cash_due_inr": 2840.0, "upi_collected_inr": 4120.0, "cash_deposited_inr": 2840.0, "variance_inr": 0.0, "status": "SETTLED"},
+            {"rider_code": "RD-KUMAR-12", "rider_name": "Kumar Swamy", "orders_completed": 11, "cash_due_inr": 1950.0, "upi_collected_inr": 3200.0, "cash_deposited_inr": 1950.0, "variance_inr": 0.0, "status": "SETTLED"},
+            {"rider_code": "RD-VIKRAM-04", "rider_name": "Vikram Singh", "orders_completed": 16, "cash_due_inr": 3420.0, "upi_collected_inr": 4890.0, "cash_deposited_inr": 3000.0, "variance_inr": -420.0, "status": "PENDING_AUDIT"},
+            {"rider_code": "RD-ANAND-19", "rider_name": "Anand Rao", "orders_completed": 9, "cash_due_inr": 1480.0, "upi_collected_inr": 2600.0, "cash_deposited_inr": 1480.0, "variance_inr": 0.0, "status": "SETTLED"},
+        ]
+        for s in seed_data:
+            item = RiderSettlement(**s)
+            db.add(item)
+        await db.commit()
+        res = await db.execute(select(RiderSettlement).order_by(RiderSettlement.id.asc()))
+        settlements = list(res.scalars().all())
+
+    items = [
+        {
+            "id": s.rider_code,
+            "name": s.rider_name,
+            "ordersCompleted": s.orders_completed,
+            "cashDueInr": s.cash_due_inr,
+            "upiCollectedInr": s.upi_collected_inr,
+            "cashDepositedInr": s.cash_deposited_inr,
+            "varianceInr": s.variance_inr,
+            "status": s.status,
+            "notes": s.notes,
+            "updatedAt": s.updated_at.isoformat() if s.updated_at else None
+        }
+        for s in settlements
+    ]
+
+    total_cash_collected = sum(s["cashDepositedInr"] for s in items)
+    total_upi_collected = sum(s["upiCollectedInr"] for s in items)
+    total_discrepancy = sum(s["varianceInr"] for s in items)
+
+    return {
+        "status": "success",
+        "totalCashCollected": total_cash_collected,
+        "totalUpiCollected": total_upi_collected,
+        "totalDiscrepancy": total_discrepancy,
+        "settlements": items
+    }
+
+
+@router.post("/cod-vault/deposit")
+async def record_cod_vault_deposit(
+    req: CodDepositIn,
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """
+    Records a physical cash deposit into the dark store cash vault.
+    Updates rider variance, settlement status, and writes immutable AuditLog entry.
+    """
+    res = await db.execute(select(RiderSettlement).where(RiderSettlement.rider_code == req.rider_code))
+    rider = res.scalars().first()
+
+    if not rider:
+        # Create rider on the fly if not exists
+        rider = RiderSettlement(
+            rider_code=req.rider_code,
+            rider_name=f"Rider {req.rider_code}",
+            orders_completed=1,
+            cash_due_inr=req.deposit_amount_inr,
+            cash_deposited_inr=0.0,
+            variance_inr=-req.deposit_amount_inr,
+            status="PENDING_AUDIT"
+        )
+        db.add(rider)
+        await db.flush()
+
+    old_deposit = rider.cash_deposited_inr
+    rider.cash_deposited_inr = round(rider.cash_deposited_inr + req.deposit_amount_inr, 2)
+    rider.variance_inr = round(rider.cash_deposited_inr - rider.cash_due_inr, 2)
+    rider.status = "SETTLED" if rider.variance_inr >= 0 else "PENDING_AUDIT"
+    rider.notes = req.notes
+    rider.updated_at = datetime.now(timezone.utc)
+
+    # Immutable AuditLog entry
+    audit = AuditLog(
+        action="COD_VAULT_DEPOSIT",
+        target_table="rider_settlements",
+        target_id=str(rider.id),
+        new_state={
+            "rider_code": rider.rider_code,
+            "rider_name": rider.rider_name,
+            "deposit_amount_inr": req.deposit_amount_inr,
+            "previous_deposit_inr": old_deposit,
+            "new_deposit_total_inr": rider.cash_deposited_inr,
+            "new_variance_inr": rider.variance_inr,
+            "status": rider.status,
+            "notes": req.notes,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    )
+    db.add(audit)
+    await db.commit()
+    await db.refresh(rider)
+
+    return {
+        "status": "success",
+        "rider_code": rider.rider_code,
+        "amount_deposited_inr": req.deposit_amount_inr,
+        "new_variance_inr": rider.variance_inr,
+        "settlement_status": rider.status,
+        "message": f"Successfully deposited INR {req.deposit_amount_inr} for {rider.rider_name}. Safe register updated."
     }

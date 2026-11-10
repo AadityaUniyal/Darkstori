@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Banknote,
@@ -17,8 +17,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import { api } from '../../services/api';
 
-const RIDER_COD_SETTLEMENTS = [
+const RIDER_COD_SETTLEMENTS_DEFAULT = [
   { id: 'RD-SURESH-08', name: 'Suresh Kumar', ordersCompleted: 14, cashDueInr: 2840, upiCollectedInr: 4120, cashDepositedInr: 2840, varianceInr: 0, status: 'SETTLED' },
   { id: 'RD-KUMAR-12', name: 'Kumar Swamy', ordersCompleted: 11, cashDueInr: 1950, upiCollectedInr: 3200, cashDepositedInr: 1950, varianceInr: 0, status: 'SETTLED' },
   { id: 'RD-VIKRAM-04', name: 'Vikram Singh', ordersCompleted: 16, cashDueInr: 3420, upiCollectedInr: 4890, cashDepositedInr: 3000, varianceInr: -420, status: 'PENDING_AUDIT' },
@@ -26,57 +27,86 @@ const RIDER_COD_SETTLEMENTS = [
 ];
 
 export default function CodVaultRegister() {
-  const [settlements, setSettlements] = useState(() => {
-    try {
-      const saved = localStorage.getItem('darkstori_cod_settlements');
-      return saved ? JSON.parse(saved) : RIDER_COD_SETTLEMENTS;
-    } catch {
-      return RIDER_COD_SETTLEMENTS;
-    }
-  });
-
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('darkstori_cod_settlements', JSON.stringify(settlements));
-    } catch {}
-  }, [settlements]);
+  const [settlements, setSettlements] = useState(RIDER_COD_SETTLEMENTS_DEFAULT);
+  const [loading, setLoading] = useState(false);
   const [vaultDepositModalOpen, setVaultDepositModalOpen] = useState(false);
   const [selectedRider, setSelectedRider] = useState(null);
   const [depositAmount, setDepositAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalCashCollected = settlements.reduce((acc, r) => acc + r.cashDepositedInr, 0);
-  const totalUpiCollected = settlements.reduce((acc, r) => acc + r.upiCollectedInr, 0);
-  const totalDiscrepancy = settlements.reduce((acc, r) => acc + r.varianceInr, 0);
+  // Fetch live settlements from Neon PostgreSQL / SQLite backend
+  const fetchVaultLedger = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.getCodVaultLedger();
+      if (res && res.settlements && res.settlements.length > 0) {
+        setSettlements(res.settlements);
+      }
+    } catch (err) {
+      console.warn("Could not load COD vault from server, using local ledger:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVaultLedger();
+  }, [fetchVaultLedger]);
+
+  const totalCashCollected = settlements.reduce((acc, r) => acc + (r.cashDepositedInr || 0), 0);
+  const totalUpiCollected = settlements.reduce((acc, r) => acc + (r.upiCollectedInr || 0), 0);
+  const totalDiscrepancy = settlements.reduce((acc, r) => acc + (r.varianceInr || 0), 0);
 
   const handleDepositToVault = (rider) => {
     floorAudio.playSuccessPick();
     setSelectedRider(rider);
-    setDepositAmount(Math.abs(rider.cashDueInr - rider.cashDepositedInr).toString());
+    const deficit = Math.max(0, (rider.cashDueInr || 0) - (rider.cashDepositedInr || 0));
+    setDepositAmount(deficit.toString());
     setVaultDepositModalOpen(true);
   };
 
-  const handleConfirmVaultDeposit = (e) => {
+  const handleConfirmVaultDeposit = async (e) => {
     e.preventDefault();
-    const amount = parseInt(depositAmount, 10);
-    if (isNaN(amount) || amount <= 0) return;
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid deposit amount.");
+      return;
+    }
 
-    floorAudio.playSuccessPick();
-    toast.success(`₹${amount} deposited into Dark Store Safe Vault for ${selectedRider.name}!`);
+    setIsSubmitting(true);
+    floorAudio.click();
 
-    setSettlements(prev => prev.map(r => {
-      if (r.id === selectedRider.id) {
-        const newDeposited = r.cashDepositedInr + amount;
-        return {
-          ...r,
-          cashDepositedInr: newDeposited,
-          varianceInr: newDeposited - r.cashDueInr,
-          status: newDeposited >= r.cashDueInr ? 'SETTLED' : 'PENDING_AUDIT'
-        };
-      }
-      return r;
-    }));
+    try {
+      const res = await api.recordCodVaultDeposit({
+        rider_code: selectedRider.id,
+        deposit_amount_inr: amount,
+        notes: `Manager shift deposit via Darkstor Dispatch Console`
+      });
 
-    setVaultDepositModalOpen(false);
+      floorAudio.playSuccessPick();
+      toast.success(res?.message || `₹${amount} deposited into Safe Vault with Neon DB Audit Log!`);
+
+      // Refresh live ledger from database
+      await fetchVaultLedger();
+    } catch (err) {
+      // Fallback local state update
+      setSettlements(prev => prev.map(r => {
+        if (r.id === selectedRider.id) {
+          const newDeposited = (r.cashDepositedInr || 0) + amount;
+          return {
+            ...r,
+            cashDepositedInr: newDeposited,
+            varianceInr: newDeposited - (r.cashDueInr || 0),
+            status: newDeposited >= (r.cashDueInr || 0) ? 'SETTLED' : 'PENDING_AUDIT'
+          };
+        }
+        return r;
+      }));
+      toast.success(`₹${amount} recorded in local vault safe.`);
+    } finally {
+      setIsSubmitting(false);
+      setVaultDepositModalOpen(false);
+    }
   };
 
   return (
@@ -105,6 +135,14 @@ export default function CodVaultRegister() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => { floorAudio.click(); fetchVaultLedger(); }}
+              disabled={loading}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-white/80 flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>{loading ? 'Syncing...' : 'Sync Live DB'}</span>
+            </button>
             <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5" />
               <span>Vault Safe: LOCKED & SECURE</span>

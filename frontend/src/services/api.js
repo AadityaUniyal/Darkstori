@@ -494,6 +494,16 @@ const reassignOrder = async (payload = {}) => {
   return response.data;
 };
 
+const getCodVaultLedger = async () => {
+  const response = await apiClient.get('/api/v1/sla/cod-vault');
+  return response.data;
+};
+
+const recordCodVaultDeposit = async (payload) => {
+  const response = await apiClient.post('/api/v1/sla/cod-vault/deposit', payload);
+  return response.data;
+};
+
 const getConformalSlaStats = async (alpha = 0.05, anticipatoryPrepick = false) => {
   const response = await apiClient.get('/api/v1/sla/conformal-stats', {
     params: { alpha, anticipatory_prepick: anticipatoryPrepick }
@@ -546,6 +556,11 @@ const scanQRCrate = async (qrCodeHash, storeId = null) => {
 const verifyPhoto = async (payload) => {
   // payload: { batch_id, photo_url, bruising_percent, color_state, freshness_score }
   const response = await apiClient.post('/api/v1/resilience/batches/verify-photo', payload);
+  return response.data;
+};
+
+const applyDynamicMarkdown = async (payload) => {
+  const response = await apiClient.post('/api/v1/resilience/dynamic-markdown/apply', payload);
   return response.data;
 };
 
@@ -945,6 +960,8 @@ export const api = {
   getSLAMetrics,
   getBatchDispatch,
   reassignOrder,
+  getCodVaultLedger,
+  recordCodVaultDeposit,
   getConformalSlaStats,
   evaluateConformalSla,
   simulateNeuroSymbolicDarkstore,
@@ -983,6 +1000,7 @@ export const api = {
   simulateDecay,
   scanQRCrate,
   verifyPhoto,
+  applyDynamicMarkdown,
   ocrExpiry,
 
   // System
