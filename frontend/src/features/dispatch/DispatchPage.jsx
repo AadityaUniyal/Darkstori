@@ -25,7 +25,8 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 import CodVaultRegister from './CodVaultRegister';
-import { Banknote, CloudRain } from 'lucide-react';
+import GeospatialClusterOptimizer from './GeospatialClusterOptimizer';
+import { Banknote, CloudRain, Compass } from 'lucide-react';
 
 const AVAILABLE_RIDERS = [
   { id: 'RD-SURESH-08', name: 'Suresh Kumar', status: 'Available', batchedOrders: 0, battery: '92%' },
@@ -201,8 +202,8 @@ export default function DispatchPage() {
         )}
       </div>
 
-      {/* VIEW MODE TOGGLE (Live Swarm vs COD Vault) */}
-      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+      {/* VIEW MODE TOGGLE (Live Swarm vs COD Vault vs Geospatial Clustering) */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
         <button
           onClick={() => { setDispatchViewMode('live-swarm'); floorAudio.playSuccessPick(); }}
           className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
@@ -225,6 +226,17 @@ export default function DispatchPage() {
           <Banknote className="w-3.5 h-3.5" />
           <span>COD Cash Vault Register</span>
         </button>
+        <button
+          onClick={() => { setDispatchViewMode('geospatial-clustering'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dispatchViewMode === 'geospatial-clustering'
+              ? 'bg-sky-500 text-black shadow-md shadow-sky-500/20'
+              : 'text-sky-400/80 hover:text-sky-300'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+          <span>K-Means Geospatial Swarm (AI)</span>
+        </button>
       </div>
 
       {monsoonThrottleActive && (
@@ -239,6 +251,8 @@ export default function DispatchPage() {
 
       {dispatchViewMode === 'cod-vault' ? (
         <CodVaultRegister />
+      ) : dispatchViewMode === 'geospatial-clustering' ? (
+        <GeospatialClusterOptimizer />
       ) : (
         <>
       {/* 2. FLEET & SLA KPI RIBBON */}

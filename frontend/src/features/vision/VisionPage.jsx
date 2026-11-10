@@ -26,6 +26,7 @@ import { useRole } from '../../context/RoleContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 import { useWebSerialScale } from '../../hooks/useWebSerialScale';
+import ProduceQualityVisionInspector from './ProduceQualityVisionInspector';
 
 export default function VisionPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
@@ -155,6 +156,37 @@ export default function VisionPage() {
         )}
       </div>
 
+      {/* VIEW MODE TABS */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+        <button
+          onClick={() => { setActiveTab('live-dock'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'live-dock'
+              ? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Scan className="w-3.5 h-3.5" />
+          <span>Optical Packing & WebSerial Scale Dock</span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('produce-quality-ai'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'produce-quality-ai'
+              ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+              : 'text-emerald-400/80 hover:text-emerald-300'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Produce Ripeness & Defect Vision AI</span>
+        </button>
+      </div>
+
+      {activeTab === 'produce-quality-ai' ? (
+        <ProduceQualityVisionInspector />
+      ) : (
+        <>
       {/* 2. VISION QA TELEMETRY CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div whileHover={{ y: -2 }} className="kpi-card p-5 rounded-2xl bg-white/[0.02] border border-white/10">
@@ -368,6 +400,8 @@ export default function VisionPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* 4. QUALITY PASSPORT MODAL */}
       <AnimatePresence>
