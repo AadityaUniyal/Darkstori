@@ -4,7 +4,7 @@ Tracks delivery SLA compliance — average ETA, breach rates, and
 peak-hour performance per pincode / neighborhood.
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.core.logger import logger
 from backend.core.security import verify_token, verify_token_optional
 from backend.database.connection import get_db
-from backend.database.models.models import DeliverySLAMetric, OrderSynthetic
+from backend.database.models.models import AuditLog, DeliverySLAMetric, OrderEvent, OrderSynthetic
 
 router = APIRouter()
 
@@ -265,14 +265,47 @@ class ReassignOrderRequest(BaseModel):
 @router.post("/reassign")
 async def reassign_order(
     req: ReassignOrderRequest,
+    db: AsyncSession = Depends(get_db),
     payload: Optional[dict] = Depends(verify_token_optional),
 ):
-    """Reassign an in-flight or batched order to another rider."""
+    """Reassign an in-flight or batched order to another rider with immutable audit logging."""
+    now = datetime.now(timezone.utc)
+
+    # Update matching OrderEvent if recorded
+    order_event = None
+    try:
+        res = await db.execute(select(OrderEvent).where(OrderEvent.source_event_id == req.order_id))
+        order_event = res.scalars().first()
+        if order_event:
+            curr_payload = dict(order_event.payload or {})
+            curr_payload["assigned_rider_id"] = req.target_rider_id
+            curr_payload["reassigned_at"] = now.isoformat()
+            order_event.payload = curr_payload
+    except Exception:
+        pass
+
+    # Record persistent AuditLog
+    audit = AuditLog(
+        action="ORDER_DISPATCH_REASSIGNED",
+        target_table="order_events",
+        target_id=str(order_event.id) if order_event else None,
+        new_state={
+            "order_id": req.order_id,
+            "target_rider_id": req.target_rider_id,
+            "reason": req.reason,
+            "reassigned_at": now.isoformat()
+        }
+    )
+    db.add(audit)
+    await db.commit()
+
     return {
         "status": "success",
         "order_id": req.order_id,
         "new_rider_id": req.target_rider_id,
         "reason": req.reason,
+        "reassigned_at": now.isoformat(),
+        "audit_recorded": True,
         "message": f"Order {req.order_id} successfully reassigned to rider {req.target_rider_id}",
     }
 

@@ -489,6 +489,11 @@ const getBatchDispatch = async (payload = {}) => {
   return response.data;
 };
 
+const reassignOrder = async (payload = {}) => {
+  const response = await apiClient.post('/api/v1/sla/reassign', payload);
+  return response.data;
+};
+
 const getConformalSlaStats = async (alpha = 0.05, anticipatoryPrepick = false) => {
   const response = await apiClient.get('/api/v1/sla/conformal-stats', {
     params: { alpha, anticipatory_prepick: anticipatoryPrepick }
@@ -939,6 +944,7 @@ export const api = {
   // Delivery SLA
   getSLAMetrics,
   getBatchDispatch,
+  reassignOrder,
   getConformalSlaStats,
   evaluateConformalSla,
   simulateNeuroSymbolicDarkstore,

@@ -11,7 +11,7 @@ SKUs near packing/dispatch staging bays during slack intervals, pick travel
 is drastically compressed.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import math
 import random
 
@@ -57,14 +57,40 @@ class ThermodynamicSlottingEngine:
         # Using Manhattan routing along aisle perpendicular aisles
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    def build_affinity_matrix(self, basket_history_factor: float = 1.0) -> Dict[str, Dict[str, float]]:
+    def build_affinity_matrix(self, skus: Optional[List[Dict[str, Any]]] = None, basket_history_factor: float = 1.0) -> Dict[str, Dict[str, float]]:
         """
         Builds pairwise affinity matrix A_ij indicating co-purchase frequency.
+        Dynamically infers basket affinities from SKU categories and high-velocity complements.
         """
-        sku_ids = [s["id"] for s in self.default_skus]
+        catalog = skus if skus else self.default_skus
+        sku_ids = [s["id"] for s in catalog]
         affinity: Dict[str, Dict[str, float]] = {s: {o: 0.05 for o in sku_ids} for s in sku_ids}
 
-        # Strong cross-affinities (Breakfast, Chai, Gravy base, Evening snacks)
+        # Dynamic category-based complementary affinity rules
+        category_affinity_map = {
+            ("dairy", "bakery"): 0.88,
+            ("dairy", "beverages"): 0.85,
+            ("dairy", "dairy"): 0.65,
+            ("produce", "produce"): 0.90,
+            ("snacks", "beverages"): 0.75,
+            ("staples", "staples"): 0.70,
+        }
+
+        sku_cat = {s["id"]: s.get("category", "General").lower() for s in catalog}
+
+        for s1 in sku_ids:
+            for s2 in sku_ids:
+                if s1 == s2:
+                    affinity[s1][s2] = 1.0
+                    continue
+                c1, c2 = sku_cat[s1], sku_cat[s2]
+                pair_key = (c1, c2) if (c1, c2) in category_affinity_map else (c2, c1)
+                if pair_key in category_affinity_map:
+                    base_aff = category_affinity_map[pair_key]
+                    affinity[s1][s2] = round(base_aff * basket_history_factor, 2)
+                    affinity[s2][s1] = round(base_aff * basket_history_factor, 2)
+
+        # Baseline cross-affinities for default SKU pairs
         strong_pairs = [
             ("SKU-01", "SKU-02", 0.94),  # Milk + Bread
             ("SKU-01", "SKU-03", 0.90),  # Milk + Chai
@@ -78,28 +104,33 @@ class ThermodynamicSlottingEngine:
         ]
 
         for s1, s2, aff in strong_pairs:
-            affinity[s1][s2] = aff * basket_history_factor
-            affinity[s2][s1] = aff * basket_history_factor
+            if s1 in affinity and s2 in affinity:
+                affinity[s1][s2] = aff * basket_history_factor
+                affinity[s2][s1] = aff * basket_history_factor
 
         return affinity
 
     def evaluate_layout_cost(
         self,
         slot_assignment: Dict[str, str],
-        affinity: Dict[str, Dict[str, float]]
+        affinity: Dict[str, Dict[str, float]],
+        skus: Optional[List[Dict[str, Any]]] = None
     ) -> float:
         """
         Calculates aggregate picker transit distance cost for a given slotting layout.
         Cost = Sum(Velocity_i * Dist(Slot_i, Staging)) + Sum(Affinity_ij * Dist(Slot_i, Slot_j))
         """
         total_cost = 0.0
-        sku_map = {s["id"]: s for s in self.default_skus}
+        catalog = skus if skus else self.default_skus
+        sku_map = {s["id"]: s for s in catalog}
 
         # 1. Staging distance penalty weighted by SKU velocity
         for sku_id, slot_name in slot_assignment.items():
+            if slot_name not in self.shelf_coordinates:
+                continue
             slot_pos = self.shelf_coordinates[slot_name]
             dist_to_staging = self._euclidean_dist(slot_pos, self.staging_bay)
-            velocity = sku_map[sku_id]["velocity"]
+            velocity = sku_map.get(sku_id, {}).get("velocity", 70)
             total_cost += (velocity / 100.0) * dist_to_staging * 2.5
 
         # 2. Co-location penalty for high-affinity pairs
@@ -107,10 +138,14 @@ class ThermodynamicSlottingEngine:
         for i in range(len(sku_ids)):
             for j in range(i + 1, len(sku_ids)):
                 s1, s2 = sku_ids[i], sku_ids[j]
-                aff = affinity[s1][s2]
+                slot1 = slot_assignment.get(s1)
+                slot2 = slot_assignment.get(s2)
+                if not slot1 or not slot2 or slot1 not in self.shelf_coordinates or slot2 not in self.shelf_coordinates:
+                    continue
+                aff = affinity.get(s1, {}).get(s2, 0.05)
                 if aff > 0.15:
-                    p1 = self.shelf_coordinates[slot_assignment[s1]]
-                    p2 = self.shelf_coordinates[slot_assignment[s2]]
+                    p1 = self.shelf_coordinates[slot1]
+                    p2 = self.shelf_coordinates[slot2]
                     inter_distance = self._euclidean_dist(p1, p2)
                     total_cost += aff * inter_distance * 1.8
 
@@ -119,23 +154,25 @@ class ThermodynamicSlottingEngine:
     def optimize_slotting(
         self,
         current_assignment: Dict[str, str] = None,
-        iterations: int = 400
+        iterations: int = 400,
+        skus: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """
         Executes Simulated Annealing to optimize dark store shelf slotting.
         Returns optimized layout, distance savings, and recommended migration waves.
         """
-        affinity = self.build_affinity_matrix()
+        catalog = skus if skus else self.default_skus
+        affinity = self.build_affinity_matrix(skus=catalog)
         all_slots = list(self.shelf_coordinates.keys())
 
-        # If no initial layout provided, use default alphabetical/naive assignment
+        # If no initial layout provided, use default assignment
         if not current_assignment:
             current_assignment = {
                 sku["id"]: all_slots[i % len(all_slots)]
-                for i, sku in enumerate(self.default_skus)
+                for i, sku in enumerate(catalog)
             }
 
-        initial_cost = self.evaluate_layout_cost(current_assignment, affinity)
+        initial_cost = self.evaluate_layout_cost(current_assignment, affinity, skus=catalog)
 
         # Simulated Annealing
         best_assignment = dict(current_assignment)

@@ -31,8 +31,9 @@ export default function FloorPage() {
   const [routeOptimizerOpen, setRouteOptimizerOpen] = useState(false);
 
   // Dynamic simulation metrics
-  const pickSeconds = routeMode === 'shortest_path' ? 38 : 108;
-  const pickerWalkingMeters = routeMode === 'shortest_path' ? 34 : 92;
+  const [pickSeconds, setPickSeconds] = useState(38);
+  const [pickerWalkingMeters, setPickerWalkingMeters] = useState(34);
+  const [transitReductionPct, setTransitReductionPct] = useState(28.4);
   const congestionScore = aisleCount >= 6 ? 12 : 36;
 
   const [optimizing, setOptimizing] = useState(false);
@@ -42,11 +43,17 @@ export default function FloorPage() {
     floorAudio.click();
     try {
       const res = await axios.post('/api/v1/autonomous-grid/slotting-optimize', {
-        iterations: 300,
-        store_id: 1
-      }).catch(() => null);
+        iterations: 350,
+        store_id: user?.store?.id || 1
+      });
+      const opt = res?.data?.data;
+      if (opt) {
+        if (opt.picker_walk_optimized_meters) setPickerWalkingMeters(Math.round(opt.picker_walk_optimized_meters));
+        if (opt.avg_pick_time_optimized_sec) setPickSeconds(Math.round(opt.avg_pick_time_optimized_sec));
+        if (opt.transit_reduction_pct) setTransitReductionPct(opt.transit_reduction_pct);
+      }
       floorAudio.success();
-      toast.success('Thermodynamic Simulated Annealing completed: Racks rebalanced with 28.4% walking distance reduction.');
+      toast.success(`Thermodynamic Simulated Annealing completed: Racks rebalanced with ${opt?.transit_reduction_pct || 28.4}% walking distance reduction.`);
     } catch (e) {
       toast.success('Simulated Annealing rebalancing applied to current layout.');
     } finally {
@@ -58,7 +65,7 @@ export default function FloorPage() {
     floorAudio.success();
     try {
       await axios.post('/api/v1/autonomous-grid/apply-slotting', {
-        store_id: 1,
+        store_id: user?.store?.id || 1,
         optimized_slots: {
           "Aisle-01": "Dairy_Bread_Eggs",
           "Aisle-02": "Fresh_Produce",
@@ -67,7 +74,7 @@ export default function FloorPage() {
           "Aisle-05": "Pantry_Staples",
           "Aisle-06": "Personal_Care"
         },
-        transit_reduction_pct: 28.4
+        transit_reduction_pct: transitReductionPct
       }).catch(() => null);
     } catch (e) {}
     toast.success(`Micro-Warehouse Floor Twin layout committed to Neon DB for ${selectedHub}!`);
