@@ -8,6 +8,7 @@
 [![React 18](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon_Cloud-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
 [![Uber H3](https://img.shields.io/badge/Spatial-Uber_H3_Res8-000000?style=for-the-badge&logo=uber&logoColor=white)](https://h3geo.org)
+[![CI Pipeline](https://github.com/AadityaUniyal/Darkstori/actions/workflows/ci.yml/badge.svg)](https://github.com/AadityaUniyal/Darkstori/actions/workflows/ci.yml)
 [![Tests Passing](https://img.shields.io/badge/Tests-100%25_Passing-10B981?style=for-the-badge&logo=pytest&logoColor=white)](#-verification--test-guarantees)
 
 ### **Enterprise Operating System for 10-Minute Hyperlocal Micro-Fulfillment Networks**
@@ -15,6 +16,9 @@
 *Built on mathematical order, spatial physics, and unit profitability for high-density Indian metros.*
 
 [🌐 **Live Production Web App**](https://darkstori.vercel.app) • [📖 **OpenAPI Specification**](https://darkstori.vercel.app/api/docs) • [🗺️ **Pan-India Directory**](https://darkstori.vercel.app/directory) • [⚡ **Flagship Features**](#-the-8-flagship-production-modules)
+
+> **⚡ Hiring Manager & Recruiter Fast-Track (Zero-Registration Instant Demo):**  
+> Click [**darkstori.vercel.app**](https://darkstori.vercel.app) and select any **1-Click Demo Persona** (*C-Suite Executive*, *Store GM*, or *Fleet Commander*) on the sign-in page to explore the full operating system immediately without creating an account.
 
 </div>
 
