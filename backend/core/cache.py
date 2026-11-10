@@ -24,17 +24,23 @@ class FeatureCache:
     async def init(self):
         """Initialize the Redis connection."""
         try:
+            # For remote Redis (like Upstash rediss://), allow sufficient TLS handshake timeout
+            is_remote = not ("localhost" in settings.REDIS_URL or "127.0.0.1" in settings.REDIS_URL)
+            connect_timeout = 3.0 if is_remote else 0.5
+            socket_timeout = 2.0 if is_remote else 0.5
+
             self.redis_client = redis.from_url(
                 settings.REDIS_URL, 
                 encoding="utf-8", 
                 decode_responses=True,
-                socket_connect_timeout=0.3,
-                socket_timeout=0.3,
+                socket_connect_timeout=connect_timeout,
+                socket_timeout=socket_timeout,
             )
             # Ping to verify connection
             await self.redis_client.ping()
             self._is_connected = True
-            logger.info(f"Connected to Redis at {settings.REDIS_URL}")
+            safe_url = settings.REDIS_URL.split('@')[-1] if '@' in settings.REDIS_URL else settings.REDIS_URL
+            logger.info(f"Connected to Redis at {safe_url}")
         except Exception as e:
             logger.warning(f"Failed to connect to Redis. Falling back to local dict cache. Error: {e}")
             self._is_connected = False

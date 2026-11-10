@@ -80,18 +80,24 @@ class RedisRateLimiter:
         """Lazy initialize Redis client connection with fast timeout."""
         if self.client is None and REDIS_AVAILABLE:
             try:
+                is_remote = not ("localhost" in self.redis_url or "127.0.0.1" in self.redis_url)
+                connect_timeout = 3.0 if is_remote else 0.5
+                sock_timeout = 2.0 if is_remote else 0.5
+
                 self.client = redis.from_url(
                     self.redis_url,
                     decode_responses=True,
-                    socket_connect_timeout=0.3,
-                    socket_timeout=0.3,
+                    socket_connect_timeout=connect_timeout,
+                    socket_timeout=sock_timeout,
                 )
                 await self.client.ping()
                 self._connected = True
-                logger.info(f"Connected to Redis for rate limiting at {self.redis_url}")
+                safe_url = self.redis_url.split('@')[-1] if '@' in self.redis_url else self.redis_url
+                logger.info(f"Connected to Redis for rate limiting at {safe_url}")
             except Exception as e:
+                safe_url = self.redis_url.split('@')[-1] if '@' in self.redis_url else self.redis_url
                 logger.warning(
-                    f"Failed to connect to Redis at {self.redis_url}: {e}. "
+                    f"Failed to connect to Redis at {safe_url}: {e}. "
                     "Rate limiter falling back to in-memory mode."
                 )
                 self.client = None
