@@ -894,6 +894,12 @@ const getMlBenchmark = async () => {
   }
 };
 
+export const getRiderTelemetryStream = (city = 'Bangalore') =>
+  apiClient.get('/api/v1/sla/rider/telemetry-stream', { params: { city } }).then(r => r.data);
+
+export const sendRiderTelemetryPing = (payload) =>
+  apiClient.post('/api/v1/sla/rider/telemetry-ping', payload).then(r => r.data);
+
 export const api = {
   // Local Events
   getEvents,
@@ -1061,6 +1067,10 @@ export const api = {
   getNeighborhoodMood,
   getCityMood,
   getMoodSummary,
+
+  // Rider Telemetry
+  getRiderTelemetryStream,
+  sendRiderTelemetryPing,
 };
 
 export default apiClient;

@@ -477,7 +477,176 @@ async def simulate_neuro_symbolic_darkstore(
     }
 
 
-# ── COD Cash Vault & Fleet Settlements ──────────────────────────────────────────
+# ── Real-Time Rider Telemetry & Geofence Boundary Breaches ─────────────────
+
+class RiderTelemetryPing(BaseModel):
+    rider_id: str
+    latitude: float
+    longitude: float
+    speed_kmh: float = 24.0
+    battery_pct: float = 85.0
+    darkstore_lat: float = 12.9716  # Indiranagar Hub default
+    darkstore_lng: float = 77.6412
+    geofence_radius_km: float = 3.2
+    active_order_id: Optional[str] = None
+
+
+@router.post("/rider/telemetry-ping")
+async def process_rider_telemetry_ping(
+    ping: RiderTelemetryPing,
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """
+    Ingests live GPS coordinates from delivery rider mobile unit or simulation agent.
+    Computes Haversine geodesic distance from hub, detects geofence boundary breaches,
+    calculates dynamic ETA, and logs an immutable audit trail when an SLA breach risk arises.
+    """
+    import math
+
+    # Haversine calculation
+    R = 6371.0  # Earth's radius in km
+    lat1, lon1 = math.radians(ping.darkstore_lat), math.radians(ping.darkstore_lng)
+    lat2, lon2 = math.radians(ping.latitude), math.radians(ping.longitude)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat / 2.0) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2.0) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance_from_hub_km = round(R * c, 3)
+
+    is_geofence_breach = distance_from_hub_km > ping.geofence_radius_km
+    excess_km = round(max(0.0, distance_from_hub_km - ping.geofence_radius_km), 3)
+
+    # Dynamic ETA calculation based on real speed
+    effective_speed = max(10.0, ping.speed_kmh)
+    eta_mins = round((distance_from_hub_km / effective_speed) * 60.0 + 2.5, 1)  # 2.5m handoff buffer
+
+    breach_severity = "NORMAL"
+    if is_geofence_breach:
+        breach_severity = "CRITICAL" if excess_km > 1.0 else "WARNING"
+
+    # Audit log breach event if detected
+    if is_geofence_breach:
+        audit = AuditLog(
+            organization_id=1,
+            user_id=None,
+            action="RIDER_GEOFENCE_BREACH",
+            target_table="rider_telemetry",
+            target_id=ping.rider_id,
+            new_state={
+                "rider_id": ping.rider_id,
+                "distance_km": distance_from_hub_km,
+                "radius_km": ping.geofence_radius_km,
+                "excess_km": excess_km,
+                "severity": breach_severity,
+                "latitude": ping.latitude,
+                "longitude": ping.longitude,
+                "eta_mins": eta_mins,
+                "active_order": ping.active_order_id,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+        if hasattr(db, "add"):
+            db.add(audit)
+        if hasattr(db, "commit"):
+            try:
+                await db.commit()
+            except Exception:
+                pass
+
+    return {
+        "rider_id": ping.rider_id,
+        "coordinates": {"lat": ping.latitude, "lng": ping.longitude},
+        "hub_coordinates": {"lat": ping.darkstore_lat, "lng": ping.darkstore_lng},
+        "distance_from_hub_km": distance_from_hub_km,
+        "geofence_radius_km": ping.geofence_radius_km,
+        "is_geofence_breach": is_geofence_breach,
+        "excess_km": excess_km,
+        "breach_severity": breach_severity,
+        "dynamic_eta_mins": eta_mins,
+        "battery_pct": ping.battery_pct,
+        "speed_kmh": ping.speed_kmh,
+        "status": "BREACH_ALERT" if is_geofence_breach else "WITHIN_CORRIDOR",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/rider/telemetry-stream")
+async def get_rider_telemetry_stream(
+    city: str = Query("Bangalore"),
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """
+    Returns live multi-rider GPS telemetry stream with synthetic waypoint vectors,
+    instantaneous speeds, geofence compliance, and battery states for the active store cluster.
+    """
+    import math
+
+    city_coords = {
+        "Bangalore": (12.9716, 77.6412),
+        "Mumbai": (19.0760, 72.8777),
+        "Delhi": (28.6139, 77.2090),
+        "Hyderabad": (17.3850, 78.4867),
+        "Chennai": (13.0827, 80.2707),
+    }
+    hub_lat, hub_lng = city_coords.get(city, (12.9716, 77.6412))
+    city_code = city[:3].upper()
+
+    now_sec = datetime.now().timestamp()
+    
+    # 5 Live simulated riders orbiting or heading along corridors
+    riders_telemetry = []
+    rider_specs = [
+        {"id": f"RD-{city_code}-01", "name": "Suresh K.", "vehicle": "Ather 450X", "bearing_deg": 45, "speed": 28.5, "base_dist": 1.4, "battery": 92},
+        {"id": f"RD-{city_code}-02", "name": "Pravin R.", "vehicle": "Ola S1 Pro", "bearing_deg": 135, "speed": 34.0, "base_dist": 2.7, "battery": 78},
+        {"id": f"RD-{city_code}-03", "name": "Vikram S.", "vehicle": "Hero Electric", "bearing_deg": 220, "speed": 18.0, "base_dist": 0.8, "battery": 86},
+        {"id": f"RD-{city_code}-04", "name": "Anand M.", "vehicle": "TVS iQube", "bearing_deg": 310, "speed": 38.0, "base_dist": 3.6, "battery": 64},  # Breaching geofence (>3.2km)
+        {"id": f"RD-{city_code}-05", "name": "Mohd Farhan", "vehicle": "Bajaj Chetak", "bearing_deg": 85, "speed": 22.0, "base_dist": 1.9, "battery": 71},
+    ]
+
+    geofence_limit = 3.2
+
+    for r in rider_specs:
+        # Oscillate coordinates realistically over time
+        angle = math.radians(r["bearing_deg"] + (now_sec % 360) * 0.5)
+        dist = r["base_dist"] + 0.15 * math.sin(now_sec / 15.0)
+        
+        # 1 deg lat ~ 111 km, 1 deg lng ~ 111 * cos(lat) km
+        delta_lat = (dist * math.cos(angle)) / 111.0
+        delta_lng = (dist * math.sin(angle)) / (111.0 * math.cos(math.radians(hub_lat)))
+
+        r_lat = round(hub_lat + delta_lat, 6)
+        r_lng = round(hub_lng + delta_lng, 6)
+        
+        is_breach = dist > geofence_limit
+        eta = round((dist / max(10.0, r["speed"])) * 60.0 + 2.0, 1)
+
+        riders_telemetry.append({
+            "rider_id": r["id"],
+            "rider_name": r["name"],
+            "vehicle": r["vehicle"],
+            "battery_pct": r["battery"],
+            "speed_kmh": r["speed"],
+            "latitude": r_lat,
+            "longitude": r_lng,
+            "distance_from_hub_km": round(dist, 2),
+            "geofence_radius_km": geofence_limit,
+            "is_geofence_breach": is_breach,
+            "breach_severity": "CRITICAL" if dist > (geofence_limit + 0.5) else ("WARNING" if is_breach else "NORMAL"),
+            "dynamic_eta_mins": eta,
+            "status": "OUT_OF_BOUNDS_ALERT" if is_breach else "DISPATCH_IN_TRANSIT"
+        })
+
+    return {
+        "city": city,
+        "hub_location": {"lat": hub_lat, "lng": hub_lng, "name": f"{city} Apex Hub"},
+        "geofence_radius_km": geofence_limit,
+        "total_riders_active": len(riders_telemetry),
+        "breaches_detected": sum(1 for r in riders_telemetry if r["is_geofence_breach"]),
+        "fleet_telemetry": riders_telemetry,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 class CodDepositIn(BaseModel):
     rider_code: str

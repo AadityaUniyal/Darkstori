@@ -26,7 +26,8 @@ import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 import CodVaultRegister from './CodVaultRegister';
 import GeospatialClusterOptimizer from './GeospatialClusterOptimizer';
-import { Banknote, CloudRain, Compass } from 'lucide-react';
+import RiderTelemetryRadar from './RiderTelemetryRadar';
+import { Banknote, CloudRain, Compass, Radio } from 'lucide-react';
 
 import axios from 'axios';
 
@@ -289,6 +290,17 @@ export default function DispatchPage() {
           <Compass className="w-3.5 h-3.5" />
           <span>K-Means Geospatial Swarm (AI)</span>
         </button>
+        <button
+          onClick={() => { setDispatchViewMode('gps-radar'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            dispatchViewMode === 'gps-radar'
+              ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20'
+              : 'text-violet-400/80 hover:text-violet-300'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5" />
+          <span>Rider Telemetry & Geofence Radar</span>
+        </button>
       </div>
 
       {monsoonThrottleActive && (
@@ -305,6 +317,8 @@ export default function DispatchPage() {
         <CodVaultRegister />
       ) : dispatchViewMode === 'geospatial-clustering' ? (
         <GeospatialClusterOptimizer />
+      ) : dispatchViewMode === 'gps-radar' ? (
+        <RiderTelemetryRadar activeCity={activeCity} />
       ) : (
         <>
       {/* 2. FLEET & SLA KPI RIBBON */}
