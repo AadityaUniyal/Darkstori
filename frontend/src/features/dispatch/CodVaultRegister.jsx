@@ -26,7 +26,20 @@ const RIDER_COD_SETTLEMENTS = [
 ];
 
 export default function CodVaultRegister() {
-  const [settlements, setSettlements] = useState(RIDER_COD_SETTLEMENTS);
+  const [settlements, setSettlements] = useState(() => {
+    try {
+      const saved = localStorage.getItem('darkstori_cod_settlements');
+      return saved ? JSON.parse(saved) : RIDER_COD_SETTLEMENTS;
+    } catch {
+      return RIDER_COD_SETTLEMENTS;
+    }
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('darkstori_cod_settlements', JSON.stringify(settlements));
+    } catch {}
+  }, [settlements]);
   const [vaultDepositModalOpen, setVaultDepositModalOpen] = useState(false);
   const [selectedRider, setSelectedRider] = useState(null);
   const [depositAmount, setDepositAmount] = useState('');

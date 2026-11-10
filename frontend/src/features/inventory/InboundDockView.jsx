@@ -74,7 +74,20 @@ const INBOUND_PURCHASE_ORDERS = [
 
 export default function InboundDockView() {
   const { roleConfig } = useRole();
-  const [purchaseOrders, setPurchaseOrders] = useState(INBOUND_PURCHASE_ORDERS);
+  const [purchaseOrders, setPurchaseOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('darkstori_inbound_pos');
+      return saved ? JSON.parse(saved) : INBOUND_PURCHASE_ORDERS;
+    } catch {
+      return INBOUND_PURCHASE_ORDERS;
+    }
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('darkstori_inbound_pos', JSON.stringify(purchaseOrders));
+    } catch {}
+  }, [purchaseOrders]);
   const [selectedPoId, setSelectedPoId] = useState('PO-APMC-MANDI-8901');
   const [scannedBarcode, setScannedBarcode] = useState('');
   const [debitNoteModalOpen, setDebitNoteModalOpen] = useState(false);

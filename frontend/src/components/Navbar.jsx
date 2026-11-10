@@ -9,6 +9,8 @@ import { ThemeToggle } from './ThemeToggle';
 import { useSocketStore } from '../stores/socketStore';
 import UniversalDataImporter from './UniversalDataImporter';
 import StorefrontSettingsModal from './StorefrontSettingsModal';
+import CiamSecurityModal from './CiamSecurityModal';
+import { ShieldCheck as ShieldIcon } from 'lucide-react';
 import ApplePersonaSelector from './ApplePersonaSelector';
 import { floorAudio } from '../utils/floorAudio';
 import './Navbar.css';
@@ -25,6 +27,7 @@ const Navbar = memo(() => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [importerOpen, setImporterOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [ciamOpen, setCiamOpen] = useState(false);
   const notifRef = useRef(null);
   const { notifications, markRead, clearNotifications } = useSocketStore();
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -231,6 +234,21 @@ const Navbar = memo(() => {
                   </button>
                   <div className="user-dropdown-divider" />
                   <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setCiamOpen(true);
+                      floorAudio.playSuccessPick();
+                    }}
+                    className="user-dropdown-item w-full text-left flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShieldIcon size={16} className="text-amber-400" />
+                      <span>Identity & CIAM Governance</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-mono">RBAC</span>
+                  </button>
+                  <div className="user-dropdown-divider" />
+                  <button
                     className="user-dropdown-item text-rose-400 hover:text-rose-300"
                     onClick={() => { logout(); navigate('/login'); }}
                   >
@@ -258,6 +276,7 @@ const Navbar = memo(() => {
       </div>
       <UniversalDataImporter isOpen={importerOpen} onClose={() => setImporterOpen(false)} />
       <StorefrontSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <CiamSecurityModal isOpen={ciamOpen} onClose={() => setCiamOpen(false)} />
     </nav>
   );
 });
