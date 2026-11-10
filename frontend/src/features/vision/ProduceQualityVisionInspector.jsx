@@ -263,8 +263,11 @@ export default function ProduceQualityVisionInspector() {
       // 3. Commit optical metrics through real backend API verification
       let serverResponse = null;
       try {
+        const orderRand = new Uint8Array(2);
+        crypto.getRandomValues(orderRand);
+        const orderNum = 10000 + ((orderRand[0] << 8 | orderRand[1]) % 90000);
         serverResponse = await api.inspectPackingTote({
-          order_id: `ORD-BLR-${Math.floor(10000 + Math.random() * 90000)}`,
+          order_id: `ORD-BLR-${orderNum}`,
           store_id: 1,
           station_code: "DOCK-VISION-01",
           measured_weight_grams: selectedProduce.idealWeight,
@@ -278,6 +281,10 @@ export default function ProduceQualityVisionInspector() {
       } catch (err) {
         console.warn("Backend inspection logged offline:", err);
       }
+
+      const hashBytes = new Uint8Array(6);
+      crypto.getRandomValues(hashBytes);
+      const hashHex = Array.from(hashBytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 
       const result = {
         item: selectedProduce.name,
@@ -293,7 +300,7 @@ export default function ProduceQualityVisionInspector() {
         snapshotBase64,
         hash: serverResponse?.order_id
           ? `SHA256-${serverResponse.order_id}`
-          : `SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+          : `SHA256-${hashHex}`
       };
 
       setAnalysisResult(result);
@@ -318,7 +325,10 @@ export default function ProduceQualityVisionInspector() {
     floorAudio.click();
 
     try {
-      const orderId = `ORD-BLR-${Math.floor(10000 + Math.random() * 90000)}`;
+      const randBytes = new Uint8Array(4);
+      crypto.getRandomValues(randBytes);
+      const randHex = Array.from(randBytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      const orderId = `ORD-BLR-${randHex}`;
       const passportRes = await api.commitPackingPassport({
         order_id: orderId,
         store_id: 1,
@@ -342,7 +352,7 @@ export default function ProduceQualityVisionInspector() {
         snapshot_image_url: analysisResult.snapshotBase64 || "https://darkstor.io/snapshots/default.jpg"
       });
 
-      const passportCode = passportRes?.passport_qr || `FPASS-${selectedProduce.id}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const passportCode = passportRes?.passport_qr || `FPASS-${selectedProduce.id}-${randHex}`;
       setFreshnessPassport({
         code: passportCode,
         snapshotHash: passportRes?.snapshot_hash,
@@ -352,7 +362,10 @@ export default function ProduceQualityVisionInspector() {
       floorAudio.playDispatchSuccess();
       toast.success(`Cryptographic Passport ${passportCode} committed to Neon DB! Ready for consumer QR scan.`);
     } catch (err) {
-      const fallbackCode = `FPASS-${selectedProduce.id}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const errBytes = new Uint8Array(4);
+      crypto.getRandomValues(errBytes);
+      const errHex = Array.from(errBytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      const fallbackCode = `FPASS-${selectedProduce.id}-${errHex}`;
       setFreshnessPassport({
         code: fallbackCode,
         ...analysisResult

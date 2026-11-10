@@ -365,7 +365,10 @@ export default function PickerTerminalPage() {
     setElapsedSeconds(0);
     setBatchCompleted(false);
     setTimerRunning(true);
-    setActiveBatchId(`WAVE-BLR-${Math.floor(1000 + Math.random() * 9000)}`);
+    const randBuf = new Uint8Array(2);
+    crypto.getRandomValues(randBuf);
+    const waveNum = 1000 + ((randBuf[0] << 8 | randBuf[1]) % 9000);
+    setActiveBatchId(`WAVE-BLR-${waveNum}`);
     floorAudio.playSuccessPick();
   };
 

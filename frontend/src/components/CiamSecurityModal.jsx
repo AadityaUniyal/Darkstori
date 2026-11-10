@@ -91,7 +91,10 @@ export default function CiamSecurityModal({ isOpen, onClose }) {
 
   const handleRotateKey = () => {
     floorAudio.playSuccessPick();
-    const newKey = `dks_live_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    const randomHex = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    const newKey = `dks_live_${randomHex}`;
     setApiKey(newKey);
     toast.success('Production API Key rotated successfully. Old key revoked.');
   };

@@ -7,9 +7,12 @@ export const useSocketStore = create((set, get) => ({
 
   // Notifications
   notifications: [],
-  addNotification: (notif) => set((state) => ({
-    notifications: [{ ...notif, id: Date.now() + Math.random(), timestamp: 'Just now', read: false }, ...state.notifications].slice(0, 50)
-  })),
+  addNotification: (notif) => set((state) => {
+    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${state.notifications.length + 1}`;
+    return {
+      notifications: [{ ...notif, id, timestamp: 'Just now', read: false }, ...state.notifications].slice(0, 50)
+    };
+  }),
   markAllRead: () => set((state) => ({ notifications: state.notifications.map(n => ({ ...n, read: true })) })),
   markRead: (id) => set((state) => ({ notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n) })),
   clearNotifications: () => set({ notifications: [] }),

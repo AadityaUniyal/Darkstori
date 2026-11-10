@@ -118,7 +118,10 @@ export default function InboundDockView() {
 
   const handleGenerateDebitNote = (item) => {
     floorAudio.playErrorMismatch();
-    const noteId = `DBN-VND-${Math.floor(100000 + Math.random() * 900000)}`;
+    const randBuf = new Uint8Array(3);
+    crypto.getRandomValues(randBuf);
+    const randNum = 100000 + ((randBuf[0] << 16 | randBuf[1] << 8 | randBuf[2]) % 900000);
+    const noteId = `DBN-VND-${randNum}`;
     const shortKg = item.expectedKg - item.receivedKg;
     const estimatedLossInr = shortKg * 42; // ₹42/kg average
 

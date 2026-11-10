@@ -66,7 +66,10 @@ export default function VisionPage() {
 
   const handleIssuePassport = async () => {
     floorAudio.playSuccessPick();
-    const fallbackQr = `PASSPORT-DKS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const fallbackBuf = new Uint8Array(4);
+    crypto.getRandomValues(fallbackBuf);
+    const fallbackHex = Array.from(fallbackBuf, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    const fallbackQr = `PASSPORT-DKS-${fallbackHex}`;
 
     try {
       const res = await api.commitPackingPassport({
