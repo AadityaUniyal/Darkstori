@@ -28,6 +28,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 import InboundDockView from './InboundDockView';
+import DynamicMarkdownEngine from './DynamicMarkdownEngine';
 import { Truck } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Dairy & Eggs', 'Fresh Produce', 'Beverages', 'Snacks'];
@@ -238,8 +239,8 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* VIEW MODE TOGGLE (Replenishment vs Inbound Dock) */}
-      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+      {/* VIEW MODE TOGGLE (Replenishment vs Inbound Dock vs Dynamic Markdown) */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
         <button
           onClick={() => { setInventoryViewMode('replenishment'); floorAudio.playSuccessPick(); }}
           className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
@@ -262,10 +263,23 @@ export default function InventoryPage() {
           <Truck className="w-3.5 h-3.5" />
           <span>Inbound Receiving Dock (GRN)</span>
         </button>
+        <button
+          onClick={() => { setInventoryViewMode('markdown-engine'); floorAudio.playSuccessPick(); }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            inventoryViewMode === 'markdown-engine'
+              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+              : 'text-amber-400/80 hover:text-amber-300'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Zero-Waste Dynamic Markdown (AI)</span>
+        </button>
       </div>
 
       {inventoryViewMode === 'inbound-dock' ? (
         <InboundDockView />
+      ) : inventoryViewMode === 'markdown-engine' ? (
+        <DynamicMarkdownEngine />
       ) : (
         <>
       {/* 2. REPLENISHMENT KPI METRICS */}

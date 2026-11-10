@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Layers, ArrowRight, CheckCircle2, RefreshCw, Eye, Sparkles, Navigation, ShieldCheck, Box } from 'lucide-react';
+import { Layers, ArrowRight, CheckCircle2, RefreshCw, Eye, Sparkles, Navigation, ShieldCheck, Box, Compass } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRole } from '../../context/RoleContext';
 import { useCity } from '../../context/CityContext';
 import { useAuth } from '../../context/AuthContext';
 import { floorAudio } from '../../utils/floorAudio';
+import PickRouteOptimizerModal from './PickRouteOptimizerModal';
 
 const AISLE_DATA = [
   { id: 1, name: 'Aisle 01 (Golden Zone)', category: 'Dairy, Bread & Eggs', items: ['Amul Taaza Milk 500ml', 'Modern Sandwich Bread', 'Fresho Farm Eggs 6pcs'], picksPerHour: 184, heat: 94 },
@@ -26,6 +27,7 @@ export default function FloorPage() {
   const [routeMode, setRouteMode] = useState('shortest_path'); // 'serpentine', 'shortest_path'
   const [goldenZonePct, setGoldenZonePct] = useState(20);
   const [inspectedAisle, setInspectedAisle] = useState(AISLE_DATA[0]);
+  const [routeOptimizerOpen, setRouteOptimizerOpen] = useState(false);
 
   // Dynamic simulation metrics
   const pickSeconds = routeMode === 'shortest_path' ? 38 : 108;
@@ -69,7 +71,15 @@ export default function FloorPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => { setRouteOptimizerOpen(true); floorAudio.click(); }}
+              className="px-4 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <Compass className="w-4 h-4 text-emerald-400" />
+              <span>Algorithmic 2-Opt Pick Optimizer</span>
+            </button>
+
             <button
               onClick={handleSaveLayout}
               className="px-4 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-bold text-xs transition-all shadow-lg shadow-purple-500/25 flex items-center gap-2 cursor-pointer"
@@ -320,6 +330,12 @@ export default function FloorPage() {
           </button>
         </div>
       </div>
+
+      <PickRouteOptimizerModal
+        isOpen={routeOptimizerOpen}
+        onClose={() => setRouteOptimizerOpen(false)}
+        podName={selectedHub}
+      />
     </div>
   );
 }
