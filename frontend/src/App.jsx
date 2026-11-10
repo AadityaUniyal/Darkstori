@@ -22,6 +22,7 @@ const NocPage        = lazy(() => import('./features/noc/NocPage'));
 const PickerTerminalPage = lazy(() => import('./features/terminal/PickerTerminalPage'));
 const PanIndiaDirectoryPage = lazy(() => import('./features/directory/PanIndiaDirectoryPage'));
 const HolodeckPage   = lazy(() => import('./features/holodeck/HolodeckPage'));
+const BenchmarksPage = lazy(() => import('./features/benchmarks/BenchmarksPage'));
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -189,6 +190,7 @@ function AppContent() {
                 <Route path="/playbooks"   element={<PrivateRoute><AnimatedPage><PlaybooksPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/economics"   element={<PrivateRoute><AnimatedPage><EconomicsPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/vision"      element={<PrivateRoute><AnimatedPage><VisionPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/benchmarks"  element={<PrivateRoute><AnimatedPage><BenchmarksPage /></AnimatedPage></PrivateRoute>} />
 
                 {/* Seamless Legacy Workspaces & Aliases */}
                 <Route path="/dashboard"     element={<Navigate to="/expansion" replace />} />

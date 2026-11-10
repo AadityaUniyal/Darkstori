@@ -27,6 +27,7 @@ from backend.api.routes import (
     decision_loop,
     ingestion,
     vision_pack,
+    benchmarks,
 )
 import asyncio
 import socketio
@@ -445,6 +446,7 @@ app.include_router(geo.router, prefix="/api/v1/geo", tags=["Geo Intelligence"])
 
 # ── Seed Data ────────────────────────────────────────────────────────────────────
 app.include_router(seed_data.router, prefix="/api/v1", tags=["Seed Data"])
+app.include_router(benchmarks.router, prefix="/api/v1/benchmarks", tags=["Live Algorithmic Benchmarks"])
 
 
 # Rate limiting middleware — applies to all /api routes

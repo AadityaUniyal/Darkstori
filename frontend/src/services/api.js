@@ -738,6 +738,18 @@ const deleteEvent = async (eventId) => {
   return response.data;
 };
 
+// ── Benchmarks & Stress Testing ─────────────────────────────────────────────
+
+export const getBenchmarksSummary = async () => {
+  const response = await apiClient.get('/api/v1/benchmarks/summary');
+  return response.data;
+};
+
+export const runBenchmarksStressTest = async (sampleSize = 250) => {
+  const response = await apiClient.post(`/api/v1/benchmarks/run-stress-test?sample_size=${sampleSize}`);
+  return response.data;
+};
+
 // ── Playbook Automation ──────────────────────────────────────────────────────
 
 const getPlaybooks = async (params) => {
@@ -1021,6 +1033,8 @@ export const api = {
   approveExpansionDecision,
   getCompetitors,
   getMlBenchmark,
+  getBenchmarksSummary,
+  runBenchmarksStressTest,
 
   // Geo Intelligence
   resolveLocation,

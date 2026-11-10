@@ -15,7 +15,7 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
+  Activity,
   Cpu
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
@@ -42,6 +42,7 @@ const ALL_8_FEATURES = [
       { path: '/playbooks',  icon: ShieldAlert,label: 'Disruption Playbooks',   featureNum: '06', role: 'fleet-commander' },
       { path: '/economics',  icon: DollarSign, label: 'EBITDA & Board Dossier', featureNum: '07', role: 'executive' },
       { path: '/vision',     icon: Scan,       label: 'Vision Packing & QA',     featureNum: '08', role: 'store-gm' },
+      { path: '/benchmarks', icon: Activity,   label: 'Engine Benchmarks & Profiler', featureNum: 'BENCH', role: 'executive' },
     ]
   }
 ];
