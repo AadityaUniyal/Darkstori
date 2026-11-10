@@ -9,10 +9,19 @@ import { api } from '../services/api';
 
 const STORAGE_KEY = 'darkstor_storefront_config';
 
+const generateSecureSecret = () => {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    return 'whsec_in_' + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+  return 'whsec_in_' + Date.now().toString(36);
+};
+
 export default function StorefrontSettingsModal({ isOpen, onClose }) {
   const [platform, setPlatform] = useState('shopify');
   const [webhookUrl, setWebhookUrl] = useState('https://storefront.mybrand.in/api/webhooks/darkstor');
-  const [hmacSecret, setHmacSecret] = useState('whsec_in_' + Math.random().toString(36).substring(2, 12));
+  const [hmacSecret, setHmacSecret] = useState(() => generateSecureSecret());
   const [gstin, setGstin] = useState('29AAACG1234F1Z5');
   const [fssai, setFssai] = useState('11224333000492');
   const [geofenceKm, setGeofenceKm] = useState('2.8');
@@ -35,7 +44,6 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
         const parsed = JSON.parse(saved);
         if (parsed.platform) setPlatform(parsed.platform);
         if (parsed.webhookUrl) setWebhookUrl(parsed.webhookUrl);
-        if (parsed.hmacSecret) setHmacSecret(parsed.hmacSecret);
         if (parsed.gstin) setGstin(parsed.gstin);
         if (parsed.fssai) setFssai(parsed.fssai);
         if (parsed.geofenceKm) setGeofenceKm(parsed.geofenceKm);
@@ -56,9 +64,9 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
   };
 
   const handleGenerateSecret = () => {
-    const fresh = 'whsec_in_' + Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 8);
+    const fresh = generateSecureSecret();
     setHmacSecret(fresh);
-    toast.info('Generated new HMAC Secret Key. Remember to update your storefront.');
+    toast.info('Generated new cryptographically secure HMAC Secret Key.');
   };
 
   const handleTestPing = async () => {
@@ -105,7 +113,6 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
     const config = {
       platform,
       webhookUrl,
-      hmacSecret,
       gstin,
       fssai,
       geofenceKm,

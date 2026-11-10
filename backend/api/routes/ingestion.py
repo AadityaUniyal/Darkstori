@@ -3,9 +3,13 @@
 from datetime import datetime, timezone
 import hashlib
 import hmac
+import ipaddress
 import json
+import logging
+import socket
 import time
 from typing import Any, List, Literal, Optional
+from urllib.parse import urlparse
 import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,7 +21,66 @@ from backend.core.security import require_roles
 from backend.database.connection import get_db
 from backend.database.models.models import AuditLog, DarkStore, OrderEvent, ProductBatch, StockLedger, User
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _is_safe_webhook_url(url: str) -> bool:
+    """Validate that a webhook target URL is safe and not pointing to internal/private networks (SSRF prevention)."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+
+        lower_host = hostname.lower().strip(".")
+        # Block localhost and internal names
+        if (
+            lower_host in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal")
+            or lower_host.endswith(".local")
+            or lower_host.endswith(".internal")
+            or lower_host.endswith(".localhost")
+            or lower_host.endswith(".lan")
+        ):
+            return False
+
+        # If it's an IP literal
+        try:
+            ip = ipaddress.ip_address(lower_host)
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+                or ip.is_unspecified
+            ):
+                return False
+            return True
+        except ValueError:
+            # Domain name: verify resolved IP addresses if resolvable
+            try:
+                addr_info = socket.getaddrinfo(lower_host, None)
+                for family, _, _, _, sockaddr in addr_info:
+                    ip_str = sockaddr[0]
+                    resolved_ip = ipaddress.ip_address(ip_str)
+                    if (
+                        resolved_ip.is_private
+                        or resolved_ip.is_loopback
+                        or resolved_ip.is_link_local
+                        or resolved_ip.is_reserved
+                        or resolved_ip.is_multicast
+                        or resolved_ip.is_unspecified
+                    ):
+                        return False
+            except socket.gaierror:
+                pass
+
+        return True
+    except Exception:
+        return False
 
 
 class OrderEventIn(BaseModel):
@@ -294,18 +357,34 @@ async def test_storefront_webhook(
     code = 200
     detail = "Webhook payload signed and verified. Destination test simulated successfully."
 
-    # If it's a real external HTTPS/HTTP URL, attempt a real ping with 4s timeout
+    # If it's an external HTTP/HTTPS URL, validate against SSRF and attempt ping
     if item.webhook_url.startswith("http://") or item.webhook_url.startswith("https://"):
+        if not _is_safe_webhook_url(item.webhook_url):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid webhook target URL. Target must be a publicly accessible HTTP/HTTPS destination.",
+            )
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
+            async with httpx.AsyncClient(timeout=4.0, follow_redirects=False) as client:
                 res = await client.post(item.webhook_url, content=raw_json, headers=headers)
                 code = res.status_code
                 status_str = "delivered" if res.is_success else "http_error"
                 detail = f"Received HTTP {code} from storefront endpoint."
-        except Exception as err:
-            status_str = "unreachable"
+        except httpx.TimeoutException:
+            status_str = "timeout"
             code = 504
-            detail = f"Could not reach {item.webhook_url}: {str(err)}"
+            detail = "Webhook delivery timed out after 4 seconds."
+            logger.warning("Webhook delivery timed out for %s", item.webhook_url)
+        except httpx.HTTPError:
+            status_str = "unreachable"
+            code = 502
+            detail = "Unable to connect to storefront webhook endpoint."
+            logger.warning("Webhook HTTP connection error for %s", item.webhook_url)
+        except Exception:
+            status_str = "unreachable"
+            code = 500
+            detail = "Webhook test delivery failed due to a network connection error."
+            logger.exception("Unexpected error during webhook delivery to %s", item.webhook_url)
 
     latency_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
 
