@@ -1,19 +1,19 @@
 .navbar {
-  height: 64px;
-  background: rgba(7, 9, 14, 0.82); /* Apple Space Titanium Glass */
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  height: 52px;
+  background: rgba(7, 9, 14, 0.88); /* Clean Obsidian Titanium */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-6);
+  padding: 0 1.25rem;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navbar-brand {

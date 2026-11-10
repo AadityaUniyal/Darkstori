@@ -33,8 +33,6 @@ import CommandPalette from './components/CommandPalette';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 import ProductTourModal from './components/ProductTourModal';
 import { useRole } from './context/RoleContext';
-import OperationsPulse from './components/OperationsPulse';
-import IndustrialStatusBar from './components/IndustrialStatusBar';
 import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
 import { RoleProvider } from './context/RoleContext';
@@ -172,7 +170,6 @@ function AppContent() {
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <ProductTourModal />
-      <OperationsPulse />
       <div className="app-container">
         <Sidebar />
         <main className="main-content">
@@ -212,7 +209,6 @@ function AppContent() {
           </Suspense>
         </main>
       </div>
-      <IndustrialStatusBar />
     </div>
   );
 }

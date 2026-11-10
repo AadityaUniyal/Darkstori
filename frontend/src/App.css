@@ -4,15 +4,15 @@
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
-  padding-top: var(--navbar-height, 64px); /* Space for fixed Navbar */
+  padding-top: var(--navbar-height, 52px); /* Space for streamlined 52px Navbar */
   overflow-x: hidden;
 }
 
 .app-container {
   display: flex;
   flex: 1;
-  min-height: calc(100vh - var(--navbar-height, 64px));
-  min-height: calc(100dvh - var(--navbar-height, 64px));
+  min-height: calc(100vh - var(--navbar-height, 52px));
+  min-height: calc(100dvh - var(--navbar-height, 52px));
   position: relative;
   width: 100%;
 }

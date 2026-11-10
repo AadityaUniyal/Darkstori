@@ -101,7 +101,7 @@ const Sidebar = memo(() => {
   }
 
   return (
-    <aside className={`flex flex-col bg-[#07090E]/90 backdrop-blur-2xl border-r border-white/[0.08] h-[calc(100vh-64px)] sticky top-[64px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[250px]'}`}>
+    <aside className={`flex flex-col bg-[#07090E]/90 backdrop-blur-2xl border-r border-white/[0.08] h-[calc(100vh-52px)] sticky top-[52px] z-[900] overflow-y-auto transition-[width] duration-300 ease-in-out flex-shrink-0 ${isCollapsed ? 'w-[72px]' : 'w-[250px]'}`}>
       <nav className="flex-1 py-3 flex flex-col gap-3 overflow-y-auto scrollbar-thin">
         {!isCollapsed && (
           <div className="mx-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-1">
