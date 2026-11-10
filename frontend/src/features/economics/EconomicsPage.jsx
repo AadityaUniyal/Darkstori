@@ -20,7 +20,7 @@ import { useRole } from '../../context/RoleContext';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
 import ExecutivePortfolioView from './ExecutivePortfolioView';
-import { Globe } from 'lucide-react';
+import { Globe, FileText, Download, Printer } from 'lucide-react';
 
 export default function EconomicsPage() {
   const { roleConfig, isFirstTimeUser } = useRole();
@@ -111,7 +111,20 @@ export default function EconomicsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                const url = '/api/v1/economics/dossier/executive-summary?city=Bangalore&format=html';
+                window.open(url, '_blank');
+                toast.success('Generated official Board & Investor Executive Dossier in new tab!');
+              }}
+              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
+              title="Printable, export-ready executive due diligence dossier"
+            >
+              <FileText className="w-3.5 h-3.5 text-amber-400" />
+              <span>Export Investor Dossier (PDF/HTML)</span>
+            </button>
+
             <button
               onClick={handleSaveModel}
               className="px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-400 hover:bg-amber-300 text-black transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)] cursor-pointer flex items-center gap-2 active:scale-95"
