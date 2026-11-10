@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import verify_token
+from backend.core.security import verify_token, verify_token_optional
 from backend.database.connection import get_db
 from backend.database.models.models import (
     CannibalizationSimulation,
@@ -122,7 +122,7 @@ def _huff_attractiveness(sqft: int, distance_km: float, beta: float = 2.0) -> fl
 async def analyze_cannibalization(
     req: CannibalizationRequest,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Run Huff's Gravity Model cannibalization analysis.
 

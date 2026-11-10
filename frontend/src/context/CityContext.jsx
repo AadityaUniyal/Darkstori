@@ -57,6 +57,8 @@ export function CityProvider({ children }) {
       setSelectedCity,
       activeCity: selectedCity,
       setActiveCity: setSelectedCity,
+      currentCity: selectedCity,
+      setCity: setSelectedCity,
       cities,
       selectedLocation,
       setSelectedLocation,

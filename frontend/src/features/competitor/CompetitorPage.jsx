@@ -34,78 +34,29 @@ export default function CompetitorPage() {
   const [parityPosture, setParityPosture] = useState('undercut_2pct'); // 'undercut_2pct', 'exact_parity', 'margin_preserve'
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [pricingIntel, setPricingIntel] = useState([
-    {
-      id: 1,
-      sku_name: 'Amul Taaza Toned Milk 1L',
-      category: 'Dairy',
-      darkstor_price: 74.0,
-      blinkit_price: 76.0,
-      zepto_price: 75.0,
-      instamart_price: 76.0,
-      competitor_name: 'Zepto',
-      competitor_price: 75.0,
-      price_gap_pct: -1.33,
-      competitor_stock: 'In Stock',
-      recommendation: 'MAINTAIN_EDGE'
-    },
-    {
-      id: 2,
-      sku_name: 'Farm Fresh Tender Coconut (1 pc)',
-      category: 'Fresh Produce',
-      darkstor_price: 58.0,
-      blinkit_price: 65.0,
-      zepto_price: 64.0,
-      instamart_price: 64.0,
-      competitor_name: 'Instamart',
-      competitor_price: 64.0,
-      price_gap_pct: -9.38,
-      competitor_stock: 'OUT_OF_STOCK',
-      recommendation: 'EXPLOIT_STOCKOUT'
-    },
-    {
-      id: 3,
-      sku_name: 'Red Bull Energy Drink 250ml',
-      category: 'Beverages',
-      darkstor_price: 125.0,
-      blinkit_price: 125.0,
-      zepto_price: 125.0,
-      instamart_price: 125.0,
-      competitor_name: 'Blinkit',
-      competitor_price: 125.0,
-      price_gap_pct: 0.0,
-      competitor_stock: 'In Stock',
-      recommendation: 'PARITY_LOCKED'
-    },
-    {
-      id: 4,
-      sku_name: 'Lays Magic Masala Chips 115g',
-      category: 'Snacks',
-      darkstor_price: 48.0,
-      blinkit_price: 50.0,
-      zepto_price: 50.0,
-      instamart_price: 50.0,
-      competitor_name: 'Zepto',
-      competitor_price: 50.0,
-      price_gap_pct: -4.0,
-      competitor_stock: 'In Stock',
-      recommendation: 'MAINTAIN_EDGE'
-    },
-    {
-      id: 5,
-      sku_name: 'Ferrero Rocher Chocolates (16 Pcs)',
-      category: 'Snacks',
-      darkstor_price: 549.0,
-      blinkit_price: 599.0,
-      zepto_price: 590.0,
-      instamart_price: 599.0,
-      competitor_name: 'Blinkit',
-      competitor_price: 599.0,
-      price_gap_pct: -8.35,
-      competitor_stock: 'OUT_OF_STOCK',
-      recommendation: 'EXPLOIT_STOCKOUT'
+  const [pricingIntel, setPricingIntel] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCompetitorPricing();
+  }, [activeCity, category]);
+
+  const fetchCompetitorPricing = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `/api/v1/analytics/competitor-pricing?city=${encodeURIComponent(activeCity || 'Bangalore')}${category !== 'All' ? `&category=${encodeURIComponent(category)}` : ''}`
+      ).catch(() => null);
+
+      if (res?.data?.items && res.data.items.length > 0) {
+        setPricingIntel(res.data.items);
+      }
+    } catch (e) {
+      console.warn('Competitor pricing fetch fallback:', e);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const handleApplyParityPosture = (posture) => {
     setParityPosture(posture);

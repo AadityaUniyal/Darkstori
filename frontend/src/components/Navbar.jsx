@@ -100,29 +100,29 @@ const Navbar = memo(() => {
             
             <button
               onClick={() => navigate('/vision')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Launch VisionPack AI Optical Dock"
             >
               <Scan size={14} className="text-amber-400" />
-              <span className="hidden sm:inline">VisionPack</span>
+              <span className="hidden xl:inline">VisionPack</span>
             </button>
             
             <button
               onClick={() => setImporterOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Upload CSV Catalog & Inventory"
             >
               <UploadCloud size={14} className="text-emerald-400" />
-              <span className="hidden lg:inline">Import CSV</span>
+              <span className="hidden xl:inline">Import</span>
             </button>
             
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/25 text-xs font-semibold transition-all shadow-sm cursor-pointer"
               title="Storefront & Webhooks Integration"
             >
               <Webhook size={14} className="text-violet-400" />
-              <span className="hidden xl:inline">Webhooks</span>
+              <span className="hidden 2xl:inline">Webhooks</span>
             </button>
             
             <ConnectionStatus />

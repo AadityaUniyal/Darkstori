@@ -13,7 +13,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import require_roles, verify_token
+from backend.core.security import require_roles, verify_token, verify_token_optional
 from backend.database.connection import get_db
 from backend.database.models.models import ProductBatch, DarkStore
 
@@ -86,15 +86,14 @@ class OcrRequest(BaseModel):
     image_url: str
 
 
-def _scope_batch_query(query, payload: dict):
+def _scope_batch_query(query, payload: Optional[dict]):
+    payload = payload or {}
     organization_id = payload.get("org_id") or payload.get("organization_id")
     if str(organization_id or "").isdigit() and int(organization_id) > 0:
         return query.join(DarkStore, ProductBatch.store_id == DarkStore.id).where(
             DarkStore.organization_id == int(organization_id)
         )
-    return query.join(DarkStore, ProductBatch.store_id == DarkStore.id).where(
-        DarkStore.organization_id.is_(None)
-    )
+    return query.outerjoin(DarkStore, ProductBatch.store_id == DarkStore.id)
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -104,7 +103,7 @@ async def get_batches(
     city: Optional[str] = None,
     category: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(require_roles("admin", "director", "executive", "store-gm", "store_gm", "gm", "datascience", "franchise", "user")),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Retrieve active perishable produce batches."""
     query = _scope_batch_query(select(ProductBatch), payload)
@@ -185,7 +184,7 @@ async def delete_batch(
 async def simulate_decay(
     req: DecayRequest,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Simulate decay over time, updating freshness and markdown pricing dynamically."""
     query = _scope_batch_query(select(ProductBatch), payload)

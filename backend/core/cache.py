@@ -49,9 +49,16 @@ class FeatureCache:
         return self
 
     async def close(self):
-        """Close the Redis connection."""
+        """Close the Redis connection safely without blocking shutdown."""
         if self.redis_client:
-            await self.redis_client.close()
+            try:
+                close_fn = getattr(self.redis_client, "aclose", None) or getattr(self.redis_client, "close")
+                await asyncio.wait_for(close_fn(), timeout=1.5)
+            except Exception as e:
+                logger.debug(f"Redis close timeout or ignore: {e}")
+            finally:
+                self.redis_client = None
+                self._is_connected = False
             
     async def get(self, key: str) -> Optional[str]:
         """Get value from cache."""

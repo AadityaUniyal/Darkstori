@@ -18,35 +18,69 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { floorAudio } from '../../utils/floorAudio';
+import { useCity } from '../../context/CityContext';
 
-// 16 Real Bangalore Quick-Commerce Delivery Orders with relative coordinates (lat, lon offset from Pod)
-const POD_ORIGIN = { name: 'Indiranagar Pod 04 Hub', x: 260, y: 190 };
-
-const RAW_ORDERS = [
-  { id: 'ORD-901', customer: 'Apt 4B, 100ft Road', weightKg: 2.4, x: 230, y: 150, deadlineMins: 8 },
-  { id: 'ORD-902', customer: 'Villa 12, Defence Colony', weightKg: 1.8, x: 210, y: 140, deadlineMins: 9 },
-  { id: 'ORD-903', customer: 'Flat 302, CMH Road', weightKg: 3.1, x: 250, y: 110, deadlineMins: 7 },
-  { id: 'ORD-904', customer: 'House 88, 12th Main', weightKg: 1.2, x: 220, y: 180, deadlineMins: 10 },
-  { id: 'ORD-905', customer: 'Tower C, Domlur Ring Rd', weightKg: 2.8, x: 380, y: 240, deadlineMins: 8 },
-  { id: 'ORD-906', customer: 'Amarjyoti Layout Apt 1', weightKg: 1.9, x: 360, y: 260, deadlineMins: 9 },
-  { id: 'ORD-907', customer: 'EGL Tech Park Bldg 3', weightKg: 4.2, x: 390, y: 220, deadlineMins: 6 },
-  { id: 'ORD-908', customer: 'Koramangala 1st Block', weightKg: 2.5, x: 280, y: 310, deadlineMins: 8 },
-  { id: 'ORD-909', customer: 'Koramangala 3rd Block Villa', weightKg: 3.0, x: 250, y: 340, deadlineMins: 7 },
-  { id: 'ORD-910', customer: 'Raheja Residency B-10', weightKg: 1.5, x: 290, y: 330, deadlineMins: 9 },
-  { id: 'ORD-911', customer: 'Ulsoor Lake Rd House 14', weightKg: 2.2, x: 140, y: 120, deadlineMins: 9 },
-  { id: 'ORD-912', customer: 'Cambridge Layout Apt 7', weightKg: 1.7, x: 170, y: 160, deadlineMins: 8 },
-  { id: 'ORD-913', customer: 'Someshwarpura 2nd Cross', weightKg: 2.0, x: 130, y: 150, deadlineMins: 10 },
-  { id: 'ORD-914', customer: 'Old Airport Rd Rustam Bagh', weightKg: 3.5, x: 420, y: 160, deadlineMins: 7 },
-  { id: 'ORD-915', customer: 'Wind Tunnel Rd House 4', weightKg: 1.6, x: 440, y: 190, deadlineMins: 8 },
-  { id: 'ORD-916', customer: 'Murugeshpalya Apt 201', weightKg: 2.9, x: 410, y: 180, deadlineMins: 9 }
-];
+const CITY_DATA = {
+  Bangalore: {
+    pod: { name: 'Indiranagar Pod 04 Hub', x: 260, y: 190 },
+    orders: [
+      { id: 'ORD-BLR-901', customer: 'Apt 4B, 100ft Road', weightKg: 2.4, x: 230, y: 150, deadlineMins: 8 },
+      { id: 'ORD-BLR-902', customer: 'Villa 12, Defence Colony', weightKg: 1.8, x: 210, y: 140, deadlineMins: 9 },
+      { id: 'ORD-BLR-903', customer: 'Flat 302, CMH Road', weightKg: 3.1, x: 250, y: 110, deadlineMins: 7 },
+      { id: 'ORD-BLR-904', customer: 'House 88, 12th Main', weightKg: 1.2, x: 220, y: 180, deadlineMins: 10 },
+      { id: 'ORD-BLR-905', customer: 'Tower C, Domlur Ring Rd', weightKg: 2.8, x: 380, y: 240, deadlineMins: 8 },
+      { id: 'ORD-BLR-906', customer: 'Amarjyoti Layout Apt 1', weightKg: 1.9, x: 360, y: 260, deadlineMins: 9 },
+      { id: 'ORD-BLR-907', customer: 'EGL Tech Park Bldg 3', weightKg: 4.2, x: 390, y: 220, deadlineMins: 6 },
+      { id: 'ORD-BLR-908', customer: 'Koramangala 1st Block', weightKg: 2.5, x: 280, y: 310, deadlineMins: 8 },
+      { id: 'ORD-BLR-909', customer: 'Koramangala 3rd Block Villa', weightKg: 3.0, x: 250, y: 340, deadlineMins: 7 },
+      { id: 'ORD-BLR-910', customer: 'Raheja Residency B-10', weightKg: 1.5, x: 290, y: 330, deadlineMins: 9 },
+      { id: 'ORD-BLR-911', customer: 'Ulsoor Lake Rd House 14', weightKg: 2.2, x: 140, y: 120, deadlineMins: 9 },
+      { id: 'ORD-BLR-912', customer: 'Cambridge Layout Apt 7', weightKg: 1.7, x: 170, y: 160, deadlineMins: 8 },
+      { id: 'ORD-BLR-913', customer: 'Someshwarpura 2nd Cross', weightKg: 2.0, x: 130, y: 150, deadlineMins: 10 },
+      { id: 'ORD-BLR-914', customer: 'Old Airport Rd Rustam Bagh', weightKg: 3.5, x: 420, y: 160, deadlineMins: 7 },
+      { id: 'ORD-BLR-915', customer: 'Wind Tunnel Rd House 4', weightKg: 1.6, x: 440, y: 190, deadlineMins: 8 },
+      { id: 'ORD-BLR-916', customer: 'Murugeshpalya Apt 201', weightKg: 2.9, x: 410, y: 180, deadlineMins: 9 }
+    ]
+  },
+  Mumbai: {
+    pod: { name: 'Bandra West Pod 01', x: 250, y: 180 },
+    orders: [
+      { id: 'ORD-BOM-101', customer: 'Pali Hill Villa 4', weightKg: 2.1, x: 210, y: 140, deadlineMins: 8 },
+      { id: 'ORD-BOM-102', customer: 'Carter Road Seaface Apt 12', weightKg: 1.9, x: 180, y: 160, deadlineMins: 9 },
+      { id: 'ORD-BOM-103', customer: 'Linking Road Commercial 88', weightKg: 3.2, x: 240, y: 110, deadlineMins: 7 },
+      { id: 'ORD-BOM-104', customer: 'Hill Road Junction Bldg 2', weightKg: 1.5, x: 220, y: 190, deadlineMins: 10 },
+      { id: 'ORD-BOM-105', customer: 'Khar Danda Lane 3', weightKg: 2.6, x: 370, y: 230, deadlineMins: 8 },
+      { id: 'ORD-BOM-106', customer: 'Santacruz West 14th Rd', weightKg: 1.8, x: 350, y: 260, deadlineMins: 9 },
+      { id: 'ORD-BOM-107', customer: 'BKC Tech Complex G-Block', weightKg: 4.0, x: 390, y: 210, deadlineMins: 6 },
+      { id: 'ORD-BOM-108', customer: 'Mahim West Fisherman Colony', weightKg: 2.3, x: 270, y: 310, deadlineMins: 8 },
+      { id: 'ORD-BOM-109', customer: 'Matunga Central Circle', weightKg: 2.8, x: 240, y: 340, deadlineMins: 7 },
+      { id: 'ORD-BOM-110', customer: 'Dadar TT Circle Apt 9', weightKg: 1.6, x: 290, y: 330, deadlineMins: 9 },
+      { id: 'ORD-BOM-111', customer: 'Prabhadevi Twin Towers', weightKg: 2.4, x: 130, y: 130, deadlineMins: 9 },
+      { id: 'ORD-BOM-112', customer: 'Worli Seaface Apt 6', weightKg: 1.8, x: 160, y: 170, deadlineMins: 8 },
+      { id: 'ORD-BOM-113', customer: 'Lower Parel One Indiabulls', weightKg: 3.6, x: 420, y: 150, deadlineMins: 7 }
+    ]
+  },
+  Delhi: {
+    pod: { name: 'Hauz Khas Pod 02 Hub', x: 250, y: 180 },
+    orders: [
+      { id: 'ORD-DEL-201', customer: 'Green Park Main Market', weightKg: 2.2, x: 220, y: 140, deadlineMins: 8 },
+      { id: 'ORD-DEL-202', customer: 'SDA Market Flat 104', weightKg: 1.7, x: 200, y: 160, deadlineMins: 9 },
+      { id: 'ORD-DEL-203', customer: 'Malviya Nagar Block B', weightKg: 3.0, x: 250, y: 100, deadlineMins: 7 },
+      { id: 'ORD-DEL-204', customer: 'Saket Select Citywalk Residences', weightKg: 2.5, x: 380, y: 230, deadlineMins: 8 },
+      { id: 'ORD-DEL-205', customer: 'Greater Kailash 1 M-Block', weightKg: 3.4, x: 390, y: 200, deadlineMins: 6 },
+      { id: 'ORD-DEL-206', customer: 'Defence Colony C-Block', weightKg: 2.1, x: 270, y: 320, deadlineMins: 8 },
+      { id: 'ORD-DEL-207', customer: 'Lajpat Nagar 4', weightKg: 2.9, x: 240, y: 340, deadlineMins: 7 },
+      { id: 'ORD-DEL-208', customer: 'South Extension Part 2', weightKg: 2.3, x: 130, y: 140, deadlineMins: 9 }
+    ]
+  }
+};
 
 const CLUSTER_COLORS = [
-  { fill: '#8B5CF6', stroke: '#A78BFA', name: 'Corridor A (Indiranagar Central)' },
-  { fill: '#10B981', stroke: '#34D399', name: 'Corridor B (Domlur / EGL Park)' },
-  { fill: '#F59E0B', stroke: '#FBBF24', name: 'Corridor C (Koramangala Link)' },
-  { fill: '#06B6D4', stroke: '#22D3EE', name: 'Corridor D (Ulsoor / Halasuru)' },
-  { fill: '#EC4899', stroke: '#F472B6', name: 'Corridor E (Old Airport Belt)' }
+  { fill: '#8B5CF6', stroke: '#A78BFA', name: 'Corridor A (Zone Alpha)' },
+  { fill: '#10B981', stroke: '#34D399', name: 'Corridor B (Tech Park Belt)' },
+  { fill: '#F59E0B', stroke: '#FBBF24', name: 'Corridor C (Commercial Spine)' },
+  { fill: '#06B6D4', stroke: '#22D3EE', name: 'Corridor D (Suburban Link)' },
+  { fill: '#EC4899', stroke: '#F472B6', name: 'Corridor E (High-Density Ring)' }
 ];
 
 // Simple in-browser K-Means clustering algorithm
@@ -93,20 +127,25 @@ function runKMeans(orders, k, maxIterations = 20) {
 }
 
 export default function GeospatialClusterOptimizer() {
+  const { activeCity } = useCity();
+  const activeCityData = CITY_DATA[activeCity] || CITY_DATA.Bangalore;
+  const podOrigin = activeCityData.pod;
+  const rawOrders = activeCityData.orders;
+
   const [kCount, setKCount] = useState(4); // 4 Rider Swarms default
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [activeClusterView, setActiveClusterView] = useState(null);
 
   const { clusters, centroids } = useMemo(() => {
-    return runKMeans(RAW_ORDERS, kCount);
-  }, [kCount]);
+    return runKMeans(rawOrders, Math.min(kCount, rawOrders.length));
+  }, [rawOrders, kCount]);
 
   // Aggregate metrics
-  const totalOrders = RAW_ORDERS.length;
+  const totalOrders = rawOrders.length;
   const singleRiderTrips = totalOrders;
-  const batchedRiderTrips = kCount;
+  const batchedRiderTrips = Math.min(kCount, totalOrders);
   const fleetReductionPct = Math.round(((singleRiderTrips - batchedRiderTrips) / singleRiderTrips) * 100);
-  const avgClusterWeight = (RAW_ORDERS.reduce((s, o) => s + o.weightKg, 0) / kCount).toFixed(1);
+  const avgClusterWeight = (rawOrders.reduce((s, o) => s + o.weightKg, 0) / kCount).toFixed(1);
 
   const handleRerunClustering = () => {
     setIsOptimizing(true);
@@ -234,11 +273,11 @@ export default function GeospatialClusterOptimizer() {
             <rect width="540" height="380" fill="url(#clusterGrid)" />
 
             {/* Central Darkstore Pod Origin */}
-            <g transform={`translate(${POD_ORIGIN.x}, ${POD_ORIGIN.y})`}>
+            <g transform={`translate(${podOrigin.x}, ${podOrigin.y})`}>
               <circle r="16" fill="#6366F1" fillOpacity="0.25" stroke="#6366F1" strokeWidth="2" />
               <circle r="6" fill="#818CF8" />
               <text y="28" fill="#C7D2FE" fontSize="9" fontWeight="bold" textAnchor="middle">
-                POD 04 HUB
+                {podOrigin.name}
               </text>
             </g>
 
@@ -252,8 +291,8 @@ export default function GeospatialClusterOptimizer() {
                 <g key={`cluster-group-${cIdx}`}>
                   {/* Vector from Hub to Centroid */}
                   <line
-                    x1={POD_ORIGIN.x}
-                    y1={POD_ORIGIN.y}
+                    x1={podOrigin.x}
+                    y1={podOrigin.y}
                     x2={centroid.x}
                     y2={centroid.y}
                     stroke={color.stroke}

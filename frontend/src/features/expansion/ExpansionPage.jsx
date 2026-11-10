@@ -41,6 +41,7 @@ export default function ExpansionPage() {
   const { activeCity } = useCity();
   const { user } = useAuth();
 
+  const [candidateSites, setCandidateSites] = useState(DEFAULT_SITES);
   const [loading, setLoading] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState('site-hsr');
   const [candidateNeighborhood, setCandidateNeighborhood] = useState('HSR Layout Sector 3');
@@ -62,13 +63,56 @@ export default function ExpansionPage() {
   });
 
   useEffect(() => {
-    fetchDecisions();
+    fetchCandidatesAndDecisions();
   }, [activeCity]);
 
-  const fetchDecisions = async () => {
+  const fetchCandidatesAndDecisions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`/api/v1/expansion/history?city=${activeCity || 'Bangalore'}`).catch(() => null);
+      // 1. Fetch live ranked candidate store locations from the placement engine
+      const rankRes = await axios.get(`/api/v1/placement/rank-candidates?city=${encodeURIComponent(activeCity || 'Bangalore')}&limit=6`).catch(() => null);
+      if (rankRes?.data?.ranked_candidates && rankRes.data.ranked_candidates.length > 0) {
+        const raw = rankRes.data.ranked_candidates;
+        const lats = raw.map(c => c.latitude).filter(Boolean);
+        const lngs = raw.map(c => c.longitude).filter(Boolean);
+        const minLat = lats.length ? Math.min(...lats) : 12.9;
+        const maxLat = lats.length ? Math.max(...lats) : 13.0;
+        const minLng = lngs.length ? Math.min(...lngs) : 77.5;
+        const maxLng = lngs.length ? Math.max(...lngs) : 77.7;
+
+        const sites = raw.map((c, idx) => {
+          const normX = Math.round(70 + ((c.longitude - minLng) / (maxLng - minLng || 0.05)) * 360);
+          const normY = Math.round(50 + ((maxLat - c.latitude) / (maxLat - minLat || 0.05)) * 220);
+          return {
+            id: c.parcel_id || `site-${idx}`,
+            name: c.name,
+            type: `${(c.demographics?.population_density || 12000) > 15000 ? 'High-Density Residential' : 'Mixed Commercial Retail'}`,
+            x: Math.max(50, Math.min(450, normX)),
+            y: Math.max(40, Math.min(280, normY)),
+            latitude: c.latitude,
+            longitude: c.longitude,
+            rent: Math.round((c.demographics?.avg_household_income || 800000) * 0.18),
+            sqft: 2800,
+            sla: Math.round(c.road_distance?.estimated_sla_minutes || 10),
+            buffer: Math.round((c.competitor_summary?.nearest_competitor_dist_km || 1.2) * 10) / 10,
+            composite_score: c.composite_score,
+            predicted_daily_orders: c.predicted_demand?.predicted_daily_orders || 2200,
+            cannibalization_risk_pct: c.cannibalization_risk_pct || 4.2,
+          };
+        });
+        setCandidateSites(sites);
+        if (sites.length > 0) {
+          handleSelectPredefinedSite(sites[0]);
+        }
+      } else {
+        setCandidateSites(DEFAULT_SITES);
+        if (DEFAULT_SITES.length > 0) {
+          handleSelectPredefinedSite(DEFAULT_SITES[0]);
+        }
+      }
+
+      // 2. Fetch expansion decision history from real database
+      const res = await axios.get(`/api/v1/expansion/history?city=${encodeURIComponent(activeCity || 'Bangalore')}`).catch(() => null);
       if (res?.data?.items && res.data.items.length > 0) {
         setCandidateDecisions(res.data.items);
       } else {
@@ -84,30 +128,6 @@ export default function ExpansionPage() {
             roi_12_months_pct: 42.0,
             status: 'APPROVED',
             created_at: new Date().toISOString()
-          },
-          {
-            id: 2,
-            neighborhood_name: 'Whitefield Borewell Road',
-            city: activeCity || 'Bangalore',
-            store_size_sqft: 3200,
-            monthly_rent: 180000,
-            predicted_daily_orders: 2600,
-            cannibalization_risk_pct: 3.2,
-            roi_12_months_pct: 48.5,
-            status: 'FEASIBILITY_PASSED',
-            created_at: new Date(Date.now() - 86400000).toISOString()
-          },
-          {
-            id: 3,
-            neighborhood_name: 'Koramangala 4th Block',
-            city: activeCity || 'Bangalore',
-            store_size_sqft: 3100,
-            monthly_rent: 210000,
-            predicted_daily_orders: 2890,
-            cannibalization_risk_pct: 7.1,
-            roi_12_months_pct: 39.8,
-            status: 'PENDING_SURVEY',
-            created_at: new Date(Date.now() - 172800000).toISOString()
           }
         ]);
       }
@@ -121,13 +141,46 @@ export default function ExpansionPage() {
   const handleSelectPredefinedSite = (site) => {
     setSelectedSiteId(site.id);
     setCandidateNeighborhood(site.name);
-    setTargetSqft(site.sqft);
-    setMonthlyRent(site.rent);
-    setTargetSlaMinutes(site.sla);
-    setCompetitorBufferKm(site.buffer);
+    setTargetSqft(site.sqft || 2800);
+    setMonthlyRent(site.rent || 145000);
+    setTargetSlaMinutes(site.sla || 10);
+    setCompetitorBufferKm(site.buffer || 1.2);
 
-    recalculateMetrics(site.sqft, site.rent, site.sla, site.buffer);
+    analyzeCannibalizationReal(site, site.sqft || 2800, site.rent || 145000, site.sla || 10, site.buffer || 1.2);
     floorAudio.click();
+  };
+
+  const analyzeCannibalizationReal = async (site, sqft, rent, sla, buffer) => {
+    try {
+      const res = await axios.post('/api/v1/cannibalization/analyze', {
+        candidate_lat: site.latitude || 12.9716,
+        candidate_lng: site.longitude || 77.5946,
+        store_size_sqft: sqft,
+        city: activeCity || 'Bangalore',
+        beta: 2.0
+      }).catch(() => null);
+
+      if (res?.data) {
+        const d = res.data;
+        const canni = typeof d.cannibalization_risk_pct === 'number' ? d.cannibalization_risk_pct : +(12.0 - (buffer * 4.5)).toFixed(1);
+        const baseOrders = d.projected_daily_orders || Math.round((sqft * 0.85) + (rent * 0.006));
+        const oppScore = typeof d.opportunity_score === 'number' ? d.opportunity_score : Math.min(99, +(98.5 - (canni * 1.5) - (sla > 10 ? 5 : 0)).toFixed(1));
+        const payback = +( (sqft * 1250) / (baseOrders * 32 * 0.22 * 30) ).toFixed(1);
+
+        setMetrics({
+          opportunityScore: oppScore,
+          predictedDailyOrders: baseOrders,
+          cannibalizationIndex: Math.max(1.2, canni),
+          capexPaybackMonths: Math.max(7.5, payback),
+          coveragePopulation: Math.round(baseOrders * 60),
+          catchmentIsochroneRadiusKm: +(sla * 0.28).toFixed(2),
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn('Cannibalization analysis fallback:', err);
+    }
+    recalculateMetrics(sqft, rent, sla, buffer);
   };
 
   const recalculateMetrics = (sqft, rent, sla, buffer) => {
@@ -154,13 +207,13 @@ export default function ExpansionPage() {
       sla: key === 'sla' ? val : targetSlaMinutes,
       buffer: key === 'buffer' ? val : competitorBufferKm,
     };
-    recalculateMetrics(newParams.sqft, newParams.rent, newParams.sla, newParams.buffer);
+    const currentSite = candidateSites.find(s => s.id === selectedSiteId) || candidateSites[0] || {};
+    analyzeCannibalizationReal(currentSite, newParams.sqft, newParams.rent, newParams.sla, newParams.buffer);
   };
 
   const handleCommitSite = async () => {
     floorAudio.success();
     const newRecord = {
-      id: Date.now(),
       neighborhood_name: candidateNeighborhood,
       city: activeCity || 'Bangalore',
       store_size_sqft: targetSqft,
@@ -172,22 +225,18 @@ export default function ExpansionPage() {
       created_at: new Date().toISOString()
     };
 
-    setCandidateDecisions(prev => [newRecord, ...prev]);
+    setCandidateDecisions(prev => [{ ...newRecord, id: Date.now() }, ...prev]);
 
     toast.promise(
-      axios.post('/api/v1/expansion/decisions', {
-        city: activeCity || 'Bangalore',
-        neighborhood_name: candidateNeighborhood,
-        opportunity_score: metrics.opportunityScore,
-        demand_estimate: metrics.predictedDailyOrders,
-        cannibalization_risk_pct: metrics.cannibalizationIndex,
-        store_size_sqft: targetSqft,
-        monthly_rent: monthlyRent,
-        status: 'approved'
-      }).catch(() => null),
+      axios.post('/api/v1/expansion/commit', newRecord).then(async () => {
+        const res = await axios.get(`/api/v1/expansion/history?city=${encodeURIComponent(activeCity || 'Bangalore')}`).catch(() => null);
+        if (res?.data?.items) {
+          setCandidateDecisions(res.data.items);
+        }
+      }),
       {
         loading: 'Writing expansion approval to Neon DB...',
-        success: `Site "${candidateNeighborhood}" approved and committed to Neon DB!`,
+        success: `Site "${candidateNeighborhood}" approved and committed to Expansion Ledger!`,
         error: 'Recorded in candidate registry.'
       }
     );
@@ -205,7 +254,7 @@ export default function ExpansionPage() {
     toast.info('Candidate site removed from active registry');
   };
 
-  const selectedSiteObj = DEFAULT_SITES.find(s => s.id === selectedSiteId) || DEFAULT_SITES[0];
+  const selectedSiteObj = candidateSites.find(s => s.id === selectedSiteId) || candidateSites[0] || DEFAULT_SITES[0];
 
   return (
     <div className="darkstor-feature-page p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
@@ -326,12 +375,12 @@ export default function ExpansionPage() {
                 onChange={(e) => {
                   const val = e.target.value;
                   setCandidateNeighborhood(val);
-                  const matched = DEFAULT_SITES.find(s => s.name === val);
+                  const matched = candidateSites.find(s => s.name === val);
                   if (matched) handleSelectPredefinedSite(matched);
                 }}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white focus:border-amber-400 outline-none transition-colors"
               >
-                {DEFAULT_SITES.map(s => (
+                {candidateSites.map(s => (
                   <option key={s.id} value={s.name}>{s.name} ({s.type})</option>
                 ))}
               </select>
@@ -487,7 +536,7 @@ export default function ExpansionPage() {
                 </g>
 
                 {/* Candidate & Rival Store Pins */}
-                {DEFAULT_SITES.map(site => {
+                {candidateSites.map(site => {
                   const isSelected = site.id === selectedSiteId;
                   return (
                     <g

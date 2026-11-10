@@ -299,6 +299,95 @@ async def approve_decision(
     return {"status": "scenario_approved", "simulation_id": simulation_id, "physical_store_created": False, "data_mode": "heuristic_simulation"}
 
 
+class CommitCandidateRequest(BaseModel):
+    neighborhood_name: str
+    city: str = "Bangalore"
+    store_size_sqft: int = 2800
+    monthly_rent: float = 145000.0
+    predicted_daily_orders: int = 2200
+    cannibalization_risk_pct: float = 4.2
+    roi_12_months_pct: float = 45.0
+    status: str = "APPROVED"
+
+
+@router.post("/commit")
+async def commit_candidate_site(
+    req: CommitCandidateRequest,
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Commit a chosen candidate site to the permanent expansion ledger."""
+    nb = (await db.execute(
+        select(Neighborhood).where(func.lower(Neighborhood.neighborhood_name).like(f"%{req.neighborhood_name[:8].lower()}%"))
+    )).scalars().first()
+
+    decision = ExpansionDecision(
+        city=req.city,
+        neighborhood_id=nb.neighborhood_id if nb else 1,
+        neighborhood_name=req.neighborhood_name,
+        status=req.status,
+        opportunity_score=min(99.0, max(60.0, req.roi_12_months_pct * 2.0)),
+        demand_estimate=req.predicted_daily_orders,
+        coverage_gain_pct=18.5,
+        cannibalization_risk_pct=req.cannibalization_risk_pct,
+        roi_12_months_pct=req.roi_12_months_pct,
+        breakeven_months=11,
+        capex=req.store_size_sqft * 1200,
+        store_size_sqft=req.store_size_sqft,
+        logistics_constraint_mins=10.0,
+        review_notes=f"Auto-committed via Darkstori Cockpit with rent Rs.{req.monthly_rent:,.0f}/mo",
+        decision_payload={
+            "status": req.status,
+            "monthly_rent": req.monthly_rent,
+            "store_size_sqft": req.store_size_sqft,
+            "data_mode": "candidate_ranking_engine",
+        }
+    )
+    db.add(decision)
+    db.add(AuditLog(
+        action="COMMIT_EXPANSION_CANDIDATE",
+        target_table="expansion_decisions",
+        target_id=0,
+        new_state={"city": req.city, "neighborhood": req.neighborhood_name, "rent": req.monthly_rent}
+    ))
+    await db.commit()
+    await db.refresh(decision)
+    return {
+        "status": "success",
+        "decision_id": decision.id,
+        "message": f"Successfully committed store site for {req.neighborhood_name} ({req.city})"
+    }
+
+
+@router.get("/history")
+async def get_expansion_history(
+    city: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Retrieve historical committed expansion decisions for the specified city."""
+    query = select(ExpansionDecision).order_by(ExpansionDecision.created_at.desc())
+    if city and city.lower() != "all":
+        query = query.where(func.lower(ExpansionDecision.city) == func.lower(city))
+    rows = (await db.execute(query.limit(30))).scalars().all()
+    items = [
+        {
+            "id": row.id,
+            "city": row.city,
+            "neighborhood_name": row.neighborhood_name,
+            "store_size_sqft": row.store_size_sqft,
+            "monthly_rent": (row.decision_payload or {}).get("monthly_rent", 145000),
+            "predicted_daily_orders": row.demand_estimate,
+            "cannibalization_risk_pct": row.cannibalization_risk_pct,
+            "roi_12_months_pct": row.roi_12_months_pct,
+            "status": row.status,
+            "created_at": str(row.created_at),
+        }
+        for row in rows
+    ]
+    return {"items": items, "count": len(items)}
+
+
 @router.get("/ledger")
 async def decision_ledger(
     city: Optional[str] = None,

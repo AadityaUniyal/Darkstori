@@ -136,7 +136,8 @@ export default function InventoryPage() {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/v1/recommendations').catch(() => null);
+      const catParam = category !== 'All' ? `&category=${encodeURIComponent(category)}` : '';
+      const res = await axios.get(`/api/v1/recommendations?city=${encodeURIComponent(activeCity || 'Bangalore')}${catParam}`).catch(() => null);
       if (res?.data?.items && res.data.items.length > 0) {
         setRecommendations(res.data.items);
       }

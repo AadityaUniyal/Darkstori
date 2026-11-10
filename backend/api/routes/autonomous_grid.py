@@ -18,7 +18,7 @@ from backend.database.connection import get_db
 from backend.database.models.models import (
     AuditLog, StockLedger, DarkStore, ProductBatch, StoreLayout
 )
-from backend.core.security import verify_token
+from backend.core.security import verify_token, verify_token_optional
 from backend.ml.thermodynamic_slotting import slotting_engine
 from backend.ml.swarm_intercept import swarm_engine
 from backend.ml.self_healing_grid import grid_engine
@@ -58,7 +58,7 @@ class TransshipmentExecuteRequest(BaseModel):
 @router.post("/slotting-optimize")
 async def optimize_darkstore_slotting(
     req: SlottingOptimizeRequest = SlottingOptimizeRequest(),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """
     Computes thermodynamic affinity re-slotting using simulated annealing & spectral distance minimization.
@@ -78,7 +78,7 @@ async def optimize_darkstore_slotting(
 async def apply_and_persist_slotting(
     req: ApplySlottingRequest,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """
     Persists thermodynamic shelf slotting optimization to the live database (StoreLayout & AuditLog).
@@ -122,7 +122,7 @@ async def apply_and_persist_slotting(
 
 
 @router.post("/swarm-intercept")
-async def compute_swarm_intercept(req: SwarmInterceptRequest, payload: dict = Depends(verify_token)):
+async def compute_swarm_intercept(req: SwarmInterceptRequest, payload: Optional[dict] = Depends(verify_token_optional)):
     """
     Computes dynamic en-route parcel handoffs between two couriers to defend SLA under traffic friction.
     """
@@ -139,7 +139,7 @@ async def compute_swarm_intercept(req: SwarmInterceptRequest, payload: dict = De
 
 
 @router.get("/multi-hub-mesh")
-async def get_multi_hub_mesh(payload: dict = Depends(verify_token)):
+async def get_multi_hub_mesh(payload: Optional[dict] = Depends(verify_token_optional)):
     """
     Returns live self-healing transshipment schedule and net economic alpha across urban hubs.
     """
@@ -154,7 +154,7 @@ async def get_multi_hub_mesh(payload: dict = Depends(verify_token)):
 async def execute_and_persist_transshipment(
     req: TransshipmentExecuteRequest,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Depends(verify_token),
+    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """
     Executes and persists an autonomous inter-hub transshipment in the live database:

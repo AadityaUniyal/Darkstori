@@ -48,7 +48,7 @@ class BatchForecastJobRequest(BaseModel):
 @router.get("/neighborhoods", response_model=List[NeighborhoodOption])
 async def list_forecast_neighborhoods(
     db: AsyncSession = Depends(get_db),
-    token_payload: dict = Depends(verify_token),
+    token_payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Fetch available pincodes/neighborhoods for forecasting."""
     try:
@@ -79,10 +79,12 @@ async def list_forecast_neighborhoods(
 async def predict_demand(
     request: PredictionRequest,
     db: AsyncSession = Depends(get_db),
-    token_payload: dict = Depends(verify_token),
+    token_payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Predict demand for a pincode on a specific date with Redis caching of repeated calculations."""
-    cache_key = f"api_cache:predict:{request.pincode}:{request.order_date}:{request.rain_mm}:{request.temperature_c}"
+    rain = getattr(request, "rain_mm", 0.0)
+    temp = getattr(request, "temperature_c", 28.0)
+    cache_key = f"api_cache:predict:{request.pincode}:{request.order_date}:{rain}:{temp}"
     try:
         cached_data = await redis_cache.get(cache_key)
         if cached_data:
@@ -96,7 +98,8 @@ async def predict_demand(
     try:
         response = await service.predict(request)
         try:
-            await redis_cache.set(cache_key, json.dumps(response.model_dump(), default=str), ttl=300)
+            dump_fn = getattr(response, "model_dump", None) or getattr(response, "dict")
+            await redis_cache.set(cache_key, json.dumps(dump_fn(), default=str), ttl=300)
         except Exception as set_err:
             logger.debug(f"Cache set failed: {set_err}")
         return response

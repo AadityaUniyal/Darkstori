@@ -125,7 +125,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: 'Import Catalog / Inventory CSV',
       subtitle: 'Upload Master SKU Catalog or Batch Inventory CSV into DarkStori',
       action: () => {
-        window.dispatchEvent(new CustomEvent('darkstor:open-importer'));
+        window.dispatchEvent(new CustomEvent('darkstori:open-importer'));
       }
     },
     {
@@ -135,7 +135,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: 'Storefront Webhooks & Compliance',
       subtitle: 'Configure real-time price sync, stockout hooks, GSTIN, and FSSAI credentials',
       action: () => {
-        window.dispatchEvent(new CustomEvent('darkstor:open-settings'));
+        window.dispatchEvent(new CustomEvent('darkstori:open-settings'));
       }
     },
     {

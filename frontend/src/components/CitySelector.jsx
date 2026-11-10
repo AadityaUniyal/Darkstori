@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCity } from '../context/CityContext';
 import { api } from '../services/api';
-import { MapPin, Search, Loader2, Globe } from 'lucide-react';
+import { MapPin, Search, Loader2, Globe, ChevronDown } from 'lucide-react';
 
 export default function CitySelector() {
   const { selectedCity, setSelectedCity, cities, citiesError, addCity, selectLocation } = useCity();
@@ -84,18 +84,19 @@ export default function CitySelector() {
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
-            className="input-seamless bg-transparent text-xs font-semibold text-white/90 outline-none cursor-pointer appearance-none pr-2 max-w-[120px]"
+            className="input-seamless bg-transparent text-xs font-semibold text-white/90 outline-none cursor-pointer appearance-none pr-1 max-w-[120px]"
           >
             {!cities.length && <option value="">{citiesError ? 'Market list unavailable' : 'No configured markets'}</option>}
             {cities.map((city) => {
               const value = typeof city === 'string' ? city : city.city_name;
               return (
-                <option key={value} value={value} className="bg-card text-foreground">
+                <option key={value} value={value} className="bg-[#0F1420] text-white">
                   {value}
                 </option>
               );
             })}
           </select>
+          <ChevronDown size={11} className="text-white/40 pointer-events-none shrink-0" />
         </div>
 
         {/* Search world button */}
