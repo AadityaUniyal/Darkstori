@@ -26,6 +26,7 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
   const [fssai, setFssai] = useState('11224333000492');
   const [geofenceKm, setGeofenceKm] = useState('2.8');
   const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedInbound, setCopiedInbound] = useState(false);
   const [isPinging, setIsPinging] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
@@ -61,6 +62,15 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
     setCopiedKey(true);
     toast.success('HMAC Secret copied to clipboard');
     setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const handleCopyInboundUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://darkstori.onrender.com';
+    const inboundUrl = `${origin}/api/v1/ingestion/storefront/webhook/receive`;
+    navigator.clipboard.writeText(inboundUrl);
+    setCopiedInbound(true);
+    toast.success('Inbound Webhook Receiver URL copied to clipboard');
+    setTimeout(() => setCopiedInbound(false), 2000);
   };
 
   const handleGenerateSecret = () => {
@@ -189,6 +199,38 @@ export default function StorefrontSettingsModal({ isOpen, onClose }) {
 
             {/* Webhook Endpoint & HMAC Key */}
             <div className="space-y-3">
+              {/* Inbound Webhook Receiver URL */}
+              <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-violet-300 flex items-center gap-1.5">
+                    <Zap size={13} className="text-violet-400" />
+                    <span>DarkStori Inbound Receiver (Shopify / ERP Ingest)</span>
+                  </label>
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    HMAC-SHA256 Verified
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/api/v1/ingestion/storefront/webhook/receive` : 'https://darkstori.onrender.com/api/v1/ingestion/storefront/webhook/receive'}
+                    className="flex-1 bg-[#0D121F] border border-violet-500/30 rounded-xl px-3 py-2 text-xs font-mono text-violet-200 select-all outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyInboundUrl}
+                    className="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-medium text-white flex items-center gap-1.5 shrink-0 transition-colors"
+                  >
+                    {copiedInbound ? <Check size={14} className="text-white" /> : <Copy size={14} />}
+                    <span>{copiedInbound ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1.5">
+                  Point your Shopify / Unicommerce / Increff order creation webhooks to this endpoint. Supports <code className="text-violet-300">X-Darkstor-Signature</code> or <code className="text-violet-300">X-Shopify-Hmac-SHA256</code>.
+                </p>
+              </div>
+
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">
                   Outbound Webhook URL (POST Target)
