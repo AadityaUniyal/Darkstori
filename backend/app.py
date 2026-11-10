@@ -209,7 +209,7 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="DarkStori — Autonomous Quick-Commerce Operating System",
+    title="Darkstor — Hyperlocal Delivery Intelligence",
     description=(
         "Decision support for dark-store operators. Market coverage depends on "
         "configured operating data and geospatial providers."
@@ -395,7 +395,7 @@ async def metrics():
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "DarkStori — Autonomous Quick-Commerce Operating System API",
+        "message": "Darkstor — Autonomous Quick-Commerce Operating System API",
         "version": "3.0.0",
         "focus_cities": settings.FOCUS_CITIES,
         "docs": "/api/docs",

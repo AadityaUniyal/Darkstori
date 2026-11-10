@@ -152,8 +152,8 @@ async def get_store(
 @router.post("/", response_model=StoreResponse, include_in_schema=False)
 async def create_store(
     store: StoreCreate,
+    payload: dict = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
-    payload: Optional[dict] = Depends(verify_token_optional),
 ):
     """Create a new store (authenticated or demo operator)."""
     organization_id = (payload or {}).get("org_id") or (payload or {}).get("organization_id")

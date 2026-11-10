@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, AlertTriangle } from "lucide-react";
+import EmptyState from "../components/EmptyState";
 import "./NotFound.css";
 
 const NotFound = () => {

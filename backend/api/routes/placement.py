@@ -5,17 +5,28 @@ clusters vs. under-served high-density zones.
 """
 
 import math
-from typing import List, Optional
+import uuid
+from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import logger
-from backend.core.security import verify_token
+from backend.core.security import verify_token, verify_token_optional
 from backend.database.connection import get_db
 from backend.database.models.models import DarkStore, PlacementScore, PincodeCoverage
+from backend.services.candidate_ranking import (
+    CandidateRankingService,
+    CandidateRankingRequest,
+    CandidateRankingResponse,
+    CandidateLocationInput,
+    RankingWeights,
+    register_job,
+    get_job_status,
+    execute_background_candidate_ranking,
+)
 
 router = APIRouter()
 
@@ -298,3 +309,86 @@ async def get_top_placement_opps(
     scores = result.scalars().all()
 
     return scores
+
+
+# ── Candidate Store Locations Ranking (Competitors, Demographics, Road Distance, Predicted Demand) ──
+
+@router.post("/rank-candidates", response_model=CandidateRankingResponse)
+async def rank_candidate_store_locations(
+    request: CandidateRankingRequest,
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Rank candidate store locations for delivery companies using 4 analytical pillars.
+    
+    1. Competitor Presence: distance to nearest rivals (Zepto, Blinkit, Instamart) & saturation.
+    2. Demographics: catchment population, population density, avg income & working professionals %.
+    3. Road Distance & Logistics: travel time applying urban road friction (tau=1.30) for 10-min SLA reach.
+    4. Predicted Demand: machine learning forecasting of daily order velocity and GMV.
+    
+    Backed by Redis caching for repeated calculations.
+    """
+    service = CandidateRankingService(db)
+    return await service.rank_candidates(request)
+
+
+@router.get("/rank-candidates", response_model=CandidateRankingResponse)
+async def get_ranked_candidate_locations(
+    city: str = Query("Bangalore", description="City to rank candidate store locations in"),
+    limit: int = Query(5, ge=1, le=20, description="Max candidate locations to evaluate"),
+    target_sla_minutes: float = Query(10.0, ge=5.0, le=30.0),
+    force_refresh: bool = Query(False, description="Bypass Redis cache"),
+    db: AsyncSession = Depends(get_db),
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Instant query endpoint to rank candidate store locations in a target city."""
+    service = CandidateRankingService(db)
+    candidates = await service.get_candidate_locations_for_city(city=city, limit=limit)
+    req = CandidateRankingRequest(
+        city=city,
+        candidates=candidates,
+        target_sla_minutes=target_sla_minutes,
+        force_refresh=force_refresh,
+    )
+    return await service.rank_candidates(req)
+
+
+@router.post("/rank-candidates/jobs", status_code=status.HTTP_202_ACCEPTED)
+async def dispatch_candidate_ranking_job(
+    request: CandidateRankingRequest,
+    background_tasks: BackgroundTasks,
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Dispatch an asynchronous background job for long-running location ranking calculations."""
+    job_id = f"job-rank-{uuid.uuid4().hex[:12]}"
+    register_job(
+        job_id=job_id,
+        job_type="candidate_location_ranking",
+        metadata={"city": request.city, "candidate_count": len(request.candidates or [])},
+    )
+    background_tasks.add_task(
+        execute_background_candidate_ranking,
+        job_id=job_id,
+        request_data=request.model_dump(),
+    )
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "job_type": "candidate_location_ranking",
+        "city": request.city,
+        "status_url": f"/api/v1/placement/jobs/{job_id}",
+        "message": "Long-running location ranking job queued in background.",
+    }
+
+
+@router.get("/jobs/{job_id}")
+async def get_candidate_ranking_job_status(
+    job_id: str,
+    payload: Optional[dict] = Depends(verify_token_optional),
+):
+    """Retrieve status, execution progress, or completed results of a background ranking job."""
+    job = await get_job_status(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+    return job
+
