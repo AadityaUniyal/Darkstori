@@ -26,40 +26,83 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from existing real session in localStorage
+  // Initialize from existing real session in localStorage and verify via /me
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 > Date.now()) {
-          const savedStoreRaw = localStorage.getItem('darkstori_active_store');
-          const savedStore = savedStoreRaw ? JSON.parse(savedStoreRaw) : null;
-          setUser({
-            id: payload.user_id,
-            email: payload.sub,
-            role: payload.role || 'user',
-            organization_id: payload.organization_id || null,
-            store: savedStore,
-            isDemo: Boolean(payload.sub?.includes('demo')),
-          });
-          setIsAuthenticated(true);
-          setIsLoading(false);
-          return;
-        } else {
+    let isMounted = true;
+    const initAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.exp * 1000 > Date.now()) {
+            const savedStoreRaw = localStorage.getItem('darkstori_active_store');
+            const savedStore = savedStoreRaw ? JSON.parse(savedStoreRaw) : null;
+            if (isMounted) {
+              setUser({
+                id: payload.user_id,
+                email: payload.sub,
+                role: payload.role || 'user',
+                organization_id: payload.organization_id || null,
+                store: savedStore,
+                isDemo: Boolean(payload.sub?.includes('demo')),
+              });
+              setIsAuthenticated(true);
+              setIsLoading(false);
+            }
+
+            // Asynchronously sync latest profile & store metadata from DB
+            try {
+              const profile = await api.getMe();
+              if (isMounted && profile) {
+                const refreshedStore = profile.store_name ? {
+                  id: profile.store_id,
+                  name: profile.store_name,
+                  city: profile.city
+                } : savedStore;
+                setUser(prev => ({
+                  ...prev,
+                  id: profile.id,
+                  email: profile.email,
+                  role: profile.role || prev?.role,
+                  organization_id: profile.organization_id,
+                  organization_name: profile.organization_name,
+                  store: refreshedStore
+                }));
+                if (refreshedStore) {
+                  localStorage.setItem('darkstori_active_store', JSON.stringify(refreshedStore));
+                }
+              }
+            } catch (syncErr) {
+              // Token might be revoked or expired on backend
+              if (syncErr?.response?.status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('refresh_token');
+                if (isMounted) {
+                  setUser(null);
+                  setIsAuthenticated(false);
+                }
+              }
+            }
+            return;
+          } else {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+          }
+        } catch (e) {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('refresh_token');
         }
-      } catch (e) {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
       }
-    }
 
-    // Default to clean unauthenticated state — user must register or sign in
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsLoading(false);
+      if (isMounted) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+    return () => { isMounted = false; };
   }, []);
 
   // Listen for global logout events

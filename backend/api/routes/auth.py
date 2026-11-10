@@ -107,6 +107,11 @@ class UserOut(BaseModel):
     username: str
     role: str
     is_active: bool
+    organization_id: Optional[int] = None
+    organization_name: Optional[str] = None
+    store_id: Optional[int] = None
+    store_name: Optional[str] = None
+    city: Optional[str] = None
 
 
 class DemoLoginRequest(BaseModel):
@@ -390,17 +395,42 @@ async def get_me(
     payload: dict = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get current user profile."""
+    """Get current user profile with resolved organization and dark store details."""
     result = await db.execute(select(User).where(User.email == payload["sub"]))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    org_name = None
+    store_id = None
+    store_name = None
+    store_city = None
+
+    if user.organization_id:
+        org_res = await db.execute(select(Organization).where(Organization.id == user.organization_id))
+        org = org_res.scalar_one_or_none()
+        if org:
+            org_name = org.name
+
+        from backend.database.models.models import DarkStore
+        store_res = await db.execute(select(DarkStore).where(DarkStore.organization_id == user.organization_id))
+        st = store_res.scalars().first()
+        if st:
+            store_id = st.id
+            store_name = st.store_name
+            store_city = st.city
+
     return UserOut(
         id=int(user.id),  # type: ignore
         email=str(user.email),  # type: ignore
         username=str(user.username),  # type: ignore
         role=str(user.role),  # type: ignore
         is_active=bool(user.is_active),  # type: ignore
+        organization_id=int(user.organization_id) if user.organization_id else None,
+        organization_name=org_name,
+        store_id=store_id,
+        store_name=store_name,
+        city=store_city,
     )
 
 

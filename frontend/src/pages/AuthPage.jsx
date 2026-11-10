@@ -340,6 +340,30 @@ export default function AuthPage() {
                     ? 'Enter your credentials to access your dark store operations shift.'
                     : 'Configure your company profile, focus metro, and initial dark store pod.'}
                 </p>
+                {authMode === 'login' && (
+                  <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left text-xs space-y-1">
+                    <div className="flex items-center justify-between text-amber-300 font-mono font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <ShieldCheck size={14} className="text-amber-400" />
+                        <span>Pre-seeded Enterprise Credentials:</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmail('admin@darkstori.io');
+                          setPassword('Password123!');
+                          setErrors({});
+                        }}
+                        className="text-[11px] px-2 py-0.5 rounded bg-amber-400 text-black font-bold hover:bg-amber-300 transition-colors cursor-pointer"
+                      >
+                        Auto-Fill
+                      </button>
+                    </div>
+                    <div className="text-[11px] text-slate-300 font-mono">
+                      Email: <code className="text-amber-300 select-all">admin@darkstori.io</code> &bull; Password: <code className="text-amber-300 select-all">Password123!</code>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {errors.submit && (
