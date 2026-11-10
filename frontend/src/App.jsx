@@ -21,6 +21,7 @@ const VisionPage     = lazy(() => import('./features/vision/VisionPage'));
 const NocPage        = lazy(() => import('./features/noc/NocPage'));
 const PickerTerminalPage = lazy(() => import('./features/terminal/PickerTerminalPage'));
 const PanIndiaDirectoryPage = lazy(() => import('./features/directory/PanIndiaDirectoryPage'));
+const HolodeckPage   = lazy(() => import('./features/holodeck/HolodeckPage'));
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -181,6 +182,7 @@ function AppContent() {
                 {/* 8 Dedicated Flagship Features + NOC, Terminal & Pan-India Directory */}
                 <Route path="/directory"   element={<PrivateRoute><AnimatedPage><PanIndiaDirectoryPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/noc"         element={<PrivateRoute><AnimatedPage><NocPage /></AnimatedPage></PrivateRoute>} />
+                <Route path="/holodeck"    element={<PrivateRoute><AnimatedPage><HolodeckPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/terminal"    element={<PrivateRoute><AnimatedPage><PickerTerminalPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/expansion"   element={<PrivateRoute><AnimatedPage><ExpansionPage /></AnimatedPage></PrivateRoute>} />
                 <Route path="/inventory"   element={<PrivateRoute><AnimatedPage><InventoryPage /></AnimatedPage></PrivateRoute>} />

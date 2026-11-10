@@ -15,7 +15,8 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Cpu
 } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import './Sidebar.css';
@@ -26,6 +27,7 @@ const ALL_8_FEATURES = [
     items: [
       { path: '/directory',  icon: Globe,      label: 'Pan-India Geo-Directory', featureNum: 'MAP', role: 'executive' },
       { path: '/noc',        icon: Radio,      label: 'Metro NOC & Pod Mesh',   featureNum: 'NOC', role: 'executive' },
+      { path: '/holodeck',   icon: Cpu,        label: 'Neuro-Twin Holodeck',    featureNum: 'HOL', role: 'executive' },
       { path: '/expansion',  icon: Compass,    label: 'Catchment & Expansion', featureNum: '01', role: 'executive' },
       { path: '/inventory',  icon: Package,    label: 'Demand & Inbound Dock', featureNum: '02', role: 'store-gm' },
       { path: '/floor',      icon: Layers,     label: 'Floor Twin & Heatmap',   featureNum: '03', role: 'store-gm' },
